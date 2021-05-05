@@ -133,10 +133,6 @@ public class CapabilityExchange implements ConnectionListener, MessageListener {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public CompletableFuture<ServerInfo> bootstrap() {
-        return node.bootstrap();
-    }
-
     public CompletableFuture<Connection> send(Message message, Address peerAddress) {
         return getConnection(peerAddress)
                 .thenCompose(connection -> send(message, connection));
@@ -203,6 +199,15 @@ public class CapabilityExchange implements ConnectionListener, MessageListener {
 
     public void removeMessageListener(MessageListener messageListener) {
         messageListeners.remove(messageListener);
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // Delegates
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+    public CompletableFuture<ServerInfo> bootstrap() {
+        return node.bootstrap();
     }
 
     public Optional<Address> getMyAddress() {

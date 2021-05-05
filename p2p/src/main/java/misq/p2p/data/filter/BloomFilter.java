@@ -20,9 +20,6 @@ package misq.p2p.data.filter;
 
 import misq.p2p.data.storage.MapKey;
 
-/**
- * Could be a bloom filter or a collection of hashes of messages the requests has already
- */
 public class BloomFilter implements DataFilter {
     public boolean matches(MapKey mapKey) {
         return true;

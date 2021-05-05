@@ -57,11 +57,11 @@ public class Guard implements MessageListener {
 
     @Override
     public void onMessage(Connection connection, Message message) {
-        if (message instanceof PermittedMessage) {
-            PermittedMessage permittedMessage = (PermittedMessage) message;
-            if (permissionControl.hasPermit(permittedMessage)) {
-                log.info("Received valid restrictedMessage: {}", permittedMessage);
-                messageListeners.forEach(listener -> listener.onMessage(connection, permittedMessage.getMessage()));
+        if (message instanceof GuardedMessage) {
+            GuardedMessage guardedMessage = (GuardedMessage) message;
+            if (permissionControl.hasPermit(guardedMessage)) {
+                log.info("Received valid restrictedMessage: {}", guardedMessage);
+                messageListeners.forEach(listener -> listener.onMessage(connection, guardedMessage.getMessage()));
             } else {
                 log.warn("Handling message at onMessage is not permitted by guard");
             }
@@ -81,7 +81,7 @@ public class Guard implements MessageListener {
     public CompletableFuture<Connection> send(Message message, Connection connection) {
         return permissionControl.getPermit(message)
                 .thenCompose(permit ->
-                        capabilityExchange.send(new PermittedMessage(message, permit), connection));
+                        capabilityExchange.send(new GuardedMessage(message, permit), connection));
     }
 
     public void addMessageListener(MessageListener messageListener) {

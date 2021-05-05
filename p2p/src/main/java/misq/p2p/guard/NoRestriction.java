@@ -21,10 +21,13 @@ import misq.p2p.node.Message;
 
 import java.util.concurrent.CompletableFuture;
 
+/**
+ * Dummy implementation. Will be pow based...
+ */
 public class NoRestriction implements PermissionControl {
 
     @Override
-    public boolean hasPermit(PermittedMessage permittedMessage) {
+    public boolean hasPermit(GuardedMessage guardedMessage) {
         return true;
     }
 

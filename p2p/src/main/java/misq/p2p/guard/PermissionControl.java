@@ -23,7 +23,7 @@ import java.util.concurrent.CompletableFuture;
 
 public interface PermissionControl {
 
-    boolean hasPermit(PermittedMessage permittedMessage);
+    boolean hasPermit(GuardedMessage guardedMessage);
 
     CompletableFuture<AccessToken> getPermit(Message message);
 

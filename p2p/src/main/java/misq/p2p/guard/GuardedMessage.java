@@ -23,11 +23,11 @@ import misq.p2p.node.Message;
 
 @EqualsAndHashCode
 @Getter
-public class PermittedMessage implements Message {
+public class GuardedMessage implements Message {
     private final Message message;
     private final AccessToken accessToken;
 
-    public PermittedMessage(Message message, AccessToken accessToken) {
+    public GuardedMessage(Message message, AccessToken accessToken) {
         this.message = message;
         this.accessToken = accessToken;
     }
