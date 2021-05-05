@@ -1,0 +1,10 @@
+include 'common'
+include 'p2p'
+include 'listing'
+include 'daemon'
+include 'cli'
+include 'jfx'
+include 'web'
+include 'scripts'
+
+rootProject.name = 'misq'
