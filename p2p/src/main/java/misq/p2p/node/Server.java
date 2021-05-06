@@ -34,8 +34,8 @@ public class Server {
     private final ExecutorService executorService;
     @Getter
     private final Address address;
-    private volatile boolean isStopped;
     private final Object isStoppedLock = new Object();
+    private volatile boolean isStopped;
 
     /**
      * Server using the given ServerSocket.

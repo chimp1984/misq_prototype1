@@ -15,31 +15,31 @@ import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicReference;
 
 
 @Slf4j
 public class TorNetworkProxy implements NetworkProxy {
     public final static int DEFAULT_PORT = 9999;
     private final String torDirPath;
-
-
+    private final Torify torify;
+    private final AtomicReference<TorController> torController = new AtomicReference<>();
     private volatile NetworkProxy.State state = State.NOT_STARTED;
-    private Torify torify;
-    private TorController torController;
 
     public TorNetworkProxy(NetworkConfig networkConfig) {
         torDirPath = networkConfig.getBaseDirName() + File.separator + "tor";
+        torify = new Torify(torDirPath);
     }
 
     @Override
     public CompletableFuture<Boolean> initialize() {
         log.info("Initialize Tor");
         long ts = System.currentTimeMillis();
-        torify = new Torify(torDirPath);
+
         return torify.startAsync()
                 .thenApply(torController -> {
                     state = State.INITIALIZED;
-                    this.torController = torController;
+                    this.torController.set(torController);
                     log.info("Tor initialized after {} ms", System.currentTimeMillis() - ts);
                     return true;
                 });
@@ -50,7 +50,7 @@ public class TorNetworkProxy implements NetworkProxy {
         log.info("Start hidden service");
         long ts = System.currentTimeMillis();
         try {
-            TorServerSocket torServerSocket = new TorServerSocket(torDirPath, torController);
+            TorServerSocket torServerSocket = new TorServerSocket(torDirPath, torController.get());
             return torServerSocket.bindAsync(serverPort, NetworkUtils.findFreeSystemPort())
                     .thenApply(onionAddress -> {
                         log.info("Tor hidden service Ready. Took {} ms. Onion address={}", System.currentTimeMillis() - ts, onionAddress);

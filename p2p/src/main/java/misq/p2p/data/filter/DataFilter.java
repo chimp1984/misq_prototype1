@@ -22,9 +22,6 @@ import misq.p2p.data.storage.MapKey;
 
 import java.io.Serializable;
 
-/**
- * Could be a bloom filter or a collection of hashes of messages the requests has already
- */
 public interface DataFilter extends Serializable {
     boolean matches(MapKey mapKey);
 }

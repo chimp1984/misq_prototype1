@@ -41,18 +41,16 @@ import java.util.function.Consumer;
  */
 @Slf4j
 public abstract class Connection {
-    private final Socket socket;
     private final ExecutorService outputExecutorService;
     private final ExecutorService inputHandlerService;
-
-    @Getter
-    protected final String uid = UUID.randomUUID().toString();
-
-    private final Set<MessageListener> messageListeners = new CopyOnWriteArraySet<>();
     private final ObjectInputStream objectInputStream;
     private final ObjectOutputStream objectOutputStream;
-    private volatile boolean isStopped;
+    private final Set<MessageListener> messageListeners = new CopyOnWriteArraySet<>();
+    private final Socket socket;
+    @Getter
+    protected final String uid = UUID.randomUUID().toString();
     private final Object isStoppedLock = new Object();
+    private volatile boolean isStopped;
 
     public Connection(Socket socket, Consumer<Exception> errorHandler) throws IOException {
         this.socket = socket;

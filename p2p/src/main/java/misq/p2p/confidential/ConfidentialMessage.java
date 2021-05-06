@@ -17,16 +17,16 @@
 
 package misq.p2p.confidential;
 
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import misq.p2p.node.Message;
 
+@EqualsAndHashCode
+@Getter
 public class ConfidentialMessage implements Message {
     private final Message message;
 
     public ConfidentialMessage(Message message) {
         this.message = message;
-    }
-
-    public Message getMessage() {
-        return message;
     }
 }

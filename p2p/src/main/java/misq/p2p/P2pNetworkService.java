@@ -49,7 +49,6 @@ public class P2pNetworkService {
     private final Map<NetworkType, ConfidentialMessageService> confidentialMessageServices = new ConcurrentHashMap<>();
     private final Map<NetworkType, DataService> dataServices = new ConcurrentHashMap<>();
 
-
     public P2pNetworkService(P2pNetworkConfig p2PNetworkConfig) {
         storage = new Storage();
         Set<NetworkType> mySupportedNetworks = p2PNetworkConfig.getNetworkConfigs().stream()

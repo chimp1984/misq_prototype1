@@ -36,6 +36,7 @@ public class ConfidentialMessageService implements MessageListener, ConnectionLi
 
     public ConfidentialMessageService(Guard guard) {
         this.guard = guard;
+
         guard.addMessageListener(this);
         guard.addConnectionListener(this);
     }

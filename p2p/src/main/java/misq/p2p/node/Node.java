@@ -47,14 +47,14 @@ public class Node implements MessageListener {
     public static final String DEFAULT_SERVER_ID = "default";
     public static final int DEFAULT_SERVER_PORT = 9999;
 
-    protected final NetworkConfig networkConfig;
+    private final NetworkConfig networkConfig;
     private final NetworkProxy networkProxy;
 
+    private final Map<String, Server> serverMap = new ConcurrentHashMap<>();
     private final Map<Address, OutboundConnection> outboundConnectionMap = new ConcurrentHashMap<>();
     private final Set<InboundConnection> inboundConnections = new CopyOnWriteArraySet<>();
     private final Set<ConnectionListener> connectionListeners = new CopyOnWriteArraySet<>();
     private final Set<MessageListener> messageListeners = new CopyOnWriteArraySet<>();
-    private final Map<String, Server> serverMap = new ConcurrentHashMap<>();
 
     public Node(NetworkConfig networkConfig) {
         this.networkConfig = networkConfig;

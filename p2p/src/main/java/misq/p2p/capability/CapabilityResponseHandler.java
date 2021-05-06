@@ -30,7 +30,6 @@ import java.util.function.Consumer;
 
 @Slf4j
 public class CapabilityResponseHandler implements MessageListener, Disposable {
-    @org.jetbrains.annotations.NotNull
     private final Connection connection;
     private final Address myAddress;
     private final Set<NetworkType> mySupportedNetworkTypes;
