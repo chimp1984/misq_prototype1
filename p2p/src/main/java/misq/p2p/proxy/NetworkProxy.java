@@ -48,13 +48,33 @@ public interface NetworkProxy {
         SHUT_DOWN
     }
 
+    /**
+     * Initializes the NetworkProxy
+     *
+     * @return True if initialisation was successful
+     */
     CompletableFuture<Boolean> initialize();
 
-    State getState();
-
+    /**
+     * Creates the server socket (e.g. hidden service)
+     *
+     * @param serverId
+     * @param serverPort
+     * @return ServerInfo excapsulating ServerSocket and the server address (e.g. onion address)
+     */
     CompletableFuture<ServerInfo> createServerSocket(String serverId, int serverPort);
 
+    /**
+     * Returns a client socket
+     *
+     * @param address
+     * @return
+     * @throws IOException
+     */
     Socket getSocket(Address address) throws IOException;
+
+
+    State getState();
 
     Optional<Address> getServerAddress(String serverId);
 

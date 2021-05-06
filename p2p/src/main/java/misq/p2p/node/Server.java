@@ -37,6 +37,13 @@ public class Server {
     private volatile boolean isStopped;
     private final Object isStoppedLock = new Object();
 
+    /**
+     * Server using the given ServerSocket.
+     *
+     * @param serverInfo       contains serverSocket and address
+     * @param socketHandler    Consumes socket on new inbound connection
+     * @param exceptionHandler
+     */
     public Server(ServerInfo serverInfo, Consumer<Socket> socketHandler, Consumer<Exception> exceptionHandler) {
         this.serverSocket = serverInfo.getServerSocket();
 

@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package misq.p2p.data.router.gossip;
+package misq.p2p.router.gossip;
 
 import misq.common.util.CollectionUtil;
 import misq.p2p.guard.Guard;
@@ -23,6 +23,7 @@ import misq.p2p.node.Address;
 import misq.p2p.node.Connection;
 import misq.p2p.node.Message;
 import misq.p2p.node.MessageListener;
+import misq.p2p.peers.PeerGroup;
 
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -58,9 +59,9 @@ public class GossipRouter implements MessageListener {
         }
     }
 
-    public CompletableFuture<BroadcastResult> broadcast(Message message) {
+    public CompletableFuture<GossipResult> broadcast(Message message) {
         long ts = System.currentTimeMillis();
-        CompletableFuture<BroadcastResult> future = new CompletableFuture<>();
+        CompletableFuture<GossipResult> future = new CompletableFuture<>();
         future.orTimeout(BROADCAST_TIMEOUT, TimeUnit.SECONDS);
         AtomicInteger numSuccess = new AtomicInteger(0);
         AtomicInteger numFaults = new AtomicInteger(0);
@@ -75,7 +76,7 @@ public class GossipRouter implements MessageListener {
                             numFaults.incrementAndGet();
                         }
                         if (numSuccess.get() + numFaults.get() == target) {
-                            future.complete(new BroadcastResult(numSuccess.get(),
+                            future.complete(new GossipResult(numSuccess.get(),
                                     numFaults.get(),
                                     System.currentTimeMillis() - ts));
                         }

@@ -15,20 +15,12 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package misq.p2p.confidential;
+package misq.p2p.peers;
 
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
 import misq.p2p.node.Address;
-import misq.p2p.node.Message;
 
-@EqualsAndHashCode(callSuper = true)
-@Getter
-public class RelayMessage extends ConfidentialMessage {
-    private final Address targetAddress;
+public class Peer {
+    public Peer(Address peerAddress) {
 
-    public RelayMessage(Message message, Address targetAddress) {
-        super(message);
-        this.targetAddress = targetAddress;
     }
 }

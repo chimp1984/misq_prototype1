@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package misq.p2p.data.router.gossip;
+package misq.p2p.router.gossip;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;

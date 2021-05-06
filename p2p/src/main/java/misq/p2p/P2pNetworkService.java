@@ -23,11 +23,11 @@ import misq.p2p.confidential.ConfidentialMessageService;
 import misq.p2p.data.DataService;
 import misq.p2p.data.filter.DataFilter;
 import misq.p2p.data.inventory.RequestInventoryResult;
-import misq.p2p.data.router.gossip.BroadcastResult;
 import misq.p2p.data.storage.Storage;
 import misq.p2p.guard.Guard;
 import misq.p2p.node.*;
 import misq.p2p.proxy.ServerInfo;
+import misq.p2p.router.gossip.GossipResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,7 +45,7 @@ public class P2pNetworkService {
 
     private final Storage storage;
     private final Map<NetworkType, Node> nodes = new ConcurrentHashMap<>();
-    private final Map<NetworkType, Guard> guardedNodes = new ConcurrentHashMap<>();
+    private final Map<NetworkType, Guard> guards = new ConcurrentHashMap<>();
     private final Map<NetworkType, ConfidentialMessageService> confidentialMessageServices = new ConcurrentHashMap<>();
     private final Map<NetworkType, DataService> dataServices = new ConcurrentHashMap<>();
 
@@ -61,7 +61,7 @@ public class P2pNetworkService {
             Node node = new Node(networkConfig);
             CapabilityExchange capabilityExchange = new CapabilityExchange(node, mySupportedNetworks);
             Guard guard = new Guard(capabilityExchange);
-            guardedNodes.put(networkType, guard);
+            guards.put(networkType, guard);
 
             ConfidentialMessageService confidentialMessageService = new ConfidentialMessageService(guard);
             confidentialMessageServices.put(networkType, confidentialMessageService);
@@ -77,7 +77,7 @@ public class P2pNetworkService {
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     public void bootstrap(Consumer<ServerInfo> resultHandler) {
-        guardedNodes.values().forEach(guardedNode -> {
+        guards.values().forEach(guardedNode -> {
             guardedNode.bootstrap()
                     .whenComplete((serverInfo, throwable) -> {
                         if (serverInfo != null) {
@@ -118,12 +118,12 @@ public class P2pNetworkService {
     }
 
     public void requestAddData(Message message,
-                               Consumer<BroadcastResult> resultHandler) {
+                               Consumer<GossipResult> resultHandler) {
         dataServices.values().forEach(dataService -> {
             dataService.requestAddData(message)
-                    .whenComplete((broadcastResult, throwable) -> {
-                        if (broadcastResult != null) {
-                            resultHandler.accept(broadcastResult);
+                    .whenComplete((gossipResult, throwable) -> {
+                        if (gossipResult != null) {
+                            resultHandler.accept(gossipResult);
                         } else {
                             log.error(throwable.toString());
                         }
@@ -132,12 +132,12 @@ public class P2pNetworkService {
     }
 
     public void requestRemoveData(Message message,
-                                  Consumer<BroadcastResult> resultHandler) {
+                                  Consumer<GossipResult> resultHandler) {
         dataServices.values().forEach(dataService -> {
             dataService.requestRemoveData(message)
-                    .whenComplete((broadcastResult, throwable) -> {
-                        if (broadcastResult != null) {
-                            resultHandler.accept(broadcastResult);
+                    .whenComplete((gossipResult, throwable) -> {
+                        if (gossipResult != null) {
+                            resultHandler.accept(gossipResult);
                         } else {
                             log.error(throwable.toString());
                         }
@@ -174,7 +174,7 @@ public class P2pNetworkService {
     public void shutdown() {
         confidentialMessageServices.values().forEach(ConfidentialMessageService::shutdown);
         dataServices.values().forEach(DataService::shutdown);
-        guardedNodes.values().forEach(Guard::shutdown);
+        guards.values().forEach(Guard::shutdown);
         storage.shutdown();
     }
 }

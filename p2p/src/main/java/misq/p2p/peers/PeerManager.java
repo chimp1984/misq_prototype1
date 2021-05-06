@@ -15,19 +15,12 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package misq.p2p.data.router.gossip;
+package misq.p2p.peers;
 
-import lombok.Getter;
+import misq.p2p.guard.Guard;
 
-@Getter
-public class BroadcastResult {
-    private final int numSuccess;
-    private final int numFaults;
-    private final long duration;
+public class PeerManager {
 
-    public BroadcastResult(int numSuccess, int numFaults, long duration) {
-        this.numSuccess = numSuccess;
-        this.numFaults = numFaults;
-        this.duration = duration;
+    public PeerManager(Guard guard) {
     }
 }

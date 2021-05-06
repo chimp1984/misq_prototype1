@@ -77,11 +77,23 @@ public class Node implements MessageListener {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
+    /**
+     * Combines initialize and createServerAndListen
+     *
+     * @return ServerInfo
+     */
     public CompletableFuture<ServerInfo> bootstrap() {
         return initialize()
                 .thenCompose(e -> createServerAndListen(networkConfig.getServerId(), networkConfig.getServerPort()));
     }
 
+    /**
+     * Creates server socket and starts server
+     *
+     * @param serverId
+     * @param serverPort
+     * @return
+     */
     public CompletableFuture<ServerInfo> createServerAndListen(String serverId, int serverPort) {
         return networkProxy.createServerSocket(serverId, serverPort)
                 .whenComplete((serverInfo, throwable) -> {
@@ -126,6 +138,13 @@ public class Node implements MessageListener {
         connectionListeners.forEach(connectionListener -> connectionListener.onDisconnect(connection));
     }
 
+    /**
+     * Sends to outbound connection if available, otherwise create the connection and then send the message.
+     *
+     * @param message
+     * @param address
+     * @return
+     */
     public CompletableFuture<Connection> send(Message message, Address address) {
         if (!outboundConnectionMap.containsKey(address)) {
             return getConnection(address)

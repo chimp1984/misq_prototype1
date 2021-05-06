@@ -78,5 +78,4 @@ public class ClearNetNetworkProxy implements NetworkProxy {
     public State getState() {
         return state;
     }
-
 }

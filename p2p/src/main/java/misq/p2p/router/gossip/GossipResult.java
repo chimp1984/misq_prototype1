@@ -15,12 +15,19 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package misq.p2p.data.router.gossip;
+package misq.p2p.router.gossip;
 
-import misq.p2p.node.Address;
+import lombok.Getter;
 
-public class Peer {
-    public Peer(Address peerAddress) {
+@Getter
+public class GossipResult {
+    private final int numSuccess;
+    private final int numFaults;
+    private final long duration;
 
+    public GossipResult(int numSuccess, int numFaults, long duration) {
+        this.numSuccess = numSuccess;
+        this.numFaults = numFaults;
+        this.duration = duration;
     }
 }

@@ -15,15 +15,15 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package misq.p2p.data.router;
+package misq.p2p.router;
 
-import misq.p2p.data.router.gossip.BroadcastResult;
-import misq.p2p.data.router.gossip.GossipRouter;
 import misq.p2p.guard.Guard;
 import misq.p2p.node.Address;
 import misq.p2p.node.Connection;
 import misq.p2p.node.Message;
 import misq.p2p.node.MessageListener;
+import misq.p2p.router.gossip.GossipResult;
+import misq.p2p.router.gossip.GossipRouter;
 
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -44,7 +44,7 @@ public class Router implements MessageListener {
         gossipRouter.addMessageListener(this);
     }
 
-    public CompletableFuture<BroadcastResult> broadcast(Message message) {
+    public CompletableFuture<GossipResult> broadcast(Message message) {
         return gossipRouter.broadcast(message);
     }
 

@@ -22,12 +22,12 @@ import misq.p2p.data.filter.DataFilter;
 import misq.p2p.data.inventory.InventoryRequestHandler;
 import misq.p2p.data.inventory.InventoryResponseHandler;
 import misq.p2p.data.inventory.RequestInventoryResult;
-import misq.p2p.data.router.Router;
-import misq.p2p.data.router.gossip.BroadcastResult;
 import misq.p2p.data.storage.MapKey;
 import misq.p2p.data.storage.Storage;
 import misq.p2p.guard.Guard;
 import misq.p2p.node.*;
+import misq.p2p.router.Router;
+import misq.p2p.router.gossip.GossipResult;
 
 import java.util.Map;
 import java.util.Set;
@@ -112,13 +112,13 @@ public class DataService implements MessageListener, ConnectionListener {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public CompletableFuture<BroadcastResult> requestAddData(Message message) {
+    public CompletableFuture<GossipResult> requestAddData(Message message) {
         AddDataRequest addDataRequest = new AddDataRequest(message);
         storage.add(addDataRequest);
         return router.broadcast(addDataRequest);
     }
 
-    public CompletableFuture<BroadcastResult> requestRemoveData(Message message) {
+    public CompletableFuture<GossipResult> requestRemoveData(Message message) {
         RemoveDataRequest removeDataRequest = new RemoveDataRequest(new MapKey(message));
         storage.remove(removeDataRequest.getMapKey());
         return router.broadcast(removeDataRequest);

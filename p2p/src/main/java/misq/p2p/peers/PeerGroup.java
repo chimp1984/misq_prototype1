@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package misq.p2p.data.router.gossip;
+package misq.p2p.peers;
 
 import misq.p2p.guard.Guard;
 import misq.p2p.node.*;
