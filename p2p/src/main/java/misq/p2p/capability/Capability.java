@@ -35,4 +35,12 @@ public class Capability implements Message {
         this.address = address;
         this.supportedNetworkTypes = supportedNetworkTypes;
     }
+
+    @Override
+    public String toString() {
+        return "Capability{" +
+                "\n     address=" + address +
+                ",\n     supportedNetworkTypes=" + supportedNetworkTypes +
+                "\n}";
+    }
 }

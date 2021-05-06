@@ -31,7 +31,9 @@ import misq.p2p.router.gossip.GossipResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
@@ -40,8 +42,8 @@ import java.util.stream.Collectors;
 /**
  * High level API for the p2p network.
  */
-public class P2pNetworkService {
-    private static final Logger log = LoggerFactory.getLogger(P2pNetworkService.class);
+public class P2pService {
+    private static final Logger log = LoggerFactory.getLogger(P2pService.class);
 
     private final Storage storage;
     private final Map<NetworkType, Node> nodes = new ConcurrentHashMap<>();
@@ -49,12 +51,12 @@ public class P2pNetworkService {
     private final Map<NetworkType, ConfidentialMessageService> confidentialMessageServices = new ConcurrentHashMap<>();
     private final Map<NetworkType, DataService> dataServices = new ConcurrentHashMap<>();
 
-    public P2pNetworkService(P2pNetworkConfig p2PNetworkConfig) {
+    public P2pService(List<NetworkConfig> networkConfigs) {
         storage = new Storage();
-        Set<NetworkType> mySupportedNetworks = p2PNetworkConfig.getNetworkConfigs().stream()
+        Set<NetworkType> mySupportedNetworks = networkConfigs.stream()
                 .map(NetworkConfig::getNetworkType)
                 .collect(Collectors.toSet());
-        p2PNetworkConfig.getNetworkConfigs().forEach(networkConfig -> {
+        networkConfigs.forEach(networkConfig -> {
             NetworkType networkType = networkConfig.getNetworkType();
 
             Node node = new Node(networkConfig);
@@ -175,5 +177,9 @@ public class P2pNetworkService {
         dataServices.values().forEach(DataService::shutdown);
         guards.values().forEach(Guard::shutdown);
         storage.shutdown();
+    }
+
+    public Optional<Address> getAddress(NetworkType networkType) {
+        return guards.get(networkType).getMyAddress();
     }
 }

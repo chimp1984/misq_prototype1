@@ -32,15 +32,6 @@ public class GuardedMessage implements Message {
         this.accessToken = accessToken;
     }
 
-    public Message getMessage() {
-        return message;
-    }
-
-    public AccessToken getAccessToken() {
-        return accessToken;
-    }
-
-
     @Override
     public String toString() {
         return "GuardedMessage{" +

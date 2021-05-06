@@ -17,7 +17,12 @@
 
 package misq.p2p.guard;
 
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+
 import java.io.Serializable;
 
+@EqualsAndHashCode
+@Getter
 public class AccessToken implements Serializable {
 }

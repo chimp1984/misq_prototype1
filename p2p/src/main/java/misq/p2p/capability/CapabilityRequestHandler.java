@@ -74,7 +74,7 @@ public class CapabilityRequestHandler implements MessageListener, Disposable {
                 connection.close();
                 future.completeExceptionally(new Exception("Invalid HandshakeResponse"));
             }
-            if (!capability.getAddress().equals(peersAddress)) {
+            if (!peersAddress.equals(capability.getAddress())) {
                 log.warn("Responded address {} does not match peersAddress {}",
                         capability.getAddress(), peersAddress);
 

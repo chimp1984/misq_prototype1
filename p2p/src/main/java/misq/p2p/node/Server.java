@@ -76,8 +76,7 @@ public class Server {
         ThreadingUtils.shutdownAndAwaitTermination(executorService);
         try {
             serverSocket.close();
-        } catch (IOException e) {
-            e.printStackTrace();
+        } catch (IOException ignore) {
         }
     }
 }

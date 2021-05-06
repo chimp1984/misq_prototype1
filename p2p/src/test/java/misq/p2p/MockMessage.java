@@ -19,17 +19,21 @@ package misq.p2p;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import misq.p2p.node.Message;
 
-import java.util.Set;
-
-@Getter
 @EqualsAndHashCode
-public class P2pNetworkConfig {
-    private final Set<NetworkConfig> networkConfigs;
+@Getter
+public class MockMessage implements Message {
+    private final String msg;
 
-    public P2pNetworkConfig(Set<NetworkConfig> networkConfigs) {
-        this.networkConfigs = networkConfigs;
+    public MockMessage(String msg) {
+        this.msg = msg;
     }
 
-
+    @Override
+    public String toString() {
+        return "MockMessage{" +
+                "\n     msg='" + msg + '\'' +
+                "\n}";
+    }
 }

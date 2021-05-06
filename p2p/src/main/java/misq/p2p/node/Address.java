@@ -17,6 +17,7 @@
 
 package misq.p2p.node;
 
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import misq.common.util.NetworkUtils;
 import misq.p2p.NetworkType;
@@ -24,6 +25,7 @@ import misq.p2p.NetworkType;
 import java.io.Serializable;
 import java.util.StringTokenizer;
 
+@EqualsAndHashCode
 @Getter
 public class Address implements Serializable {
     public static Address localHost(int port) {

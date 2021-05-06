@@ -29,4 +29,11 @@ public class ConfidentialMessage implements Message {
     public ConfidentialMessage(Message message) {
         this.message = message;
     }
+
+    @Override
+    public String toString() {
+        return "ConfidentialMessage{" +
+                "\n     message=" + message +
+                "\n}";
+    }
 }

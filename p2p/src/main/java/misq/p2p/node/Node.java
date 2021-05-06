@@ -24,6 +24,7 @@ import misq.p2p.proxy.ServerInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.EOFException;
 import java.io.IOException;
 import java.net.Socket;
 import java.util.Collection;
@@ -223,8 +224,10 @@ public class Node implements MessageListener {
     private void onClientSocket(Socket socket) {
         try {
             InboundConnection connection = new InboundConnection(socket, exception -> {
-                exception.printStackTrace();
-                log.error(exception.toString());
+                if (!(exception instanceof EOFException)) {
+                    exception.printStackTrace();
+                    log.error(exception.toString());
+                }
             });
             inboundConnections.add(connection);
             log.info("New inbound connection");

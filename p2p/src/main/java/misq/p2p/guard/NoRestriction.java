@@ -33,8 +33,7 @@ public class NoRestriction implements PermissionControl {
 
     @Override
     public CompletableFuture<AccessToken> getPermit(Message message) {
-        return CompletableFuture.completedFuture(new AccessToken() {
-        });
+        return CompletableFuture.completedFuture(new AccessToken());
     }
 
     @Override

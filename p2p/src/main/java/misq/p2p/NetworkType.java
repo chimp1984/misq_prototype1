@@ -17,7 +17,9 @@
 
 package misq.p2p;
 
-public enum NetworkType {
+import java.io.Serializable;
+
+public enum NetworkType implements Serializable {
     TOR,
     I2P,
     CLEAR,

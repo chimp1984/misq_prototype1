@@ -32,9 +32,4 @@ public class OutboundConnection extends Connection {
 
         this.address = address;
     }
-
-    @Override
-    protected String getId() {
-        return address.toString() + " / " + uid;
-    }
 }

@@ -80,8 +80,7 @@ public class Guard implements MessageListener {
 
     public CompletableFuture<Connection> send(Message message, Connection connection) {
         return permissionControl.getPermit(message)
-                .thenCompose(permit ->
-                        capabilityExchange.send(new GuardedMessage(message, permit), connection));
+                .thenCompose(permit -> capabilityExchange.send(new GuardedMessage(message, permit), connection));
     }
 
     public void addMessageListener(MessageListener messageListener) {
