@@ -18,27 +18,32 @@
 package misq.p2p.confidential;
 
 import misq.common.util.CollectionUtil;
+import misq.p2p.NetworkType;
 import misq.p2p.guard.Guard;
-import misq.p2p.node.*;
-import net.i2p.util.ConcurrentHashSet;
+import misq.p2p.node.Address;
+import misq.p2p.node.Connection;
+import misq.p2p.node.Message;
+import misq.p2p.node.MessageListener;
+import misq.p2p.peers.PeerGroup;
 
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
-public class ConfidentialMessageService implements MessageListener, ConnectionListener {
+public class ConfidentialMessageService implements MessageListener {
     private final Guard guard;
+    private final PeerGroup peerGroup;
     private final Set<MessageListener> messageListeners = new CopyOnWriteArraySet<>();
-    private final Set<Connection> connections = new ConcurrentHashSet<>();
 
-    public ConfidentialMessageService(Guard guard) {
+    public ConfidentialMessageService(Guard guard, PeerGroup peerGroup) {
         this.guard = guard;
+        this.peerGroup = peerGroup;
 
         guard.addMessageListener(this);
-        guard.addConnectionListener(this);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -62,25 +67,6 @@ public class ConfidentialMessageService implements MessageListener, ConnectionLi
         }
     }
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-    // ConnectionListener
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-    @Override
-    public void onInboundConnection(InboundConnection connection) {
-    }
-
-    @Override
-    public void onOutboundConnection(OutboundConnection connection, Address peerAddress) {
-        connections.add(connection);
-    }
-
-    @Override
-    public void onDisconnect(Connection connection) {
-        connections.remove(connection);
-    }
-
     public CompletableFuture<Connection> send(Message message, Address peerAddress) {
         return guard.send(seal(message), peerAddress);
     }
@@ -88,8 +74,8 @@ public class ConfidentialMessageService implements MessageListener, ConnectionLi
     public CompletableFuture<Connection> relay(Message message, Address peerAddress) {
         Optional<Address> myAddress = guard.getMyAddress();
         checkArgument(myAddress.isPresent());
-        Set<OutboundConnection> connections = guard.getConnectionsWithSupportedNetwork(peerAddress.getNetworkType());
-        OutboundConnection outboundConnection = CollectionUtil.getRandomElement(connections);
+        Set<Connection> connections = getConnectionsWithSupportedNetwork(peerAddress.getNetworkType());
+        Connection outboundConnection = CollectionUtil.getRandomElement(connections);
         if (outboundConnection != null) {
             //todo we need 2 diff. pubkeys for encryption here
             RelayMessage relayMessage = new RelayMessage(seal(message), peerAddress);
@@ -98,6 +84,10 @@ public class ConfidentialMessageService implements MessageListener, ConnectionLi
         return CompletableFuture.failedFuture(new Exception("No connection supporting that network type found."));
     }
 
+    public void shutdown() {
+        guard.removeMessageListener(this);
+        messageListeners.clear();
+    }
 
     public CompletableFuture<Connection> send(Message message, Connection connection) {
         return guard.send(seal(message), connection);
@@ -124,9 +114,10 @@ public class ConfidentialMessageService implements MessageListener, ConnectionLi
         return new ConfidentialMessage(message);
     }
 
-    public void shutdown() {
-        guard.removeMessageListener(this);
-        messageListeners.clear();
+    private Set<Connection> getConnectionsWithSupportedNetwork(NetworkType networkType) {
+        return peerGroup.getConnectedPeers().stream()
+                .filter(peer -> peer.getCapability().getSupportedNetworkTypes().contains(networkType))
+                .flatMap(peer -> guard.findConnection(peer.getCapability().getAddress()).stream())
+                .collect(Collectors.toSet());
     }
-
 }

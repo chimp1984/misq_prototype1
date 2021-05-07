@@ -120,4 +120,12 @@ public class BaseTest {
         boolean received = receivedLatch.await(getTimeout(), TimeUnit.SECONDS);
         assertTrue(received);
     }
+
+    public void testRequestAddData(NetworkType networkType) throws InterruptedException {
+        String msg = "data1";
+
+        alice.requestAddData(new MockMessage(msg), gossipResult -> {
+
+        });
+    }
 }

@@ -20,6 +20,7 @@ package misq.p2p.peers;
 import misq.p2p.guard.Guard;
 import misq.p2p.node.*;
 
+import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -59,17 +60,17 @@ public class PeerGroup implements ConnectionListener {
         return connectedPeers.keySet();
     }
 
+    public Collection<Peer> getConnectedPeers() {
+        return connectedPeers.values();
+    }
+
     public void shutdown() {
 
     }
 
     private void addPeer(Connection connection) {
-        guard.getPeerAddress(connection).ifPresent(this::addPeer);
+        Peer peer = new Peer(guard.getCapability(connection.getUid()));
+        connectedPeers.put(peer.getCapability().getAddress(), peer);
     }
-
-    private void addPeer(Address peerAddress) {
-        connectedPeers.put(peerAddress, new Peer(peerAddress));
-    }
-
 
 }

@@ -44,9 +44,9 @@ public class GossipRouter implements MessageListener {
     private final PeerGroup peerGroup;
     private final Set<MessageListener> messageListeners = new CopyOnWriteArraySet<>();
 
-    public GossipRouter(Guard guard) {
+    public GossipRouter(Guard guard, PeerGroup peerGroup) {
         this.guard = guard;
-        peerGroup = new PeerGroup(guard);
+        this.peerGroup = peerGroup;
 
         guard.addMessageListener(this);
     }

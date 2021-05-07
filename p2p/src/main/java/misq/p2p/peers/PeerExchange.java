@@ -18,9 +18,24 @@
 package misq.p2p.peers;
 
 import misq.p2p.guard.Guard;
+import misq.p2p.node.Address;
+
+import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 
 public class PeerExchange {
 
-    public PeerExchange(Guard guard) {
+    private final Guard guard;
+    private final Set<Address> seedNodes;
+
+    public PeerExchange(Guard guard, Set<Address> seedNodes) {
+        this.guard = guard;
+        this.seedNodes = seedNodes;
+    }
+
+    public CompletableFuture<Boolean> bootstrap() {
+        CompletableFuture<Boolean> future = new CompletableFuture<>();
+
+        return future;
     }
 }

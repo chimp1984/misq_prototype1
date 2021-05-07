@@ -72,9 +72,15 @@ public class ClearNetTest extends BaseTest {
         super.testBootstrap(2);
     }
 
-    @Test
+    //@Test
     public void testConfidentialSend() throws InterruptedException {
         super.testBootstrap(2);
         super.testConfidentialSend(NetworkType.CLEAR);
+    }
+
+    @Test
+    public void testConfidentialSends() throws InterruptedException {
+        super.testBootstrap(2);
+        super.testRequestAddData(NetworkType.CLEAR);
     }
 }

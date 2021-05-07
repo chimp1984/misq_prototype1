@@ -50,14 +50,14 @@ import static com.google.common.base.Preconditions.checkArgument;
 public class CapabilityExchange implements ConnectionListener, MessageListener {
     private static final Logger log = LoggerFactory.getLogger(CapabilityExchange.class);
 
+    private final Node node;
+    private final Set<NetworkType> mySupportedNetworks;
     private final Map<String, CapabilityResponseHandler> responseHandlerMap = new ConcurrentHashMap<>();
     private final Map<String, CapabilityRequestHandler> requestHandlerMap = new ConcurrentHashMap<>();
     private final Map<String, Capability> capabilityMap = new ConcurrentHashMap<>();
     private final Set<ConnectionListener> connectionListeners = new CopyOnWriteArraySet<>();
     private final Set<MessageListener> messageListeners = new CopyOnWriteArraySet<>();
     private final Map<String, List<Tuple2<Message, CompletableFuture<Connection>>>> sendQueue = new ConcurrentHashMap<>();
-    private final Node node;
-    private final Set<NetworkType> mySupportedNetworks;
 
     public CapabilityExchange(Node node, Set<NetworkType> mySupportedNetworks) {
         this.node = node;
@@ -175,6 +175,28 @@ public class CapabilityExchange implements ConnectionListener, MessageListener {
         }
     }
 
+    public Capability getCapability(String connectionUid) {
+        return capabilityMap.get(connectionUid);
+    }
+
+    public Optional<Connection> findConnection(Address peerAddress) {
+        Optional<OutboundConnection> fromOutbound = node.getOutboundConnections().stream()
+                .filter(c -> peerAddress.equals(c.getAddress()))
+                .findAny();
+        if (fromOutbound.isPresent()) {
+            return Optional.of(fromOutbound.get());
+        }
+
+        Optional<InboundConnection> fromInbound = node.getInboundConnections().stream()
+                .filter(c -> capabilityMap.get(c.getUid()).getAddress().equals(peerAddress))
+                .findAny();
+        if (fromInbound.isPresent()) {
+            return Optional.of(fromInbound.get());
+        }
+
+        return Optional.empty();
+    }
+
     public Set<OutboundConnection> getConnectionsWithSupportedNetwork(NetworkType networkType) {
         Map<String, OutboundConnection> map = node.getOutboundConnections().stream()
                 .collect(Collectors.toMap(Connection::getUid, Function.identity()));
@@ -217,7 +239,6 @@ public class CapabilityExchange implements ConnectionListener, MessageListener {
     public CompletableFuture<Connection> getConnection(Address peerAddress) {
         return node.getConnection(peerAddress);
     }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Private

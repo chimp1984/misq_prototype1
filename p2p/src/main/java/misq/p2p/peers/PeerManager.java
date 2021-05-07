@@ -17,10 +17,32 @@
 
 package misq.p2p.peers;
 
+import lombok.extern.slf4j.Slf4j;
 import misq.p2p.guard.Guard;
+import misq.p2p.node.Address;
 
+import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+
+@Slf4j
 public class PeerManager {
 
-    public PeerManager(Guard guard) {
+    private final Guard guard;
+    private final Set<Address> seedNodes;
+    private final PeerExchange peerExchange;
+
+    public PeerManager(Guard guard, PeerGroup peerGroup, Set<Address> seedNodes) {
+        this.guard = guard;
+        this.seedNodes = seedNodes;
+
+        peerExchange = new PeerExchange(guard, seedNodes);
+    }
+
+    public CompletableFuture<Boolean> bootstrap() {
+        return peerExchange.bootstrap();
+    }
+
+    public void shutdown() {
+
     }
 }

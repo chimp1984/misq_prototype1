@@ -26,6 +26,8 @@ import misq.p2p.data.inventory.RequestInventoryResult;
 import misq.p2p.data.storage.Storage;
 import misq.p2p.guard.Guard;
 import misq.p2p.node.*;
+import misq.p2p.peers.PeerGroup;
+import misq.p2p.peers.PeerManager;
 import misq.p2p.proxy.ServerInfo;
 import misq.p2p.router.gossip.GossipResult;
 import org.slf4j.Logger;
@@ -47,6 +49,7 @@ public class P2pService {
 
     private final Storage storage;
     private final Map<NetworkType, Node> nodes = new ConcurrentHashMap<>();
+    private final Map<NetworkType, PeerManager> peerManagers = new ConcurrentHashMap<>();
     private final Map<NetworkType, Guard> guards = new ConcurrentHashMap<>();
     private final Map<NetworkType, ConfidentialMessageService> confidentialMessageServices = new ConcurrentHashMap<>();
     private final Map<NetworkType, DataService> dataServices = new ConcurrentHashMap<>();
@@ -64,10 +67,15 @@ public class P2pService {
             Guard guard = new Guard(capabilityExchange);
             guards.put(networkType, guard);
 
-            ConfidentialMessageService confidentialMessageService = new ConfidentialMessageService(guard);
+            PeerGroup peerGroup = new PeerGroup(guard);
+
+            PeerManager peerManager = new PeerManager(guard, peerGroup, networkConfig.getSeedNodes());
+            peerManagers.put(networkType, peerManager);
+
+            ConfidentialMessageService confidentialMessageService = new ConfidentialMessageService(guard, peerGroup);
             confidentialMessageServices.put(networkType, confidentialMessageService);
 
-            DataService dataService = new DataService(guard, storage);
+            DataService dataService = new DataService(guard, peerGroup, storage);
             dataServices.put(networkType, dataService);
         });
     }
@@ -78,11 +86,24 @@ public class P2pService {
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     public void bootstrap(Consumer<ServerInfo> resultHandler) {
-        guards.values().forEach(guardedNode -> {
-            guardedNode.bootstrap()
+        guards.values().forEach(guard -> {
+            guard.bootstrap()
                     .whenComplete((serverInfo, throwable) -> {
                         if (serverInfo != null) {
                             resultHandler.accept(serverInfo);
+                        } else {
+                            log.error(throwable.toString());
+                        }
+                    });
+        });
+    }
+
+    public void bootstrapa(Consumer<Boolean> resultHandler) {
+        peerManagers.values().forEach(peerManager -> {
+            peerManager.bootstrap()
+                    .whenComplete((success, throwable) -> {
+                        if (success) {
+                            resultHandler.accept(success);
                         } else {
                             log.error(throwable.toString());
                         }
@@ -175,6 +196,7 @@ public class P2pService {
     public void shutdown() {
         confidentialMessageServices.values().forEach(ConfidentialMessageService::shutdown);
         dataServices.values().forEach(DataService::shutdown);
+        peerManagers.values().forEach(PeerManager::shutdown);
         guards.values().forEach(Guard::shutdown);
         storage.shutdown();
     }

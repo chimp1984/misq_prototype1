@@ -19,6 +19,7 @@ package misq.p2p.guard;
 
 
 import misq.p2p.NetworkType;
+import misq.p2p.capability.Capability;
 import misq.p2p.capability.CapabilityExchange;
 import misq.p2p.node.*;
 import misq.p2p.proxy.ServerInfo;
@@ -127,7 +128,16 @@ public class Guard implements MessageListener {
         return capabilityExchange.getConnection(peerAddress);
     }
 
+    public Optional<Connection> findConnection(Address peerAddress) {
+        return capabilityExchange.findConnection(peerAddress);
+    }
+
     public Optional<Address> getPeerAddress(Connection connection) {
         return capabilityExchange.getPeerAddress(connection);
     }
+
+    public Capability getCapability(String connectionUid) {
+        return capabilityExchange.getCapability(connectionUid);
+    }
+
 }

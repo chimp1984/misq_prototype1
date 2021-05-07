@@ -22,6 +22,7 @@ import misq.p2p.node.Address;
 import misq.p2p.node.Connection;
 import misq.p2p.node.Message;
 import misq.p2p.node.MessageListener;
+import misq.p2p.peers.PeerGroup;
 import misq.p2p.router.gossip.GossipResult;
 import misq.p2p.router.gossip.GossipRouter;
 
@@ -39,8 +40,8 @@ public class Router implements MessageListener {
     private final GossipRouter gossipRouter;
     private final Set<MessageListener> messageListeners = new CopyOnWriteArraySet<>();
 
-    public Router(Guard guard) {
-        gossipRouter = new GossipRouter(guard);
+    public Router(Guard guard, PeerGroup peerGroup) {
+        gossipRouter = new GossipRouter(guard, peerGroup);
         gossipRouter.addMessageListener(this);
     }
 

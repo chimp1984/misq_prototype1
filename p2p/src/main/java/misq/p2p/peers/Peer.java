@@ -17,10 +17,15 @@
 
 package misq.p2p.peers;
 
-import misq.p2p.node.Address;
+import lombok.Getter;
+import misq.p2p.capability.Capability;
 
+@Getter
 public class Peer {
-    public Peer(Address peerAddress) {
 
+    private final Capability capability;
+
+    public Peer(Capability capability) {
+        this.capability = capability;
     }
 }

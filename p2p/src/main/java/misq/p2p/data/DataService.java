@@ -26,6 +26,7 @@ import misq.p2p.data.storage.MapKey;
 import misq.p2p.data.storage.Storage;
 import misq.p2p.guard.Guard;
 import misq.p2p.node.*;
+import misq.p2p.peers.PeerGroup;
 import misq.p2p.router.Router;
 import misq.p2p.router.gossip.GossipResult;
 
@@ -50,11 +51,11 @@ public class DataService implements MessageListener, ConnectionListener {
     private final Map<String, InventoryResponseHandler> responseHandlerMap = new ConcurrentHashMap<>();
     private final Map<String, InventoryRequestHandler> requestHandlerMap = new ConcurrentHashMap<>();
 
-    public DataService(Guard guard, Storage storage) {
+    public DataService(Guard guard, PeerGroup peerGroup, Storage storage) {
         this.guard = guard;
         this.storage = storage;
 
-        router = new Router(guard);
+        router = new Router(guard, peerGroup);
 
         router.addMessageListener(this);
         guard.addConnectionListener(this);
