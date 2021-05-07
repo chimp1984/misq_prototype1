@@ -71,6 +71,7 @@ configure(subprojects) {
 configure([project(':common'),
            project(':p2p'),
            project(':listing'),
+           project(':contract'),
            project(':daemon'),
            project(':cli'),
            project(':jfx'),
@@ -208,6 +209,25 @@ configure(project(':listing')) {
     }
 }
 
+configure(project(':contract')) {
+    dependencies {
+        implementation project(':common')
+        implementation project(':p2p')
+
+        implementation "org.jetbrains:annotations:$jetbrainsAnnotationsVersion"
+        implementation "com.google.code.findbugs:jsr305:$findbugsVersion"
+
+        compileOnly "org.projectlombok:lombok:$lombokVersion"
+        annotationProcessor "org.projectlombok:lombok:$lombokVersion"
+        testCompileOnly "org.projectlombok:lombok:$lombokVersion"
+        testAnnotationProcessor "org.projectlombok:lombok:$lombokVersion"
+
+        implementation "org.slf4j:slf4j-api:$slf4jVersion"
+        implementation "ch.qos.logback:logback-core:$logbackVersion"
+        implementation "ch.qos.logback:logback-classic:$logbackVersion"
+    }
+}
+
 configure(project(':daemon')) {
     mainClassName = 'misq.daemon.DaemonMain'
 
@@ -262,7 +282,7 @@ configure(project(':jfx')) {
         "Implementation-Title": project.name,
         "Implementation-Version": version)
 
-   // mainClassName = 'misq.jfx.JfxMain'
+    mainClassName = 'misq.jfx.JfxMain'
 
     tasks.withType(AbstractArchiveTask) {
         preserveFileTimestamps = false
