@@ -21,6 +21,7 @@ import com.google.common.util.concurrent.MoreExecutors;
 import com.runjva.sourceforge.jsocks.protocol.Authentication;
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 import com.runjva.sourceforge.jsocks.protocol.SocksSocket;
+import misq.common.util.ThreadingUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,6 +52,8 @@ public class Torify {
     private final Bootstrap bootstrap;
 
     private volatile boolean shutdownRequested;
+    private final Object shutdownLock = new Object();
+
     @Nullable
     private ExecutorService startupExecutor;
     private int proxyPort = -1;
@@ -66,7 +69,13 @@ public class Torify {
     }
 
     public void shutdown() {
-        shutdownRequested = true;
+        if (shutdownRequested) {
+            return;
+        }
+
+        synchronized (shutdownLock) {
+            shutdownRequested = true;
+        }
         if (startupExecutor != null) {
             MoreExecutors.shutdownAndAwaitTermination(startupExecutor, 100, TimeUnit.MILLISECONDS);
             startupExecutor = null;
@@ -178,7 +187,7 @@ public class Torify {
     }
 
     private ExecutorService getStartupExecutor() {
-        startupExecutor = Utils.getSingleThreadExecutor("Torify.startAsync");
+        startupExecutor = ThreadingUtils.getSingleThreadExecutor("Torify.startAsync");
         return startupExecutor;
     }
 }

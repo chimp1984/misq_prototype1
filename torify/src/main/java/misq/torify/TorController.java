@@ -17,6 +17,7 @@
 
 package misq.torify;
 
+import misq.common.util.FileUtils;
 import net.freehaven.tor.control.TorControlConnection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,7 +47,7 @@ public class TorController {
     void start(int controlPort) throws IOException {
         controlSocket = new Socket("127.0.0.1", controlPort);
         torControlConnection = new TorControlConnection(controlSocket);
-        torControlConnection.authenticate(Utils.asBytes(cookieFile));
+        torControlConnection.authenticate(FileUtils.asBytes(cookieFile));
         torControlConnection.setEvents(Constants.EVENTS);
         torControlConnection.takeOwnership();
         torControlConnection.resetConf(Constants.OWNER);

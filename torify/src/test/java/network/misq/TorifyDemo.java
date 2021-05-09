@@ -18,7 +18,11 @@
 package network.misq;
 
 import com.runjva.sourceforge.jsocks.protocol.SocksSocket;
-import misq.torify.*;
+import misq.common.util.OsUtils;
+import misq.torify.OnionAddress;
+import misq.torify.TorController;
+import misq.torify.TorServerSocket;
+import misq.torify.Torify;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,7 +41,7 @@ public class TorifyDemo {
     private static final Logger log = LoggerFactory.getLogger(TorifyDemo.class);
 
     public static void main(String[] args) {
-        String torDirPath = Utils.getUserDataDir() + "/TorifyDemo";
+        String torDirPath = OsUtils.getUserDataDir() + "/TorifyDemo";
         //  useBlockingAPI(torDirPath);
         useNonBlockingAPI(torDirPath);
     }

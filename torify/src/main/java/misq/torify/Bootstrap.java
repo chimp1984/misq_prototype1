@@ -17,6 +17,7 @@
 
 package misq.torify;
 
+import misq.common.util.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -59,6 +60,7 @@ class Bootstrap {
 
     int start() throws IOException, InterruptedException {
         maybeCleanupCookieFile();
+
         if (!isUpToDate()) {
             installFiles();
         }
@@ -99,26 +101,26 @@ class Bootstrap {
     }
 
     private boolean isUpToDate() throws IOException {
-        return versionFile.exists() && Torify.TOR_SERVICE_VERSION.equals(Utils.readFromFile(versionFile));
+        return versionFile.exists() && Torify.TOR_SERVICE_VERSION.equals(FileUtils.readFromFile(versionFile));
     }
 
     private void installFiles() throws IOException {
         try {
-            Utils.makeDirs(torDir);
-            Utils.makeDirs(dotTorDir);
+            FileUtils.makeDirs(torDir);
+            FileUtils.makeDirs(dotTorDir);
 
-            Utils.makeFile(versionFile);
+            FileUtils.makeFile(versionFile);
 
-            Utils.resourceToFile(geoIPFile);
-            Utils.resourceToFile(geoIPv6File);
+            FileUtils.resourceToFile(geoIPFile);
+            FileUtils.resourceToFile(geoIPv6File);
 
             installTorrcFile();
 
-            Utils.extractBinary(torDirPath, osType);
+            TorifyUtils.extractBinary(torDirPath, osType);
             log.info("Tor files installed to {}", torDirPath);
             // Only if we have successfully extracted all files we write our version file which is used to
             // check if we need to call installFiles.
-            Utils.writeToFile(Torify.TOR_SERVICE_VERSION, versionFile);
+            FileUtils.writeToFile(Torify.TOR_SERVICE_VERSION, versionFile);
         } catch (Throwable e) {
             deleteVersionFile();
             throw e;
@@ -126,7 +128,7 @@ class Bootstrap {
     }
 
     private void installTorrcFile() throws IOException {
-        Utils.resourceToFile(torrcFile);
+        FileUtils.resourceToFile(torrcFile);
         extendTorrcFile();
     }
 
@@ -137,9 +139,9 @@ class Bootstrap {
 
             // Defaults are from resources
             printWriter.println("");
-            Utils.appendFromResource(printWriter, "/" + Constants.TORRC_DEFAULTS);
+            FileUtils.appendFromResource(printWriter, "/" + Constants.TORRC_DEFAULTS);
             printWriter.println("");
-            Utils.appendFromResource(printWriter, osType.getTorrcNative());
+            FileUtils.appendFromResource(printWriter, osType.getTorrcNative());
 
             // Update with our newly created files
             printWriter.println("");
@@ -174,7 +176,7 @@ class Bootstrap {
         String processName = ManagementFactory.getRuntimeMXBean().getName();
         String ownerPid = processName.split("@")[0];
         log.debug("Owner pid {}", ownerPid);
-        Utils.writeToFile(ownerPid, pidFile);
+        FileUtils.writeToFile(ownerPid, pidFile);
 
         String path = new File(torDir, osType.getBinaryName()).getAbsolutePath();
         String[] command = {path, "-f", torrcFile.getAbsolutePath(), Constants.OWNER, ownerPid};

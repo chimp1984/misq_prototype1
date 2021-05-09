@@ -17,9 +17,10 @@
 
 package network.misq;
 
+import misq.common.util.FileUtils;
+import misq.common.util.OsUtils;
 import misq.torify.Constants;
 import misq.torify.Torify;
-import misq.torify.Utils;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,9 +35,9 @@ public class TestTorStart {
 
     @Test
     public void testShutdownDuringStartup() {
-        String torDirPath = Utils.getUserDataDir() + "/Torify_test";
+        String torDirPath = OsUtils.getUserDataDir() + "/Torify_test";
         File versionFile = new File(torDirPath + "/" + Constants.VERSION);
-        Utils.deleteDirectory(new File(torDirPath));
+        FileUtils.deleteDirectory(new File(torDirPath));
         assertFalse(versionFile.exists());
         Torify torify = new Torify(torDirPath);
         new Thread(() -> {
@@ -68,14 +69,14 @@ public class TestTorStart {
 
     @Test
     public void testRepeatedStartAndShutdown() throws IOException, InterruptedException {
-        String torDirPath = Utils.getUserDataDir() + "/Torify_test";
+        String torDirPath = OsUtils.getUserDataDir() + "/Torify_test";
         File versionFile = new File(torDirPath + "/" + Constants.VERSION);
         startAndShutdown(torDirPath, versionFile);
         startAndShutdown(torDirPath, versionFile);
     }
 
     private void startAndShutdown(String torDirPath, File versionFile) throws IOException, InterruptedException {
-        Utils.deleteDirectory(new File(torDirPath));
+        FileUtils.deleteDirectory(new File(torDirPath));
         assertFalse(versionFile.exists());
         Torify torify = new Torify(torDirPath);
         torify.start();

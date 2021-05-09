@@ -17,6 +17,9 @@
 
 package misq.torify;
 
+import com.google.common.util.concurrent.MoreExecutors;
+import misq.common.util.FileUtils;
+import misq.common.util.ThreadingUtils;
 import net.freehaven.tor.control.TorControlConnection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -70,7 +73,7 @@ public class TorServerSocket extends ServerSocket {
                                                      @Nullable Executor executor) {
         CompletableFuture<OnionAddress> future = new CompletableFuture<>();
         if (executor == null) {
-            executor = Utils.directExecutor();
+            executor = MoreExecutors.directExecutor();
         }
         executor.execute(() -> {
             Thread.currentThread().setName("TorServerSocket.bind");
@@ -91,28 +94,28 @@ public class TorServerSocket extends ServerSocket {
 
         File hostNameFile = new File(hsDir.getCanonicalPath(), HOSTNAME);
         File privKeyFile = new File(hsDir.getCanonicalPath(), PRIV_KEY);
-        Utils.makeDirs(hsDir);
+        FileUtils.makeDirs(hsDir);
 
         TorControlConnection.CreateHiddenServiceResult result;
         if (privKeyFile.exists()) {
-            String privateKey = Utils.readFromFile(privKeyFile);
+            String privateKey = FileUtils.readFromFile(privKeyFile);
             result = torController.createHiddenService(hiddenServicePort, localPort, privateKey);
         } else {
             result = torController.createHiddenService(hiddenServicePort, localPort);
         }
 
         if (!hostNameFile.exists()) {
-            Utils.makeFile(hostNameFile);
+            FileUtils.makeFile(hostNameFile);
         }
         String serviceId = result.serviceID;
 
         onionAddress = new OnionAddress(serviceId + ".onion", hiddenServicePort);
-        Utils.writeToFile(onionAddress.getHost(), hostNameFile);
+        FileUtils.writeToFile(onionAddress.getHost(), hostNameFile);
 
         if (!privKeyFile.exists()) {
-            Utils.makeFile(privKeyFile);
+            FileUtils.makeFile(privKeyFile);
         }
-        Utils.writeToFile(result.privateKey, privKeyFile);
+        FileUtils.writeToFile(result.privateKey, privKeyFile);
 
         log.debug("Start publishing hidden service {}", onionAddress);
         CountDownLatch latch = new CountDownLatch(1);
@@ -144,7 +147,7 @@ public class TorServerSocket extends ServerSocket {
     }
 
     private ExecutorService getExecutor() {
-        executor = Utils.getSingleThreadExecutor("TorServerSocket.bindAsync");
+        executor = ThreadingUtils.getSingleThreadExecutor("TorServerSocket.bindAsync");
         return executor;
     }
 }

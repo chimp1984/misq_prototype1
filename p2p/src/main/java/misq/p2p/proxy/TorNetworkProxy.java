@@ -1,7 +1,7 @@
 package misq.p2p.proxy;
 
 import lombok.extern.slf4j.Slf4j;
-import misq.common.util.FileUtil;
+import misq.common.util.FileUtils;
 import misq.common.util.NetworkUtils;
 import misq.p2p.NetworkConfig;
 import misq.p2p.node.Address;
@@ -88,7 +88,7 @@ public class TorNetworkProxy implements NetworkProxy {
         String fileName = torDirPath + File.separator + "hiddenservice" + File.separator + serverId + File.separator + "hostname";
         if (new File(fileName).exists()) {
             try {
-                String host = FileUtil.readAsString(fileName);
+                String host = FileUtils.readAsString(fileName);
                 return Optional.of(new Address(host, TorNetworkProxy.DEFAULT_PORT));
             } catch (IOException e) {
                 log.error(e.toString(), e);
