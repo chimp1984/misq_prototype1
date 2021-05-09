@@ -21,9 +21,9 @@ import lombok.Getter;
 import misq.p2p.P2pService;
 import misq.p2p.node.MessageListener;
 
-import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Defines the protocol for executing a contract.
@@ -39,7 +39,7 @@ public abstract class Protocol implements MessageListener {
     @Getter
     protected final Contract contract;
     protected final P2pService p2pService;
-    protected final Set<Listener> listeners = new HashSet<>();
+    protected final Set<Listener> listeners = ConcurrentHashMap.newKeySet();
 
     public Protocol(Contract contract, P2pService p2pService) {
         this.contract = contract;

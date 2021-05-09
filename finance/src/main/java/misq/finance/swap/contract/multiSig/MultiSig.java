@@ -17,10 +17,8 @@
 
 package misq.finance.swap.contract.multiSig;
 
-
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import misq.chain.Bitcoind;
 import misq.chain.Chain;
 import misq.chain.Wallet;
 import misq.finance.contract.SecurityProvider;
@@ -29,12 +27,12 @@ import misq.finance.swap.contract.multiSig.maker.TxInputsMessage;
 import misq.finance.swap.contract.multiSig.taker.DepositTxBroadcastMessage;
 import misq.finance.swap.contract.multiSig.taker.PayoutTxBroadcastMessage;
 
-import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
-public class MultiSig implements SecurityProvider, Bitcoind.Listener {
+public class MultiSig implements SecurityProvider, Chain.Listener {
     public interface Listener {
         void onDepositTxConfirmed();
     }
@@ -46,7 +44,7 @@ public class MultiSig implements SecurityProvider, Bitcoind.Listener {
     @Setter
     private String payoutSignature;
 
-    protected final Set<MultiSig.Listener> listeners = new HashSet<>();
+    protected final Set<MultiSig.Listener> listeners = ConcurrentHashMap.newKeySet();
 
     public MultiSig(Wallet wallet, Chain chain) {
         this.wallet = wallet;

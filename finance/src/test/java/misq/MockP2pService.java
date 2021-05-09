@@ -31,16 +31,16 @@ import misq.p2p.router.gossip.GossipResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 public class MockP2pService implements P2pService {
     private static final Logger log = LoggerFactory.getLogger(MockP2pService.class);
-    private Set<MessageListener> messageListeners = new HashSet<>();
+    private Set<MessageListener> messageListeners = ConcurrentHashMap.newKeySet();
 
     public MockP2pService() {
     }

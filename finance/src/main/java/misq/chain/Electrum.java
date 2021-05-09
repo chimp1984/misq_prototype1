@@ -17,14 +17,13 @@
 
 package misq.chain;
 
-
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.HashSet;
 import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * In case our backend is a combined wallet and blockchain data provider we implement both interfaces
@@ -32,7 +31,7 @@ import java.util.concurrent.CompletableFuture;
 @Slf4j
 public class Electrum implements Chain {
 
-    protected final Set<Chain.Listener> listeners = new HashSet<>();
+    protected final Set<Chain.Listener> listeners = ConcurrentHashMap.newKeySet();
 
     public Electrum() {
     }
