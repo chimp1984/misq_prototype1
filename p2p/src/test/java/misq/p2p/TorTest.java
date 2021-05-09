@@ -49,8 +49,7 @@ public class TorTest extends BaseTest {
         NetworkConfig tor = new NetworkConfig(baseDirName,
                 NetworkType.TOR,
                 Node.DEFAULT_SERVER_ID,
-                serverPort,
-                List.of());
+                serverPort);
         return List.of(tor);
     }
 

@@ -83,7 +83,7 @@ public class Node implements MessageListener {
      *
      * @return ServerInfo
      */
-    public CompletableFuture<ServerInfo> bootstrap() {
+    public CompletableFuture<ServerInfo> initializeServer() {
         return initialize()
                 .thenCompose(e -> createServerAndListen(networkConfig.getServerId(), networkConfig.getServerPort()));
     }
@@ -229,8 +229,7 @@ public class Node implements MessageListener {
         try {
             InboundConnection connection = new InboundConnection(socket, exception -> {
                 if (!(exception instanceof EOFException)) {
-                    exception.printStackTrace();
-                    log.error(exception.toString());
+                    log.error(exception.toString(), exception);
                 }
             });
             inboundConnections.add(connection);
@@ -256,8 +255,7 @@ public class Node implements MessageListener {
             connection.addMessageListener(this);
             future.complete(connection);
         } catch (IOException exception) {
-            exception.printStackTrace();
-            log.error(exception.toString());
+            log.error(exception.toString(), exception);
             future.completeExceptionally(exception);
         }
         return future;

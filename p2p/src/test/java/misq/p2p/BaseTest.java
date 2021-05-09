@@ -29,8 +29,7 @@ import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 @Slf4j
 public class BaseTest {
@@ -40,8 +39,8 @@ public class BaseTest {
         Carol
     }
 
-    protected P2pService alice;
-    protected P2pService bob;
+    protected P2pServiceImpl alice;
+    protected P2pServiceImpl bob;
 
     protected int getTimeout() {
         return 10;
@@ -66,15 +65,14 @@ public class BaseTest {
         NetworkConfig clearNet = new NetworkConfig(baseDirName,
                 NetworkType.CLEAR,
                 Node.DEFAULT_SERVER_ID,
-                serverPort,
-                List.of(Address.localHost(1000), Address.localHost(2000)));
+                serverPort);
         return List.of(clearNet);
     }
 
     @Before
     public void setup() {
-        alice = new P2pService(getNetworkConfig(Role.Alice));
-        bob = new P2pService(getNetworkConfig(Role.Bob));
+        alice = new P2pServiceImpl(getNetworkConfig(Role.Alice));
+        bob = new P2pServiceImpl(getNetworkConfig(Role.Bob));
     }
 
     @After
@@ -85,10 +83,10 @@ public class BaseTest {
 
     public void testBootstrap(int serversReadyLatchCount) throws InterruptedException {
         CountDownLatch serversReadyLatch = new CountDownLatch(serversReadyLatchCount);
-        alice.bootstrap(serverInfo -> {
+        alice.initializeServer((serverInfo, throwable) -> {
             serversReadyLatch.countDown();
         });
-        bob.bootstrap(serverInfo -> {
+        bob.initializeServer((serverInfo, throwable) -> {
             serversReadyLatch.countDown();
         });
 
@@ -109,10 +107,13 @@ public class BaseTest {
         Optional<Address> address = bob.getAddress(networkType);
         assertTrue(address.isPresent());
         Address peerAddress = address.get();
-        alice.confidentialSend(new MockMessage(msg),
-                peerAddress,
-                connection -> {
-                    sentLatch.countDown();
+        alice.confidentialSend(new MockMessage(msg), peerAddress)
+                .whenComplete((connection, throwable) -> {
+                    if (connection != null) {
+                        sentLatch.countDown();
+                    } else {
+                        fail();
+                    }
                 });
         boolean sent = sentLatch.await(getTimeout(), TimeUnit.SECONDS);
         assertTrue(sent);

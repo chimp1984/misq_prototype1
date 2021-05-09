@@ -19,7 +19,6 @@ package misq.p2p;
 
 import lombok.extern.slf4j.Slf4j;
 import misq.common.util.OsUtils;
-import misq.p2p.node.Address;
 import misq.p2p.node.Node;
 import org.junit.Test;
 
@@ -50,14 +49,12 @@ public class TorAndClearTest extends BaseTest {
         NetworkConfig tor = new NetworkConfig(baseDirName,
                 NetworkType.TOR,
                 Node.DEFAULT_SERVER_ID,
-                serverPort,
-                List.of());
+                serverPort);
 
         NetworkConfig clearNet = new NetworkConfig(baseDirName,
                 NetworkType.CLEAR,
                 Node.DEFAULT_SERVER_ID,
-                serverPort,
-                List.of(Address.localHost(1000), Address.localHost(2000)));
+                serverPort);
         return List.of(clearNet, tor);
     }
 

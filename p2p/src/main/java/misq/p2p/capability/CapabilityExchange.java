@@ -228,8 +228,8 @@ public class CapabilityExchange implements ConnectionListener, MessageListener {
     // Delegates
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public CompletableFuture<ServerInfo> bootstrap() {
-        return node.bootstrap();
+    public CompletableFuture<ServerInfo> initializeServer() {
+        return node.initializeServer();
     }
 
     public Optional<Address> getMyAddress() {
@@ -272,6 +272,7 @@ public class CapabilityExchange implements ConnectionListener, MessageListener {
                 Message message = tuple.first;
                 CompletableFuture<Connection> future = tuple.second;
                 node.send(message, connection)
+                        .exceptionally(e -> null)
                         .whenComplete((connection2, throwable2) -> {
                             if (connection2 != null) {
                                 future.complete(connection2);

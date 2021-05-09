@@ -21,13 +21,20 @@ package misq.p2p;
 import misq.p2p.node.Address;
 
 import java.util.Arrays;
-import java.util.Collection;
+import java.util.List;
 
 public class SeedNodeRepository {
-    public SeedNodeRepository() {
-    }
 
-    public Collection<Address> getNodes() {
-        return Arrays.asList(Address.localHost(1000), Address.localHost(1001));
+    public List<Address> getNodes(NetworkType networkType) {
+        switch (networkType) {
+            case TOR:
+                return Arrays.asList(Address.localHost(1000), Address.localHost(1001));//todo
+            case I2P:
+                return Arrays.asList(Address.localHost(1000), Address.localHost(1001)); //todo
+            default:
+            case CLEAR:
+                return Arrays.asList(Address.localHost(1000), Address.localHost(1001));
+        }
+
     }
 }

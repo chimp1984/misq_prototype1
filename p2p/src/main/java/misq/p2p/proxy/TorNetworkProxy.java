@@ -91,7 +91,7 @@ public class TorNetworkProxy implements NetworkProxy {
                 String host = FileUtil.readAsString(fileName);
                 return Optional.of(new Address(host, TorNetworkProxy.DEFAULT_PORT));
             } catch (IOException e) {
-                e.printStackTrace();
+                log.error(e.toString(), e);
             }
         }
 

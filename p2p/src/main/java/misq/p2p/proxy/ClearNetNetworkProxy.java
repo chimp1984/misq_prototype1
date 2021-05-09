@@ -58,8 +58,7 @@ public class ClearNetNetworkProxy implements NetworkProxy {
         log.info("Create new Socket");
         try {
             return new Socket(address.getHost(), address.getPort());
-        } catch (IOException e) {
-            e.printStackTrace();
+        } catch (IOException ignore) {
             return null;
         }
     }

@@ -41,7 +41,8 @@ public class CapabilityRequestHandler implements MessageListener, Disposable {
     private final long requestNonce = new Random().nextLong();
     private final CompletableFuture<Capability> future = new CompletableFuture<>();
 
-    public CapabilityRequestHandler(Connection connection, Address peersAddress,
+    public CapabilityRequestHandler(Connection connection,
+                                    Address peersAddress,
                                     Address myAddress,
                                     Set<NetworkType> mySupportedNetworkTypes) {
         this.connection = connection;

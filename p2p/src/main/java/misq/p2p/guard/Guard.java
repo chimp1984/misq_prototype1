@@ -104,8 +104,8 @@ public class Guard implements MessageListener {
     // Delegates
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public CompletableFuture<ServerInfo> bootstrap() {
-        return capabilityExchange.bootstrap();
+    public CompletableFuture<ServerInfo> initializeServer() {
+        return capabilityExchange.initializeServer();
     }
 
     public void addConnectionListener(ConnectionListener listener) {

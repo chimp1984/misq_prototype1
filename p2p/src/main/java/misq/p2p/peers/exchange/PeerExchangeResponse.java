@@ -15,30 +15,21 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package misq.p2p.peers;
+package misq.p2p.peers.exchange;
 
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import misq.p2p.capability.Capability;
-import misq.p2p.node.Address;
+import misq.p2p.node.Message;
+import misq.p2p.peers.Peer;
 
-import java.util.Date;
+import java.util.Set;
 
+@EqualsAndHashCode
 @Getter
-public class Peer {
-    private final Capability capability;
+class PeerExchangeResponse implements Message {
+    private final Set<Peer> peers;
 
-    private final long created;
-
-    public Peer(Capability capability) {
-        this.capability = capability;
-        this.created = System.currentTimeMillis();
-    }
-
-    public Date getDate() {
-        return new Date(created);
-    }
-
-    public Address getAddress() {
-        return capability.getAddress();
+    public PeerExchangeResponse(Set<Peer> peers) {
+        this.peers = peers;
     }
 }

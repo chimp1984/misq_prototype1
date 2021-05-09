@@ -115,9 +115,9 @@ public class ConfidentialMessageService implements MessageListener {
     }
 
     private Set<Connection> getConnectionsWithSupportedNetwork(NetworkType networkType) {
-        return peerGroup.getConnectedPeers().stream()
+        return peerGroup.getConnectedPeerByAddress().stream()
                 .filter(peer -> peer.getCapability().getSupportedNetworkTypes().contains(networkType))
-                .flatMap(peer -> guard.findConnection(peer.getCapability().getAddress()).stream())
+                .flatMap(peer -> guard.findConnection(peer.getAddress()).stream())
                 .collect(Collectors.toSet());
     }
 }

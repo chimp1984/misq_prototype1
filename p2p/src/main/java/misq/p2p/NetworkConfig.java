@@ -19,11 +19,7 @@ package misq.p2p;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import misq.p2p.node.Address;
-
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
+import misq.p2p.peers.PeerConfig;
 
 @Getter
 @EqualsAndHashCode
@@ -32,17 +28,28 @@ public class NetworkConfig {
     private final NetworkType networkType;
     private final String serverId;
     private final int serverPort;
-    private final Set<Address> seedNodes = new HashSet<>();
+    private final PeerConfig peerConfig;
+
+    public NetworkConfig(String baseDirName,
+                         NetworkType networkType,
+                         String serverId,
+                         int serverPort) {
+        this(baseDirName,
+                networkType,
+                serverId,
+                serverPort,
+                new PeerConfig(new SeedNodeRepository().getNodes(networkType)));
+    }
 
     public NetworkConfig(String baseDirName,
                          NetworkType networkType,
                          String serverId,
                          int serverPort,
-                         Collection<Address> seedNodes) {
+                         PeerConfig peerConfig) {
         this.baseDirName = baseDirName;
         this.networkType = networkType;
         this.serverId = serverId;
         this.serverPort = serverPort;
-        this.seedNodes.addAll(seedNodes);
+        this.peerConfig = peerConfig;
     }
 }

@@ -17,25 +17,29 @@
 
 package misq.p2p.peers;
 
-import misq.p2p.guard.Guard;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import misq.p2p.node.Address;
 
-import java.util.Set;
-import java.util.concurrent.CompletableFuture;
+import java.util.List;
 
-public class PeerExchange {
+@Getter
+@EqualsAndHashCode
+public class PeerConfig {
+    private final List<Address> seedNodes;
+    private final int numPersistedPeersAtBoostrap;
+    private final int numSeeNodesAtBoostrap;
+    private final int minNumConnectedPeers;
+    private final int maxNumConnectedPeers;
+    private final int minNumReportedPeers;
 
-    private final Guard guard;
-    private final Set<Address> seedNodes;
-
-    public PeerExchange(Guard guard, Set<Address> seedNodes) {
-        this.guard = guard;
+    public PeerConfig(List<Address> seedNodes) {
         this.seedNodes = seedNodes;
-    }
 
-    public CompletableFuture<Boolean> bootstrap() {
-        CompletableFuture<Boolean> future = new CompletableFuture<>();
-
-        return future;
+        numPersistedPeersAtBoostrap = 10;
+        numSeeNodesAtBoostrap = 2;
+        minNumConnectedPeers = 8;
+        maxNumConnectedPeers = 12;
+        minNumReportedPeers = 50;
     }
 }
