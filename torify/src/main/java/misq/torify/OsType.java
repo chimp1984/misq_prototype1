@@ -17,99 +17,73 @@
 
 package misq.torify;
 
-import java.io.IOException;
-import java.util.Scanner;
+import misq.common.util.OsUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import static misq.common.util.FileUtils.FILE_SEP;
+import static misq.torify.Constants.*;
 
 public enum OsType {
     WIN,
-    LNX32,
-    LNX64,
-    MACOS;
+    LINUX_32,
+    LINUX_64,
+    OSX;
 
-    public static OsType detectOs() {
-        String osName = System.getProperty("os.name");
-        if (osName.contains("Windows")) {
+    private static final Logger log = LoggerFactory.getLogger(OsType.class);
+
+    public static OsType getOsType() {
+        if (OsUtils.isWindows()) {
             return WIN;
-        } else if (osName.contains("Mac")) {
-            return MACOS;
-        } else if (osName.contains("Linux")) {
-            return detectLinux();
+        } else if (OsUtils.isOSX()) {
+            return OSX;
+        } else if (OsUtils.isLinux32()) {
+            return LINUX_32;
+        } else if (OsUtils.isLinux64()) {
+            return LINUX_64;
+        } else {
+            throw new RuntimeException("Not supported OS: " + OsUtils.getOSName() + " / " + OsUtils.getOSArchitecture());
         }
-        return null;
-    }
-
-    private static OsType detectLinux() {
-        String[] cmd = new String[]{"uname", "-m"};
-        try {
-            Process unameProcess = Runtime.getRuntime().exec(cmd);
-            try (Scanner scanner = new Scanner(unameProcess.getInputStream())) {
-                String info = null;
-                while (scanner.hasNext()) {
-                    info = scanner.nextLine();
-                }
-
-                int exit = unameProcess.waitFor();
-                if (exit != 0) {
-                    throw new RuntimeException("Uname returned error code " + exit);
-                }
-
-                if (info == null) {
-                    throw new RuntimeException("Could not resolve Linux version");
-                }
-
-                if (info.contains("i.86")) {
-                    return LNX32;
-                } else if (info.contains("x86_64")) {
-                    return LNX64;
-                }
-            } catch (InterruptedException e) {
-                throw new RuntimeException("Could not resolve Linux version due exception. " + e.toString());
-            }
-        } catch (IOException e) {
-            throw new RuntimeException("uname failed. " + e.toString());
-        }
-        return null;
     }
 
     public String getArchiveName() {
-        switch (this) {
-            case WIN:
-                return "tor.exe";//todo
-            case LNX32:
-            case LNX64:
-                return "tor";//todo
-            case MACOS:
-                return "/native/osx/x64/tor.tar.xz";
-            default:
-                throw new RuntimeException("We don't support Tor on this OS");
-        }
+        return FILE_SEP + NATIVE_DIR + FILE_SEP + getOsDir() + FILE_SEP + TOR_ARCHIVE;
     }
 
     public String getTorrcNative() {
-        switch (this) {
-            case WIN:
-                return "tor.exe"; //todo
-            case LNX32:
-            case LNX64:
-                return "tor"; //todo
-            case MACOS:
-                return "/native/osx/" + Constants.TORRC_NATIVE;
-            default:
-                throw new RuntimeException("We don't support Tor on this OS");
-        }
+        return FILE_SEP + getOsDir(false) + FILE_SEP + TORRC_NATIVE;
     }
 
     public String getBinaryName() {
         switch (this) {
             case WIN:
                 return "tor.exe";
-            case LNX32:
-            case LNX64:
+            case LINUX_32:
+            case LINUX_64:
                 return "tor";
-            case MACOS:
+            case OSX:
                 return "tor.real";
             default:
-                throw new RuntimeException("We don't support Tor on this OS");
+                throw new RuntimeException("Not supported OS " + this);
+        }
+    }
+
+    private String getOsDir() {
+        return getOsDir(true);
+    }
+
+    private String getOsDir(boolean distinctArch) {
+        switch (this) {
+            case WIN:
+                return WIN_DIR;
+            case LINUX_32:
+                return distinctArch ? LINUX32_DIR : LINUX_DIR;
+            case LINUX_64:
+                return distinctArch ? LINUX64_DIR : LINUX_DIR;
+            case OSX:
+                return distinctArch ? OSX_DIR_64 : OSX_DIR;
+            default:
+                throw new RuntimeException("Not supported OS " + this);
         }
     }
 }

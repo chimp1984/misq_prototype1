@@ -173,11 +173,6 @@ configure(project(':torify')) {
         implementation "org.jetbrains:annotations:$jetbrainsAnnotationsVersion"
         implementation "com.google.code.findbugs:jsr305:$findbugsVersion"
 
-        compileOnly "org.projectlombok:lombok:$lombokVersion"
-        annotationProcessor "org.projectlombok:lombok:$lombokVersion"
-        testCompileOnly "org.projectlombok:lombok:$lombokVersion"
-        testAnnotationProcessor "org.projectlombok:lombok:$lombokVersion"
-
         implementation "org.slf4j:slf4j-api:$slf4jVersion"
         implementation "ch.qos.logback:logback-core:$logbackVersion"
         implementation "ch.qos.logback:logback-classic:$logbackVersion"

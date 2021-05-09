@@ -27,6 +27,7 @@ import java.util.Scanner;
 
 @Slf4j
 public class FileUtils {
+    public static final String FILE_SEP = File.separator;
 
     public static void write(String fileName, String data) throws IOException {
         write(fileName, data.getBytes(Charsets.UTF_8));
@@ -107,7 +108,7 @@ public class FileUtils {
     }
 
     public static void resourceToFile(File file) throws IOException {
-        InputStream resource = getResourceAsStream("/" + file.getName());
+        InputStream resource = getResourceAsStream(FILE_SEP + file.getName());
         if (file.exists() && !file.delete()) {
             throw new IOException("Could not remove existing file " + file.getName());
         }
@@ -122,8 +123,9 @@ public class FileUtils {
             while ((line = bufferedReader.readLine()) != null) {
                 printWriter.println(line);
             }
-        } catch (IOException e) {
-            e.printStackTrace();
+        } catch (Exception e) {
+            log.error("Error at appendFromResource with pathname {}", pathname);
+            log.error(e.toString(), e);
         }
     }
 

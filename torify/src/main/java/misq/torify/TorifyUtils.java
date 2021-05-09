@@ -65,7 +65,7 @@ public class TorifyUtils {
                 FileOutputStream fileOutputStream = new FileOutputStream(file);
                 tarArchiveInputStream.transferTo(fileOutputStream);
 
-                if (osType == OsType.MACOS) {
+                if (osType == OsType.OSX) {
                     if (!file.setExecutable(true, true)) {
                         throw new IOException("Cannot set permission at file " + file.getAbsolutePath());
                     }

@@ -19,14 +19,23 @@ package misq.torify;
 
 import java.util.List;
 
+import static misq.common.util.FileUtils.FILE_SEP;
+
 public class Constants {
     public final static String LOCALHOST = "127.0.0.1";
 
-    // directories
-    public final static String DOT_TOR = ".tor";
+    // Directories
+    public final static String DOT_TOR_DIR = ".tor";
     public final static String HS_DIR = "hiddenservice";
+    public final static String NATIVE_DIR = "native";
+    public final static String WIN_DIR = "windows";
+    public final static String LINUX_DIR = "linux";
+    public final static String LINUX32_DIR = LINUX_DIR + FILE_SEP + "x86";
+    public final static String LINUX64_DIR = LINUX_DIR + FILE_SEP + "x64";
+    public final static String OSX_DIR = "osx";
+    public final static String OSX_DIR_64 = OSX_DIR + FILE_SEP + "x64";
 
-    // files
+    // Files
     public final static String VERSION = "version";
     public final static String GEO_IP = "geoip";
     public final static String GEO_IPV_6 = "geoip6";
@@ -35,31 +44,22 @@ public class Constants {
     public final static String COOKIE = "control_auth_cookie";
     public final static String HOSTNAME = "hostname";
     public final static String PRIV_KEY = "private_key";
+    public final static String TOR_ARCHIVE = "tor.tar.xz";
 
-    // resources
+    // Torrc keys
     public final static String TORRC_DEFAULTS = "torrc.defaults";
     public final static String TORRC_NATIVE = "torrc.native";
-
-    // torrc keys
     public final static String TORRC_KEY_GEOIP6 = "GeoIPv6File";
     public final static String TORRC_KEY_GEOIP = "GeoIPFile";
     public final static String TORRC_KEY_PID = "PidFile";
     public final static String TORRC_KEY_DATA_DIRECTORY = "DataDirectory";
     public final static String TORRC_KEY_COOKIE = "CookieAuthFile";
 
-    // hs
-    public final static String HIDDEN_SERVICE_NAME = "hiddenservice";
-
-    // control
-    public final static String LOG_OF_CONTROL_PORT = "Control listener listening on port ";
-    // public final static List<String> EVENTS = List.of("CIRC", "WARN", "ERR"); netlayer
-    public final static List<String> EVENTS2 = List.of("CIRC", "WARN", "ERR");
-    public final static List<String> EVENTS1 = List.of("CIRC", "ORCONN", "HS_DESC", "NOTICE", "WARN", "ERR"); // briar
-    public final static List<String> EVENTS = List.of("INFO", "NOTICE", "WARN", "ERR", "CIRC", "ORCONN", "HS_DESC", "HS_DESC_CONTENT");
-
-    public final static String STATUS_BOOTSTRAP_PHASE = "status/bootstrap-phase";
-    public final static String DISABLE_NETWORK = "DisableNetwork";
-    public final static String NET_LISTENERS_SOCKS = "net/listeners/socks";
-    // tor process
-    public final static String OWNER = "__OwningControllerProcess";
+    // Tor control connection
+    public final static String CONTROL_PORT_LOG_SUB_STRING = "Control listener listening on port ";
+    public final static List<String> CONTROL_EVENTS = List.of("INFO", "NOTICE", "WARN", "ERR", "CIRC", "ORCONN", "HS_DESC", "HS_DESC_CONTENT");
+    public final static String CONTROL_STATUS_BOOTSTRAP_PHASE = "status/bootstrap-phase";
+    public final static String CONTROL_DISABLE_NETWORK = "DisableNetwork";
+    public final static String CONTROL_NET_LISTENERS_SOCKS = "net/listeners/socks";
+    public final static String CONTROL_RESET_CONF = "__OwningControllerProcess";
 }

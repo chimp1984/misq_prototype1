@@ -51,7 +51,7 @@ public class TorifyDemo {
             Torify torify = new Torify(torDirPath);
             TorController torController = torify.start();
             TorServerSocket torServerSocket = startServer(torDirPath, torController);
-            OnionAddress onionAddress = torServerSocket.getOnionAddress();
+            OnionAddress onionAddress = torServerSocket.getOnionAddress().get();
             sendViaSocketFactory(torify, onionAddress);
             sendViaProxy(torify, onionAddress);
             sendViaSocket(torify, onionAddress);

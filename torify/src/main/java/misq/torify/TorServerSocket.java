@@ -29,11 +29,13 @@ import java.io.File;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static misq.torify.Constants.*;
 
 public class TorServerSocket extends ServerSocket {
@@ -43,8 +45,7 @@ public class TorServerSocket extends ServerSocket {
     private final String torDirPath;
     private final TorController torController;
 
-    @Nullable
-    private OnionAddress onionAddress;
+    private Optional<OnionAddress> onionAddress = Optional.empty();
     @Nullable
     private ExecutorService executor;
 
@@ -52,6 +53,7 @@ public class TorServerSocket extends ServerSocket {
                            TorController torController) throws IOException {
         this.torDirPath = torDirPath;
         this.torController = torController;
+
         torController.setEventHandler(eventHandler);
     }
 
@@ -64,7 +66,7 @@ public class TorServerSocket extends ServerSocket {
     }
 
     public CompletableFuture<OnionAddress> bindAsync(int hiddenServicePort, int localPort, File hsDir) {
-        return bindAsync(hiddenServicePort, localPort, hsDir, getExecutor());
+        return bindAsync(hiddenServicePort, localPort, hsDir, getAndSetExecutor());
     }
 
     public CompletableFuture<OnionAddress> bindAsync(int hiddenServicePort,
@@ -79,7 +81,8 @@ public class TorServerSocket extends ServerSocket {
             Thread.currentThread().setName("TorServerSocket.bind");
             try {
                 bind(hiddenServicePort, localPort, hsDir);
-                future.complete(onionAddress);
+                checkArgument(onionAddress.isPresent(), "onionAddress must be present");
+                future.complete(onionAddress.get());
             } catch (IOException | InterruptedException e) {
                 future.completeExceptionally(e);
             }
@@ -109,8 +112,9 @@ public class TorServerSocket extends ServerSocket {
         }
         String serviceId = result.serviceID;
 
-        onionAddress = new OnionAddress(serviceId + ".onion", hiddenServicePort);
+        OnionAddress onionAddress = new OnionAddress(serviceId + ".onion", hiddenServicePort);
         FileUtils.writeToFile(onionAddress.getHost(), hostNameFile);
+        this.onionAddress = Optional.of(onionAddress);
 
         if (!privKeyFile.exists()) {
             FileUtils.makeFile(privKeyFile);
@@ -135,18 +139,23 @@ public class TorServerSocket extends ServerSocket {
     public void close() throws IOException {
         super.close();
 
-        if (onionAddress != null) {
+        onionAddress.ifPresent(onionAddress -> {
             eventHandler.removeHiddenServiceReadyListener(onionAddress.getServiceId());
-            torController.destroyHiddenService(onionAddress.getServiceId());
+            try {
+                torController.destroyHiddenService(onionAddress.getServiceId());
+            } catch (IOException ignore) {
+            }
+        });
+        if (executor != null) {
+            ThreadingUtils.shutdownAndAwaitTermination(executor);
         }
     }
 
-    @Nullable
-    public OnionAddress getOnionAddress() {
+    public Optional<OnionAddress> getOnionAddress() {
         return onionAddress;
     }
 
-    private ExecutorService getExecutor() {
+    private ExecutorService getAndSetExecutor() {
         executor = ThreadingUtils.getSingleThreadExecutor("TorServerSocket.bindAsync");
         return executor;
     }

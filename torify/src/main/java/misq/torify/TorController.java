@@ -26,9 +26,12 @@ import javax.annotation.Nullable;
 import java.io.File;
 import java.io.IOException;
 import java.net.Socket;
+import java.util.HashSet;
+import java.util.Set;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
+import static misq.torify.Constants.*;
 
 public class TorController {
     private static final Logger log = LoggerFactory.getLogger(TorController.class);
@@ -39,6 +42,8 @@ public class TorController {
     @Nullable
     private Socket controlSocket;
     private boolean isStarted;
+    private volatile boolean isStopped;
+    private final Object isStoppedLock = new Object();
 
     TorController(File cookieFile) {
         this.cookieFile = cookieFile;
@@ -48,16 +53,21 @@ public class TorController {
         controlSocket = new Socket("127.0.0.1", controlPort);
         torControlConnection = new TorControlConnection(controlSocket);
         torControlConnection.authenticate(FileUtils.asBytes(cookieFile));
-        torControlConnection.setEvents(Constants.EVENTS);
+        torControlConnection.setEvents(CONTROL_EVENTS);
         torControlConnection.takeOwnership();
-        torControlConnection.resetConf(Constants.OWNER);
-        torControlConnection.setConf(Constants.DISABLE_NETWORK, "0");
+        torControlConnection.resetConf(CONTROL_RESET_CONF);
+        torControlConnection.setConf(CONTROL_DISABLE_NETWORK, "0");
 
-        while (true) {
-            String status = torControlConnection.getInfo(Constants.STATUS_BOOTSTRAP_PHASE);
+        Set<String> loggedStatusMessages = new HashSet<>();
+        while (!isStopped && !Thread.interrupted()) {
+            String status = torControlConnection.getInfo(CONTROL_STATUS_BOOTSTRAP_PHASE);
             log.debug("Listen on bootstrap progress: >> {}", status);
-            if (status != null && status.contains("PROGRESS=100")) {
+            if (status != null && !loggedStatusMessages.contains(status)) {
                 log.info("Listen on bootstrap progress: >> {}", status);
+                loggedStatusMessages.add(status);
+            }
+
+            if (status != null && status.contains("PROGRESS=100")) {
                 break;
             } else {
                 try {
@@ -70,14 +80,17 @@ public class TorController {
     }
 
     void shutdown() {
+        synchronized (isStoppedLock) {
+            isStopped = true;
+        }
+
         try {
             if (torControlConnection != null) {
-                torControlConnection.setConf(Constants.DISABLE_NETWORK, "1");
+                torControlConnection.setConf(CONTROL_DISABLE_NETWORK, "1");
                 torControlConnection.shutdownTor("TERM");
             }
         } catch (IOException e) {
-            e.printStackTrace();
-            log.error(e.toString());
+            log.error(e.toString(), e);
         } finally {
             try {
                 if (controlSocket != null) {
@@ -94,8 +107,8 @@ public class TorController {
     }
 
     int getProxyPort() throws IOException {
-        checkArgument(isStarted, "Startup not completed");
-        String socksInfo = checkNotNull(torControlConnection).getInfo(Constants.NET_LISTENERS_SOCKS);
+        assertState();
+        String socksInfo = torControlConnection().getInfo(CONTROL_NET_LISTENERS_SOCKS);
         socksInfo = socksInfo.replace("\"", "");
         String[] tokens = socksInfo.split(":");
         String port = tokens[tokens.length - 1];
@@ -103,25 +116,34 @@ public class TorController {
     }
 
     void setEventHandler(TorEventHandler eventHandler) {
-        checkArgument(isStarted, "Startup not completed");
-        checkNotNull(torControlConnection).setEventHandler(eventHandler);
+        assertState();
+        torControlConnection().setEventHandler(eventHandler);
     }
 
     TorControlConnection.CreateHiddenServiceResult createHiddenService(int hiddenServicePort,
                                                                        int localPort) throws IOException {
-        checkArgument(isStarted, "Startup not completed");
-        return checkNotNull(torControlConnection).createHiddenService(hiddenServicePort, localPort);
+        assertState();
+        return torControlConnection().createHiddenService(hiddenServicePort, localPort);
     }
 
     TorControlConnection.CreateHiddenServiceResult createHiddenService(int hiddenServicePort,
                                                                        int localPort,
                                                                        String privateKey) throws IOException {
-        checkArgument(isStarted, "Startup not completed");
-        return checkNotNull(torControlConnection).createHiddenService(hiddenServicePort, localPort, privateKey);
+        assertState();
+        return torControlConnection().createHiddenService(hiddenServicePort, localPort, privateKey);
     }
 
     void destroyHiddenService(String serviceId) throws IOException {
+        assertState();
+        torControlConnection().destroyHiddenService(serviceId);
+    }
+
+    private void assertState() {
         checkArgument(isStarted, "Startup not completed");
-        checkNotNull(torControlConnection).destroyHiddenService(serviceId);
+        checkArgument(!isStopped, "Shutdown called already");
+    }
+
+    private TorControlConnection torControlConnection() {
+        return checkNotNull(torControlConnection);
     }
 }

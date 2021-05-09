@@ -44,6 +44,19 @@ import java.util.concurrent.TimeUnit;
 import static com.google.common.base.Preconditions.checkArgument;
 import static misq.torify.Constants.LOCALHOST;
 
+/**
+ * Open TODO:
+ * - support external running tor instance (external tor mode in netlayer)
+ * - test use case with overriding existing torrc files
+ * - test bridge and pluggable transports use cases
+ * - test linux, windows
+ * - check open TODOs
+ * - test failure cases at start up (e.g. locked files, cookies remaining,...) specially on windows it seems that
+ * current bisq has sometimes issues, we delete whole tor dir in those cases, but better to figure out when that
+ * can happen.
+ * <p>
+ * Support for Android is not planned as long we do not target Android.
+ */
 public class Torify {
     private static final Logger log = LoggerFactory.getLogger(Torify.class);
     public static final String TOR_SERVICE_VERSION = "0.1.0";
@@ -76,11 +89,14 @@ public class Torify {
         synchronized (shutdownLock) {
             shutdownRequested = true;
         }
+
+        bootstrap.shutdown();
+        torController.shutdown();
+
         if (startupExecutor != null) {
             MoreExecutors.shutdownAndAwaitTermination(startupExecutor, 100, TimeUnit.MILLISECONDS);
             startupExecutor = null;
         }
-        torController.shutdown();
         log.info("Shutdown Tor completed");
     }
 

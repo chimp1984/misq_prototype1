@@ -29,6 +29,8 @@ import java.util.Map;
 import java.util.Scanner;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static misq.torify.Constants.*;
+
 class Bootstrap {
     private static final Logger log = LoggerFactory.getLogger(Bootstrap.class);
 
@@ -44,18 +46,21 @@ class Bootstrap {
     private final File cookieFile;
     private final OsType osType;
 
+    private volatile boolean isStopped;
+    private final Object isStoppedLock = new Object();
+
     Bootstrap(String torDirPath) {
         this.torDirPath = torDirPath;
 
         torDir = new File(torDirPath);
-        dotTorDir = new File(torDirPath, Constants.DOT_TOR);
-        versionFile = new File(torDirPath, Constants.VERSION);
-        pidFile = new File(torDirPath, Constants.PID);
-        geoIPFile = new File(torDirPath, Constants.GEO_IP);
-        geoIPv6File = new File(torDirPath, Constants.GEO_IPV_6);
-        torrcFile = new File(torDirPath, Constants.TORRC);
-        cookieFile = new File(dotTorDir.getAbsoluteFile(), Constants.COOKIE);
-        osType = OsType.detectOs();
+        dotTorDir = new File(torDirPath, DOT_TOR_DIR);
+        versionFile = new File(torDirPath, VERSION);
+        pidFile = new File(torDirPath, PID);
+        geoIPFile = new File(torDirPath, GEO_IP);
+        geoIPv6File = new File(torDirPath, GEO_IPV_6);
+        torrcFile = new File(torDirPath, TORRC);
+        cookieFile = new File(dotTorDir.getAbsoluteFile(), COOKIE);
+        osType = OsType.getOsType();
     }
 
     int start() throws IOException, InterruptedException {
@@ -94,7 +99,7 @@ class Bootstrap {
     ////////////////////////////////////////////////////////////////////////////////////////////////////
 
     private void maybeCleanupCookieFile() throws IOException {
-        File cookieFile = new File(torDirPath, Constants.DOT_TOR + File.separator + Constants.COOKIE);
+        File cookieFile = new File(torDirPath, DOT_TOR_DIR + File.separator + COOKIE);
         if (cookieFile.exists() && !cookieFile.delete()) {
             throw new IOException("Cannot delete old cookie file.");
         }
@@ -139,17 +144,17 @@ class Bootstrap {
 
             // Defaults are from resources
             printWriter.println("");
-            FileUtils.appendFromResource(printWriter, "/" + Constants.TORRC_DEFAULTS);
+            FileUtils.appendFromResource(printWriter, FileUtils.FILE_SEP + TORRC_DEFAULTS);
             printWriter.println("");
             FileUtils.appendFromResource(printWriter, osType.getTorrcNative());
 
             // Update with our newly created files
             printWriter.println("");
-            printWriter.println(Constants.TORRC_KEY_DATA_DIRECTORY + " " + torDir.getCanonicalPath());
-            printWriter.println(Constants.TORRC_KEY_GEOIP + " " + geoIPFile.getCanonicalPath());
-            printWriter.println(Constants.TORRC_KEY_GEOIP6 + " " + geoIPv6File.getCanonicalPath());
-            printWriter.println(Constants.TORRC_KEY_PID + " " + pidFile.getCanonicalPath());
-            printWriter.println(Constants.TORRC_KEY_COOKIE + " " + cookieFile.getCanonicalPath());
+            printWriter.println(TORRC_KEY_DATA_DIRECTORY + " " + torDir.getCanonicalPath());
+            printWriter.println(TORRC_KEY_GEOIP + " " + geoIPFile.getCanonicalPath());
+            printWriter.println(TORRC_KEY_GEOIP6 + " " + geoIPv6File.getCanonicalPath());
+            printWriter.println(TORRC_KEY_PID + " " + pidFile.getCanonicalPath());
+            printWriter.println(TORRC_KEY_COOKIE + " " + cookieFile.getCanonicalPath());
             printWriter.println("");
         }
     }
@@ -179,22 +184,18 @@ class Bootstrap {
         FileUtils.writeToFile(ownerPid, pidFile);
 
         String path = new File(torDir, osType.getBinaryName()).getAbsolutePath();
-        String[] command = {path, "-f", torrcFile.getAbsolutePath(), Constants.OWNER, ownerPid};
+        String[] command = {path, "-f", torrcFile.getAbsolutePath(), CONTROL_RESET_CONF, ownerPid};
         log.debug("command for process builder: {} {} {} {} {}",
-                path, "-f", torrcFile.getAbsolutePath(), Constants.OWNER, ownerPid);
+                path, "-f", torrcFile.getAbsolutePath(), CONTROL_RESET_CONF, ownerPid);
         ProcessBuilder processBuilder = new ProcessBuilder(command);
 
         processBuilder.directory(torDir);
         Map<String, String> environment = processBuilder.environment();
         environment.put("HOME", torDir.getAbsolutePath());
-        switch (osType) {
-            case LNX32:
-            case LNX64:
-                // TODO Taken from netlayer, but not sure if needed. Not used in Briar.
-                // Not recommended to be used here: https://www.hpc.dtu.dk/?page_id=1180
-                environment.put("LD_LIBRARY_PATH", torDir.getAbsolutePath());
-                break;
-            default:
+        if (osType == OsType.LINUX_32 || osType == OsType.LINUX_64) {
+            // TODO Taken from netlayer, but not sure if needed. Not used in Briar.
+            // Not recommended to be used here: https://www.hpc.dtu.dk/?page_id=1180
+            environment.put("LD_LIBRARY_PATH", torDir.getAbsolutePath());
         }
 
         Process process = processBuilder.start();
@@ -210,8 +211,8 @@ class Bootstrap {
                 if (info.hasNextLine()) {
                     String line = info.nextLine();
                     log.debug("Logs from control connection: >> {}", line);
-                    if (line.contains(Constants.LOG_OF_CONTROL_PORT)) {
-                        String[] split = line.split(Constants.LOG_OF_CONTROL_PORT);
+                    if (line.contains(CONTROL_PORT_LOG_SUB_STRING)) {
+                        String[] split = line.split(CONTROL_PORT_LOG_SUB_STRING);
                         String portString = split[1].replace(".", "");
                         controlPort.set(Integer.parseInt(portString));
                         log.info("Control connection port: {}", controlPort);
@@ -226,6 +227,7 @@ class Bootstrap {
     }
 
     private void terminateProcessBuilder(Process torProcess) throws InterruptedException, IOException {
+        // TODO investigate how to handle windows case?
         if (osType != OsType.WIN) {
             int result = torProcess.waitFor();
             if (torProcess.waitFor() != 0) {
@@ -237,11 +239,17 @@ class Bootstrap {
 
     private void waitForCookieInitialized() throws InterruptedException, IOException {
         long start = System.currentTimeMillis();
-        while (cookieFile.length() < 32 && !Thread.currentThread().isInterrupted()) {
+        while (!isStopped && cookieFile.length() < 32 && !Thread.currentThread().isInterrupted()) {
             if (System.currentTimeMillis() - start > 5000) {
                 throw new IOException("Auth cookie not created");
             }
             Thread.sleep(50);
+        }
+    }
+
+    void shutdown() {
+        synchronized (isStoppedLock) {
+            isStopped = true;
         }
     }
 }
