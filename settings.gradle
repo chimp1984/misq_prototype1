@@ -1,7 +1,7 @@
 include 'common'
 include 'p2p'
 include 'listing'
-include 'contract'
+include 'finance'
 include 'daemon'
 include 'cli'
 include 'jfx'

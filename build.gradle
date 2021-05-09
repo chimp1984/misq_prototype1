@@ -71,7 +71,7 @@ configure(subprojects) {
 configure([project(':common'),
            project(':p2p'),
            project(':listing'),
-           project(':contract'),
+           project(':finance'),
            project(':daemon'),
            project(':cli'),
            project(':jfx'),
@@ -209,7 +209,7 @@ configure(project(':listing')) {
     }
 }
 
-configure(project(':contract')) {
+configure(project(':finance')) {
     dependencies {
         implementation project(':common')
         implementation project(':p2p')
