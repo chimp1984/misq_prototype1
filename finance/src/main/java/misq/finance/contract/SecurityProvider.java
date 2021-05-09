@@ -21,4 +21,25 @@ package misq.finance.contract;
  * Provides the security related aspects for the protocol.
  */
 public interface SecurityProvider {
+    Type getType();
+
+    enum Type {
+        /**
+         * For trustless protocols, such as cross-chain swaps like Farcaster, Submarine (on-chain to Lightning) swaps,
+         * same-chain BSQ-BTC swaps, BSQ-backed BTC loans repayable using SIGHASH_ANYONECANPAY, etc.
+         */
+        SMART_CONTRACT,
+        /**
+         * For 2-3 and 2-2 multisig (MAD or arbitrator-backed) and off-chain (Lightning) escrow secured contracts.
+         */
+        ESCROW,
+        /**
+         * For bond (e.g. burnable BSQ) secured contracts.
+         */
+        BOND,
+        /**
+         * For reputation secured contracts.
+         */
+        REPUTATION
+    }
 }

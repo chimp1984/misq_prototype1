@@ -31,6 +31,11 @@ public class BsqBond implements SecurityProvider {
     public BsqBond() {
     }
 
+    @Override
+    public Type getType() {
+        return Type.BOND;
+    }
+
     public CompletableFuture<String> getCommitment(Contract contract) {
         return CompletableFuture.completedFuture("commitment");
     }

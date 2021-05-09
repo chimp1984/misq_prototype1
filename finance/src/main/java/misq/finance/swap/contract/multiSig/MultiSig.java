@@ -54,6 +54,11 @@ public class MultiSig implements SecurityProvider, Chain.Listener {
     }
 
     @Override
+    public Type getType() {
+        return Type.ESCROW;
+    }
+
+    @Override
     public void onTxConfirmed(String tx) {
         if (tx.equals(depositTx)) {
             listeners.forEach(Listener::onDepositTxConfirmed);
@@ -67,7 +72,7 @@ public class MultiSig implements SecurityProvider, Chain.Listener {
 
     public CompletableFuture<String> getTxInputs() {
         return wallet.getUtxos()
-                .thenCompose(utxos -> createPartialDepositTx(utxos));
+                .thenCompose(this::createPartialDepositTx);
     }
 
     private CompletableFuture<String> createPartialDepositTx(String utxos) {
@@ -77,9 +82,9 @@ public class MultiSig implements SecurityProvider, Chain.Listener {
     public CompletableFuture<String> broadcastDepositTx(String txInput) {
         return wallet.getUtxos()
                 .thenCompose(utxos -> createDepositTx(txInput, utxos))
-                .thenCompose(depositTx -> wallet.sign(depositTx))
+                .thenCompose(wallet::sign)
                 .whenComplete((depositTx, t) -> this.depositTx = depositTx)
-                .thenCompose(depositTx -> chain.broadcast(depositTx));
+                .thenCompose(chain::broadcast);
     }
 
     private CompletableFuture<String> createDepositTx(String txInput, String utxos) {
@@ -100,8 +105,8 @@ public class MultiSig implements SecurityProvider, Chain.Listener {
 
     public CompletableFuture<String> broadcastPayoutTx() {
         return createPayoutTx(payoutSignature)
-                .thenCompose(payoutTx -> wallet.sign(payoutTx))
-                .thenCompose(payoutTx -> chain.broadcast(payoutTx));
+                .thenCompose(wallet::sign)
+                .thenCompose(chain::broadcast);
     }
 
     public CompletableFuture<Boolean> isPayoutTxInMemPool(String payoutTx) {
