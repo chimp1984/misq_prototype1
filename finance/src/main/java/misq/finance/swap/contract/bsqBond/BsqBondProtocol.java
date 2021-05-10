@@ -20,19 +20,21 @@ package misq.finance.swap.contract.bsqBond;
 import misq.finance.contract.*;
 import misq.p2p.P2pService;
 import misq.p2p.node.MessageListener;
-/**
- * Mock protocol for simulating a BSQ bond based protocol
- * <p>
- * 1. Maker commits bond
- * 2. Maker sends commitment to Taker
- * 4. After Maker has received Takers commitment she sends her funds
- * 6. After Maker has received Takers funds she has completed.
- */
 
 /**
- * Taker awaits Maker commitment
- * 3. After Taker has received Maker commitment he sends his commitment
- * 5. After Taker has received Maker funds he sends his funds. He has completed now.
+ * Mock protocol for simulating a BSQ bond based protocol.
+ * <ol>
+ *   <li value="1">Maker commits bond.
+ *   <li value="2">Maker sends commitment to Taker.
+ *   <li value="4">After Maker has received Taker's commitment she sends her funds.
+ *   <li value="6">After Maker has received Taker's funds she has completed.
+ * </ol>
+ * <p>
+ * Taker awaits Maker commitment.
+ * <ol>
+ *   <li value="3">After Taker has received Maker's commitment he sends his commitment.
+ *   <li value="5">After Taker has received Maker's funds he sends his funds. He has completed now.
+ * </ol>
  */
 public abstract class BsqBondProtocol extends TwoPartyProtocol implements MessageListener {
 
@@ -41,7 +43,7 @@ public abstract class BsqBondProtocol extends TwoPartyProtocol implements Messag
         COMMITMENT_SENT,
         COMMITMENT_RECEIVED,
         FUNDS_SENT,
-        FUNDS_RECEIVED, // Completed
+        FUNDS_RECEIVED // Completed
     }
 
     protected final AssetTransfer transport;
