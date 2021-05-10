@@ -17,17 +17,64 @@
 
 package misq.finance.contract;
 
-
+import com.google.common.util.concurrent.Uninterruptibles;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CountDownLatch;
 
 @Slf4j
-public class AssetTransfer implements Transfer {
-    public AssetTransfer() {
+public abstract class AssetTransfer implements Transfer {
+    public abstract Type getType();
+
+    public abstract CompletableFuture<Boolean> sendFunds(Contract contract);
+
+    enum Type {
+        AUTOMATIC, MANUAL
     }
 
-    public CompletableFuture<Boolean> sendFunds(Contract contract) {
-        return CompletableFuture.completedFuture(true);
+    public static class Automatic extends AssetTransfer {
+        @Override
+        public Type getType() {
+            return Type.AUTOMATIC;
+        }
+
+        @Override
+        public CompletableFuture<Boolean> sendFunds(Contract contract) {
+            return CompletableFuture.completedFuture(true);
+        }
+    }
+
+    public static class Manual extends AssetTransfer {
+        public interface Listener {
+            void onStartManualPayment();
+        }
+
+        private final CountDownLatch latch = new CountDownLatch(1);
+        private final Set<Listener> listeners = ConcurrentHashMap.newKeySet();
+
+        @Override
+        public Type getType() {
+            return Type.MANUAL;
+        }
+
+        public void onManualPaymentStarted() {
+            latch.countDown();
+        }
+
+        public void addListener(Listener listener) {
+            listeners.add(listener);
+        }
+
+        @Override
+        public CompletableFuture<Boolean> sendFunds(Contract contract) {
+            listeners.forEach(Listener::onStartManualPayment);
+            return CompletableFuture.supplyAsync(() -> {
+                Uninterruptibles.awaitUninterruptibly(latch);
+                return true;
+            });
+        }
     }
 }

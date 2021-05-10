@@ -34,7 +34,7 @@ import java.util.concurrent.CompletableFuture;
 @Slf4j
 public class TakerBsqBondProtocol extends BsqBondProtocol {
     public TakerBsqBondProtocol(TwoPartyContract contract, P2pService p2pService) {
-        super(contract, p2pService, new AssetTransfer(), new BsqBond());
+        super(contract, p2pService, new AssetTransfer.Automatic(), new BsqBond());
     }
 
     @Override
@@ -42,26 +42,18 @@ public class TakerBsqBondProtocol extends BsqBondProtocol {
         if (message instanceof MakerCommitmentMessage) {
             MakerCommitmentMessage bondCommitmentMessage = (MakerCommitmentMessage) message;
             security.verifyBondCommitmentMessage(bondCommitmentMessage)
-                    .whenComplete((success, t) -> {
-                        setState(State.COMMITMENT_RECEIVED);
-                    })
+                    .whenComplete((success, t) -> setState(State.COMMITMENT_RECEIVED))
                     .thenCompose(isValid -> security.getCommitment(contract))
                     .thenCompose(commitment -> p2pService.confidentialSend(new TakerCommitmentMessage(commitment), counterParty.getAddress()))
-                    .whenComplete((success, t) -> {
-                        setState(State.COMMITMENT_SENT);
-                    });
+                    .whenComplete((success, t) -> setState(State.COMMITMENT_SENT));
         }
         if (message instanceof MakerFundsSentMessage) {
             MakerFundsSentMessage fundsSentMessage = (MakerFundsSentMessage) message;
             security.verifyFundsSentMessage(fundsSentMessage)
-                    .whenComplete((success, t) -> {
-                        setState(State.FUNDS_RECEIVED);
-                    })
+                    .whenComplete((success, t) -> setState(State.FUNDS_RECEIVED))
                     .thenCompose(isValid -> transport.sendFunds(contract))
                     .thenCompose(isSent -> p2pService.confidentialSend(new TakerFundsSentMessage(), counterParty.getAddress()))
-                    .whenComplete((success, t) -> {
-                        setState(State.FUNDS_SENT);
-                    });
+                    .whenComplete((success, t) -> setState(State.FUNDS_SENT));
         }
     }
 

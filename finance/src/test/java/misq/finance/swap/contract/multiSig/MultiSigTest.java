@@ -89,11 +89,11 @@ public abstract class MultiSigTest {
         CountDownLatch completedLatch = new CountDownLatch(2);
         makerSwapTradeProtocolExecutor.getProtocol().addListener(state -> {
             if (state instanceof MultiSigProtocol.State) {
-                if (state == MultiSigProtocol.State.DEPOSIT_TX_CONFIRMED) {
+                if (state == MultiSigProtocol.State.START_MANUAL_PAYMENT) {
                     // Simulate user action
-                    new Timer(" Simulate Bob user action").schedule(new TimerTask() {
+                    new Timer("Simulate Bob user action").schedule(new TimerTask() {
                         public void run() {
-                            ((MakerMultiSigProtocol) makerSwapTradeProtocolExecutor.getProtocol()).onFundsSent();
+                            ((MakerMultiSigProtocol) makerSwapTradeProtocolExecutor.getProtocol()).onManualPaymentStarted();
                         }
                     }, 40);
                 } else if (state == MultiSigProtocol.State.PAYOUT_TX_VISIBLE_IN_MEM_POOL) {

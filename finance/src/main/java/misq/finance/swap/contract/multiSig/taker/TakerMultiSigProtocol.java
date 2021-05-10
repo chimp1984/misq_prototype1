@@ -36,7 +36,7 @@ import java.util.concurrent.CompletableFuture;
 public class TakerMultiSigProtocol extends MultiSigProtocol implements MultiSig.Listener {
 
     public TakerMultiSigProtocol(TwoPartyContract contract, P2pService p2pService, SecurityProvider securityProvider) {
-        super(contract, p2pService, new AssetTransfer(), securityProvider);
+        super(contract, p2pService, new AssetTransfer.Automatic(), securityProvider);
     }
 
     @Override
@@ -45,7 +45,7 @@ public class TakerMultiSigProtocol extends MultiSigProtocol implements MultiSig.
             TxInputsMessage txInputsMessage = (TxInputsMessage) message;
             multiSig.verifyTxInputsMessage(txInputsMessage)
                     .whenComplete((txInput, t) -> setState(State.TX_INPUTS_RECEIVED))
-                    .thenCompose(txInput -> multiSig.broadcastDepositTx(txInput))
+                    .thenCompose(multiSig::broadcastDepositTx)
                     .whenComplete((depositTx, t) -> setState(State.DEPOSIT_TX_BROADCAST))
                     .thenCompose(depositTx -> p2pService.confidentialSend(new DepositTxBroadcastMessage(depositTx), counterParty.getAddress()))
                     .whenComplete((connection1, t) -> setState(State.DEPOSIT_TX_BROADCAST_MSG_SENT));
@@ -56,7 +56,6 @@ public class TakerMultiSigProtocol extends MultiSigProtocol implements MultiSig.
                         multiSig.setPayoutSignature(signature);
                         setState(State.FUNDS_SENT_MSG_RECEIVED);
                     });
-
         }
     }
 

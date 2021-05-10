@@ -51,6 +51,8 @@ public abstract class MultiSigProtocol extends TwoPartyProtocol implements Messa
         DEPOSIT_TX_BROADCAST_MSG_SENT,
         DEPOSIT_TX_BROADCAST_MSG_RECEIVED,
         DEPOSIT_TX_CONFIRMED,
+        START_MANUAL_PAYMENT,
+        MANUAL_PAYMENT_STARTED,
         FUNDS_SENT,
         FUNDS_SENT_MSG_SENT,
         FUNDS_SENT_MSG_RECEIVED,
@@ -69,5 +71,22 @@ public abstract class MultiSigProtocol extends TwoPartyProtocol implements Messa
         this.assetTransfer = transfer;
 
         this.multiSig = (MultiSig) securityProvider;
+
+        if (assetTransfer instanceof AssetTransfer.Manual) {
+            ((AssetTransfer.Manual) assetTransfer).addListener(this::onStartManualPayment);
+            addListener(state -> {
+                if (state == State.MANUAL_PAYMENT_STARTED) {
+                    ((AssetTransfer.Manual) assetTransfer).onManualPaymentStarted();
+                }
+            });
+        }
+    }
+
+    private void onStartManualPayment() {
+        setState(State.START_MANUAL_PAYMENT);
+    }
+
+    public void onManualPaymentStarted() {
+        setState(State.MANUAL_PAYMENT_STARTED);
     }
 }

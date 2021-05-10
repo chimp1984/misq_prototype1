@@ -17,7 +17,6 @@
 
 package misq.finance.swap.contract.multiSig.maker;
 
-
 import lombok.extern.slf4j.Slf4j;
 import misq.finance.contract.AssetTransfer;
 import misq.finance.contract.SecurityProvider;
@@ -35,7 +34,7 @@ import java.util.concurrent.CompletableFuture;
 @Slf4j
 public class MakerMultiSigProtocol extends MultiSigProtocol implements MultiSig.Listener {
     public MakerMultiSigProtocol(TwoPartyContract contract, P2pService p2pService, SecurityProvider securityProvider) {
-        super(contract, p2pService, new AssetTransfer(), securityProvider);
+        super(contract, p2pService, new AssetTransfer.Manual(), securityProvider);
     }
 
     @Override
@@ -51,7 +50,7 @@ public class MakerMultiSigProtocol extends MultiSigProtocol implements MultiSig.
             PayoutTxBroadcastMessage payoutTxBroadcastMessage = (PayoutTxBroadcastMessage) message;
             multiSig.verifyPayoutTxBroadcastMessage(payoutTxBroadcastMessage)
                     .whenComplete((payoutTx, t) -> setState(State.PAYOUT_TX_BROADCAST_MSG_RECEIVED))
-                    .thenCompose(payoutTx -> multiSig.isPayoutTxInMemPool(payoutTx))
+                    .thenCompose(multiSig::isPayoutTxInMemPool)
                     .whenComplete((isInMemPool, t) -> setState(State.PAYOUT_TX_VISIBLE_IN_MEM_POOL));
         }
     }
@@ -59,8 +58,8 @@ public class MakerMultiSigProtocol extends MultiSigProtocol implements MultiSig.
     @Override
     public void onDepositTxConfirmed() {
         setState(State.DEPOSIT_TX_CONFIRMED);
-        // Client need to listen on that state change and instruct user to send funds or send
-        // altcoin via altcoin wallet bridge if implemented
+        assetTransfer.sendFunds(contract)
+                .thenCompose(isSent -> onFundsSent());
     }
 
     public CompletableFuture<Boolean> start() {
@@ -73,12 +72,10 @@ public class MakerMultiSigProtocol extends MultiSigProtocol implements MultiSig.
         return CompletableFuture.completedFuture(true);
     }
 
-    // Called by user or by altcoin explorer lookup
-    public void onFundsSent() {
-        assetTransfer.sendFunds(contract)
-                .whenComplete((isValid, t) -> setState(State.FUNDS_SENT))
-                .thenCompose(e -> multiSig.createPartialPayoutTx())
-                .thenCompose(partialPayoutTx -> multiSig.getPayoutTxSignature(partialPayoutTx))
+    private CompletableFuture<Connection> onFundsSent() {
+        setState(State.FUNDS_SENT);
+        return multiSig.createPartialPayoutTx()
+                .thenCompose(multiSig::getPayoutTxSignature)
                 .thenCompose(sig -> p2pService.confidentialSend(new FundsSentMessage(sig), counterParty.getAddress()))
                 .whenComplete((isValid, t) -> setState(State.FUNDS_SENT_MSG_SENT));
     }
