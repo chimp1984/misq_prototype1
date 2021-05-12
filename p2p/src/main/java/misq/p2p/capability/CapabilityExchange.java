@@ -111,9 +111,11 @@ public class CapabilityExchange implements ConnectionListener, MessageListener {
         if (isStopped) {
             return;
         }
-        checkArgument(getMyAddress().isPresent(), "My address need to be already available.");
+        Optional<Address> optionalAddress = getMyAddress();
+        checkArgument(optionalAddress.isPresent(), "My address need to be already available.");
+        Address myAddress = optionalAddress.get();
         CapabilityRequestHandler capabilityRequestHandler = new CapabilityRequestHandler(connection,
-                peerAddress, getMyAddress().get(), mySupportedNetworks);
+                peerAddress, myAddress, mySupportedNetworks);
         requestHandlerMap.put(connection.getUid(), capabilityRequestHandler);
         capabilityRequestHandler.request()
                 .whenComplete((capability, throwable) -> {
@@ -181,7 +183,6 @@ public class CapabilityExchange implements ConnectionListener, MessageListener {
         MapUtils.disposeAndRemoveAll(requestHandlerMap);
         MapUtils.disposeAndRemoveAll(responseHandlerMap);
         capabilityMap.clear();
-        node.shutdown();
     }
 
     public Optional<Address> getPeerAddress(Connection connection) {
@@ -247,8 +248,8 @@ public class CapabilityExchange implements ConnectionListener, MessageListener {
     // Delegates
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public CompletableFuture<GetServerSocketResult> initializeServer() {
-        return node.initializeServer();
+    public CompletableFuture<GetServerSocketResult> initializeServer(String serverId, int serverPort) {
+        return node.initializeServer(serverId, serverPort);
     }
 
     public Optional<Address> getMyAddress() {

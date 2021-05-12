@@ -22,15 +22,13 @@ import misq.common.util.OsUtils;
 import misq.p2p.node.Node;
 import org.junit.Test;
 
-import java.util.List;
-
 @Slf4j
 public class TorTest extends BaseTest {
     protected int getTimeout() {
         return 180;
     }
 
-    protected List<NetworkConfig> getNetworkConfig(Role role) {
+    protected NetworkConfig getNetworkConfig(Role role) {
         int serverPort;
         switch (role) {
             case Alice:
@@ -50,7 +48,7 @@ public class TorTest extends BaseTest {
                 NetworkType.TOR,
                 Node.DEFAULT_SERVER_ID,
                 serverPort);
-        return List.of(tor);
+        return tor;
     }
 
     // @Test
@@ -61,6 +59,6 @@ public class TorTest extends BaseTest {
     @Test
     public void testConfidentialSend() throws InterruptedException {
         super.testInitializeServer(2);
-        super.testConfidentialSend(NetworkType.TOR);
+        super.testConfidentialSend();
     }
 }

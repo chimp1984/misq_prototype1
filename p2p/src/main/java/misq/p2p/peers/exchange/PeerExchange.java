@@ -42,16 +42,16 @@ public class PeerExchange implements ConnectionListener {
     public static final int TIMEOUT = 300;
 
     private final Guard guard;
-    private final PeerExchangeStrategy strategy;
+    private final PeerExchangeStrategy peerExchangeStrategy;
     private final Map<String, PeerExchangeResponseHandler> responseHandlerMap = new ConcurrentHashMap<>();
     private final Map<String, PeerExchangeRequestHandler> requestHandlerMap = new ConcurrentHashMap<>();
     private final Object isStoppedLock = new Object();
     private final PeerExchangeGraph peerExchangeGraph;
     private volatile boolean isStopped;
 
-    public PeerExchange(Guard guard, PeerExchangeStrategy strategy) {
+    public PeerExchange(Guard guard, PeerExchangeStrategy peerExchangeStrategy) {
         this.guard = guard;
-        this.strategy = strategy;
+        this.peerExchangeStrategy = peerExchangeStrategy;
 
         peerExchangeGraph = new PeerExchangeGraph();
         guard.addConnectionListener(this);
@@ -66,12 +66,12 @@ public class PeerExchange implements ConnectionListener {
         // Capability exchange with address has been completed already so expect to know the peers address.
         // We do not add the requesters address to the reported peers.
         guard.getPeerAddress(connection).ifPresent(address -> {
-            Set<Peer> peersForPeerExchange = strategy.getPeersForPeerExchange(address);
+            Set<Peer> peersForPeerExchange = peerExchangeStrategy.getPeersForPeerExchange(address);
             PeerExchangeResponseHandler responseHandler = new PeerExchangeResponseHandler(connection,
                     peersForPeerExchange,
                     peers -> {
                         if (!isStopped) {
-                            strategy.addPeersFromPeerExchange(peers);
+                            peerExchangeStrategy.addPeersFromPeerExchange(peers, guard.getPeerAddress(connection).get());
                             responseHandlerMap.remove(connection.getUid());
                         }
                     });
@@ -100,7 +100,7 @@ public class PeerExchange implements ConnectionListener {
         checkArgument(optionalMyAddress.isPresent(),
                 "We must have already done out capability exchange so the peers address need to be known");
         Address myAddress = optionalMyAddress.get();
-        Set<Address> addressesForBootstrap = strategy.getAddressesForBootstrap();
+        Set<Address> addressesForBootstrap = peerExchangeStrategy.getAddressesForBootstrap();
         log.info("bootstrap {} to {}", optionalMyAddress, addressesForBootstrap);
         List<CompletableFuture<Boolean>> allFutures = addressesForBootstrap.stream()
                 .map(address -> exchangeWithPeer(address)
@@ -135,17 +135,17 @@ public class PeerExchange implements ConnectionListener {
                 .thenCompose(connection -> {
                     PeerExchangeRequestHandler requestHandler = new PeerExchangeRequestHandler(connection);
                     requestHandlerMap.put(connection.getUid(), requestHandler);
-                    return requestHandler.request(strategy.getPeersForPeerExchange(peerAddress));
+                    return requestHandler.request(peerExchangeStrategy.getPeersForPeerExchange(peerAddress));
                 })
                 .thenCompose(peers -> {
-                    strategy.addPeersFromPeerExchange(peers);
+                    peerExchangeStrategy.addPeersFromPeerExchange(peers, peerAddress);
                     return CompletableFuture.completedFuture(true);
                 })
                 .exceptionally(e -> false);
     }
 
     private void maybeRepeatBootstrap(Address myAddress, long numSuccess, int numFutures) {
-        boolean repeatBootstrap = strategy.repeatBootstrap(numSuccess, numFutures);
+        boolean repeatBootstrap = peerExchangeStrategy.repeatBootstrap(numSuccess, numFutures);
         if (repeatBootstrap && !isStopped) {
             log.warn("{} repeats the bootstrap call. numSuccess={}; numFutures={}",
                     myAddress,
@@ -157,7 +157,7 @@ public class PeerExchange implements ConnectionListener {
                         bootstrap();
                     }
                 }
-            }, strategy.getRepeatBootstrapDelay());
+            }, peerExchangeStrategy.getRepeatBootstrapDelay());
         }
     }
 }

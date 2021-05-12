@@ -17,8 +17,10 @@
 
 package misq.p2p;
 
+import com.google.common.collect.Sets;
 import lombok.extern.slf4j.Slf4j;
 import misq.common.util.OsUtils;
+import misq.p2p.data.storage.Storage;
 import misq.p2p.node.Address;
 import misq.p2p.node.Node;
 import misq.p2p.peers.PeerConfig;
@@ -26,7 +28,10 @@ import misq.p2p.peers.PeerGroup;
 import misq.p2p.peers.PeerManager;
 import misq.p2p.peers.exchange.PeerExchangeConfig;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -35,8 +40,10 @@ import static org.junit.Assert.*;
 
 @Slf4j
 public class BaseTest {
-    private P2pServiceImpl seed, node1, node2, node3, node4;
+    private P2pNode seed, node1, node2, node3, node4;
     private PeerGroup peerGroupSeed, peerGroupNode1, peerGroupNode2, peerGroupNode3, peerGroupNode4;
+    private Set<NetworkType> mySupportedNetworks = Sets.newHashSet(NetworkType.CLEAR);
+    private Storage storage = new Storage();
 
     protected enum Role {
         Alice,
@@ -44,14 +51,14 @@ public class BaseTest {
         Carol
     }
 
-    protected P2pServiceImpl alice;
-    protected P2pServiceImpl bob;
+    protected P2pNode alice;
+    protected P2pNode bob;
 
     protected int getTimeout() {
         return 10;
     }
 
-    protected List<NetworkConfig> getNetworkConfig(Role role) {
+    protected NetworkConfig getNetworkConfig(Role role) {
         int serverPort;
         switch (role) {
             case Alice:
@@ -71,14 +78,14 @@ public class BaseTest {
                 NetworkType.CLEAR,
                 Node.DEFAULT_SERVER_ID,
                 serverPort);
-        return List.of(clearNet);
+        return clearNet;
     }
 
-    protected List<NetworkConfig> getNetworkConfig(int serverPort,
-                                                   List<Address> seedNodes,
-                                                   int repeatPeerExchangeDelay,
-                                                   int minNumConnectedPeers,
-                                                   int maxNumConnectedPeers) {
+    protected NetworkConfig getNetworkConfig(int serverPort,
+                                             List<Address> seedNodes,
+                                             int repeatPeerExchangeDelay,
+                                             int minNumConnectedPeers,
+                                             int maxNumConnectedPeers) {
         String baseDirName = OsUtils.getUserDataDir().getAbsolutePath() + "/misq_test_node_" + serverPort;
         int numSeeNodesAtBoostrap = 2;
         int numPersistedPeersAtBoostrap = 8;
@@ -98,11 +105,11 @@ public class BaseTest {
                 Node.DEFAULT_SERVER_ID,
                 serverPort,
                 peerConfig);
-        return List.of(clearNet);
+        return clearNet;
     }
 
     protected void testBootstrapSolo(int count) throws InterruptedException {
-        alice = new P2pServiceImpl(getNetworkConfig(Role.Alice));
+        alice = new P2pNode(getNetworkConfig(Role.Alice), mySupportedNetworks, storage);
         CountDownLatch bootstrappedLatch = new CountDownLatch(count);
         alice.bootstrap().whenComplete((success, t) -> {
             if (success && t == null) {
@@ -116,7 +123,7 @@ public class BaseTest {
     }
 
 
-    protected List<NetworkConfig> getNetworkConfig(int serverPort) {
+    protected NetworkConfig getNetworkConfig(int serverPort) {
         int minNumConnectedPeers = 4;
         int maxNumConnectedPeers = 5;
         int repeatPeerExchangeDelay = 10;
@@ -130,8 +137,9 @@ public class BaseTest {
 
     // Seed node only, so num connection and num reported will be 0
     protected void bootstrapSeedNode() throws InterruptedException {
-        seed = new P2pServiceImpl(getNetworkConfig(1000));
-        peerGroupSeed = seed.getPeerManager(NetworkType.CLEAR).getPeerGroup();
+        NetworkConfig networkConfig = getNetworkConfig(1000);
+        seed = new P2pNode(networkConfig, mySupportedNetworks, storage);
+        peerGroupSeed = seed.getPeerManager().getPeerGroup();
 
         CountDownLatch latch = new CountDownLatch(1);
         log.info("bootstrap seed");
@@ -153,8 +161,8 @@ public class BaseTest {
      */
     protected void bootstrapSeedNodeAndNode1() throws InterruptedException {
         bootstrapSeedNode();
-        node1 = new P2pServiceImpl(getNetworkConfig(2000));
-        peerGroupNode1 = node1.getPeerManager(NetworkType.CLEAR).getPeerGroup();
+        node1 = new P2pNode(getNetworkConfig(2000), mySupportedNetworks, storage);
+        peerGroupNode1 = node1.getPeerManager().getPeerGroup();
         log.info("bootstrap node1");
 
         CountDownLatch latch = new CountDownLatch(1);
@@ -192,8 +200,8 @@ public class BaseTest {
     protected void bootstrapSeedNodeAndNode1AndNode2() throws InterruptedException {
         bootstrapSeedNodeAndNode1();
 
-        node2 = new P2pServiceImpl(getNetworkConfig(3000));
-        peerGroupNode2 = node2.getPeerManager(NetworkType.CLEAR).getPeerGroup();
+        node2 = new P2pNode(getNetworkConfig(3000), mySupportedNetworks, storage);
+        peerGroupNode2 = node2.getPeerManager().getPeerGroup();
         log.info("bootstrap node2");
 
         CountDownLatch latch = new CountDownLatch(1);
@@ -244,8 +252,8 @@ public class BaseTest {
     protected void bootstrapSeedNodeAndNode1AndNode2AndNode3() throws InterruptedException {
         bootstrapSeedNodeAndNode1AndNode2();
 
-        node3 = new P2pServiceImpl(getNetworkConfig(4000));
-        peerGroupNode3 = node3.getPeerManager(NetworkType.CLEAR).getPeerGroup();
+        node3 = new P2pNode(getNetworkConfig(4000), mySupportedNetworks, storage);
+        peerGroupNode3 = node3.getPeerManager().getPeerGroup();
         log.info("bootstrap node3");
 
         CountDownLatch latch = new CountDownLatch(1);
@@ -313,21 +321,21 @@ public class BaseTest {
         List<Address> seedNodes = Arrays.asList(Address.localHost(1000));
 
         int numNodes = 2;
-        Set<P2pService> p2pServices = new HashSet<>();
+        Set<P2pNode> p2pNodes = new HashSet<>();
         AtomicInteger counter = new AtomicInteger(0);
         for (int i = 1000; i < 1000 + numNodes; i++) {
             CountDownLatch peerGroupLatch = new CountDownLatch(1);
-            List<NetworkConfig> networkConfig = getNetworkConfig(i, seedNodes, repeatPeerExchangeDelay, minNumConnectedPeers, maxNumConnectedPeers);
-            P2pServiceImpl p2pService = new P2pServiceImpl(networkConfig);
-            p2pServices.add(p2pService);
+            NetworkConfig networkConfig = getNetworkConfig(i, seedNodes, repeatPeerExchangeDelay, minNumConnectedPeers, maxNumConnectedPeers);
+            P2pNode p2pNode = new P2pNode(networkConfig, mySupportedNetworks, storage);
+            p2pNodes.add(p2pNode);
             log.info("Node {} created", i);
             int final_i = i;
-            p2pService.bootstrap()
+            p2pNode.bootstrap()
                     .whenComplete((success, t) -> {
                         if (success && t == null) {
                             log.info("Node {} bootstrapped", final_i);
                             peerGroupLatch.countDown();
-                            PeerGroup peerGroup = p2pService.getPeerManager(NetworkType.CLEAR).getPeerGroup();
+                            PeerGroup peerGroup = p2pNode.getPeerManager().getPeerGroup();
                             assertEquals(counter.get(), peerGroup.getConnections().size());
                             counter.incrementAndGet();
                         }
@@ -340,24 +348,24 @@ public class BaseTest {
         // give time for repeated peer exchange attempts
         Thread.sleep(100);
 
-        p2pServices.forEach(p2pService -> {
-            PeerManager peerManager = ((P2pServiceImpl) p2pService).getPeerManager(NetworkType.CLEAR);
+        p2pNodes.forEach(p2pService -> {
+            PeerManager peerManager = ((P2pNode) p2pService).getPeerManager();
             int numConnections = peerManager.getPeerGroup().getConnections().size();
             log.info("{}: numConnections {}", peerManager.getGuard().getMyAddress(), numConnections);
             //  assertTrue(numConnections >= minNumConnectedPeers);
         });
 
-        p2pServices.forEach(P2pService::shutdown);
+        p2pNodes.forEach(P2pNode::shutdown);
     }
 
     protected void testInitializeServer(int serversReadyLatchCount) throws InterruptedException {
-        alice = new P2pServiceImpl(getNetworkConfig(Role.Alice));
-        bob = new P2pServiceImpl(getNetworkConfig(Role.Bob));
+        alice = new P2pNode(getNetworkConfig(Role.Alice), mySupportedNetworks, storage);
+        bob = new P2pNode(getNetworkConfig(Role.Bob), mySupportedNetworks, storage);
         CountDownLatch serversReadyLatch = new CountDownLatch(serversReadyLatchCount);
-        alice.initializeServer((serverInfo, throwable) -> {
+        alice.initializeServer().whenComplete((result, throwable) -> {
             serversReadyLatch.countDown();
         });
-        bob.initializeServer((serverInfo, throwable) -> {
+        bob.initializeServer().whenComplete((result, throwable) -> {
             serversReadyLatch.countDown();
         });
 
@@ -365,9 +373,9 @@ public class BaseTest {
         assertTrue(serversReady);
     }
 
-    protected void testConfidentialSend(NetworkType networkType) throws InterruptedException {
-        alice = new P2pServiceImpl(getNetworkConfig(Role.Alice));
-        bob = new P2pServiceImpl(getNetworkConfig(Role.Bob));
+    protected void testConfidentialSend() throws InterruptedException {
+        testInitializeServer(2);
+        NetworkConfig networkConfigBob = getNetworkConfig(Role.Bob);
         String msg = "hello";
         CountDownLatch receivedLatch = new CountDownLatch(1);
         bob.addMessageListener((connection, message) -> {
@@ -377,9 +385,7 @@ public class BaseTest {
         });
         CountDownLatch sentLatch = new CountDownLatch(1);
 
-        Optional<Address> address = bob.getAddress(networkType);
-        assertTrue(address.isPresent());
-        Address peerAddress = address.get();
+        Address peerAddress = Address.localHost(networkConfigBob.getServerPort());
         alice.confidentialSend(new MockMessage(msg), peerAddress)
                 .whenComplete((connection, throwable) -> {
                     if (connection != null) {

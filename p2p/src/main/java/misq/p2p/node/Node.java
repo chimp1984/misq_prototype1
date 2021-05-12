@@ -18,7 +18,6 @@
 package misq.p2p.node;
 
 
-import misq.p2p.NetworkConfig;
 import misq.p2p.proxy.GetServerSocketResult;
 import misq.p2p.proxy.NetworkProxy;
 import org.slf4j.Logger;
@@ -39,18 +38,17 @@ import java.util.stream.Stream;
 
 /**
  * Responsibility:
- * - Creates networkProxy from given networkType
  * - Creates multiple Servers kept in a map by serverId.
  * - Creates inbound and outbound connections.
  * - Checks if a connection has been created when sending a message and creates one otherwise.
  * - Notifies ConnectionListeners when a new connection has been created or one has been closed.
+ * - Notifies MessageListeners on messages.
  */
 public class Node implements MessageListener {
     private static final Logger log = LoggerFactory.getLogger(Node.class);
     public static final String DEFAULT_SERVER_ID = "default";
     public static final int DEFAULT_SERVER_PORT = 9999;
 
-    private final NetworkConfig networkConfig;
     private final NetworkProxy networkProxy;
 
     private final Map<String, Server> serverMap = new ConcurrentHashMap<>();
@@ -61,10 +59,8 @@ public class Node implements MessageListener {
     private final Object isStoppedLock = new Object();
     private volatile boolean isStopped;
 
-    public Node(NetworkConfig networkConfig) {
-        this.networkConfig = networkConfig;
-
-        networkProxy = NetworkProxy.get(networkConfig);
+    public Node(NetworkProxy networkProxy) {
+        this.networkProxy = networkProxy;
     }
 
 
@@ -87,9 +83,9 @@ public class Node implements MessageListener {
      *
      * @return ServerInfo
      */
-    public CompletableFuture<GetServerSocketResult> initializeServer() {
+    public CompletableFuture<GetServerSocketResult> initializeServer(String serverId, int serverPort) {
         return initialize()
-                .thenCompose(e -> createServerAndListen(networkConfig.getServerId(), networkConfig.getServerPort()));
+                .thenCompose(e -> createServerAndListen(serverId, serverPort));
     }
 
     /**

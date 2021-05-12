@@ -22,15 +22,13 @@ import misq.common.util.OsUtils;
 import misq.p2p.node.Node;
 import org.junit.Test;
 
-import java.util.List;
-
 @Slf4j
 public class ClearNetTest extends BaseTest {
     protected int getTimeout() {
         return 10;
     }
 
-    protected List<NetworkConfig> getNetworkConfig(Role role) {
+    protected NetworkConfig getNetworkConfig(Role role) {
         int serverPort;
         switch (role) {
             case Alice:
@@ -50,30 +48,21 @@ public class ClearNetTest extends BaseTest {
                 NetworkType.CLEAR,
                 Node.DEFAULT_SERVER_ID,
                 serverPort);
-        return List.of(clearNet);
+        return clearNet;
     }
 
-  /*  @Before
-    public void setup() {
-        alice = new P2pService(getNetworkConfig(Role.Alice));
-        bob = new P2pService(getNetworkConfig(Role.Bob));
-    }
-
-    @After
-    public void shutdown() {
-        alice.shutdown();
-        bob.shutdown();
-    }*/
-
-    //  @Test
+    //@Test
     public void testInitializeServer() throws InterruptedException {
         super.testInitializeServer(2);
+        alice.shutdown();
+        bob.shutdown();
     }
 
-    // @Test
+    //@Test
     public void testConfidentialSend() throws InterruptedException {
-        super.testInitializeServer(2);
-        super.testConfidentialSend(NetworkType.CLEAR);
+        super.testConfidentialSend();
+        alice.shutdown();
+        bob.shutdown();
     }
 
     @Test
@@ -85,7 +74,7 @@ public class ClearNetTest extends BaseTest {
         shutDownSeed();
         shutDownNode1();*/
 
-        /* bootstrapSeedNodeAndNode1AndNode2();
+      /*  bootstrapSeedNodeAndNode1AndNode2();
        shutDownSeed();
         shutDownNode1();
         shutDownNode2();*/
@@ -95,13 +84,5 @@ public class ClearNetTest extends BaseTest {
         shutDownNode1();
         shutDownNode2();
         shutDownNode3();
-
-    }
-
-
-    // @Test
-    public void testRequestAddData() throws InterruptedException {
-        super.testBootstrapSolo(2);
-        // super.testRequestAddData(NetworkType.CLEAR);
     }
 }

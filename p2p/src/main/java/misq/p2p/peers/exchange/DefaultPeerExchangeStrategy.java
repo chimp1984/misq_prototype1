@@ -30,7 +30,7 @@ import java.util.stream.Collectors;
  * Simple implements the strategy how to select the peers for peer exchange.
  */
 @Slf4j
-public class DefaultStrategy implements PeerExchangeStrategy {
+public class DefaultPeerExchangeStrategy implements PeerExchangeStrategy {
     private final PeerGroup peerGroup;
     private final PeerConfig peerConfig;
     private final PeerExchangeConfig peerExchangeConfig;
@@ -38,14 +38,14 @@ public class DefaultStrategy implements PeerExchangeStrategy {
     // pick the same addresses.
     private final Set<Address> usedAddresses = new HashSet<>();
 
-    public DefaultStrategy(PeerGroup peerGroup, PeerConfig peerConfig) {
+    public DefaultPeerExchangeStrategy(PeerGroup peerGroup, PeerConfig peerConfig) {
         this.peerGroup = peerGroup;
         this.peerConfig = peerConfig;
         this.peerExchangeConfig = peerConfig.getPeerExchangeConfig();
     }
 
     @Override
-    public void addPeersFromPeerExchange(Set<Peer> peers) {
+    public void addPeersFromPeerExchange(Set<Peer> peers, Address senderAddress) {
         Set<Peer> collect = peers.stream()
                 .filter(peerGroup::notMyself)
                 .collect(Collectors.toSet());

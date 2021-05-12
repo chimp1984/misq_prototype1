@@ -26,7 +26,7 @@ import java.util.Set;
  * Strategy how to select the peers used in peer management and exchange.
  */
 public interface PeerExchangeStrategy {
-    void addPeersFromPeerExchange(Set<Peer> peers);
+    void addPeersFromPeerExchange(Set<Peer> peers, Address senderAddress);
 
     Set<Peer> getPeersForPeerExchange(Address peerAddress);
 

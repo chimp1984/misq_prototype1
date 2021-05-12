@@ -60,6 +60,7 @@ public abstract class Connection {
         outputExecutor = ThreadingUtils.getSingleThreadExecutor("Connection.outputExecutor-" + getShortId());
         inputHandler = ThreadingUtils.getSingleThreadExecutor("Connection.inputHandler-" + getShortId());
 
+        // TODO java serialisation is just for dev, will be replaced by custom serialisation
         // ObjectOutputStream need to be set before objectInputStream otherwise we get blocked...
         // https://stackoverflow.com/questions/14110986/new-objectinputstream-blocks/14111047
         objectOutputStream = new ObjectOutputStream(socket.getOutputStream());

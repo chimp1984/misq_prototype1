@@ -21,6 +21,7 @@ import com.google.common.annotations.VisibleForTesting;
 import lombok.extern.slf4j.Slf4j;
 import misq.p2p.guard.Guard;
 import misq.p2p.peers.exchange.PeerExchange;
+import misq.p2p.peers.exchange.PeerExchangeStrategy;
 
 import java.util.concurrent.CompletableFuture;
 
@@ -51,27 +52,27 @@ import java.util.concurrent.CompletableFuture;
 public class PeerManager {
 
     private final Guard guard;
-    private final PeerExchange peerExchange;
-    private final PeerGroupHealth peerGroupHealth;
     private final PeerGroup peerGroup;
     private final PeerConfig peerConfig;
+    private final PeerExchange peerExchange;
+    private final PeerGroupHealth peerGroupHealth;
     private final Object isStoppedLock = new Object();
     private volatile boolean isStopped;
 
     public PeerManager(Guard guard,
-                       PeerExchange peerExchange,
-                       PeerGroupHealth peerGroupHealth,
                        PeerGroup peerGroup,
+                       PeerExchangeStrategy peerExchangeStrategy,
                        PeerConfig peerConfig) {
         this.guard = guard;
-        this.peerExchange = peerExchange;
-        this.peerGroupHealth = peerGroupHealth;
         this.peerGroup = peerGroup;
         this.peerConfig = peerConfig;
+
+        peerExchange = new PeerExchange(guard, peerExchangeStrategy);
+        peerGroupHealth = new PeerGroupHealth(guard, peerGroup);
     }
 
-    public CompletableFuture<Boolean> bootstrap() {
-        return guard.initializeServer()
+    public CompletableFuture<Boolean> bootstrap(String serverId, int serverPort) {
+        return guard.initializeServer(serverId, serverPort)
                 .thenCompose(serverInfo -> peerExchange.bootstrap())
                 .thenCompose(completed -> peerGroupHealth.bootstrap());
     }
