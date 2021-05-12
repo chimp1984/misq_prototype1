@@ -29,7 +29,7 @@ import java.util.StringTokenizer;
 @Getter
 public class Address implements Serializable {
     public static Address localHost(int port) {
-        return new Address("localhost", port);
+        return new Address("127.0.0.1", port);
     }
 
     private final String host;

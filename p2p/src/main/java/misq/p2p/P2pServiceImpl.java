@@ -18,6 +18,8 @@
 package misq.p2p;
 
 
+import com.google.common.annotations.VisibleForTesting;
+import misq.common.util.CollectionUtil;
 import misq.p2p.capability.CapabilityExchange;
 import misq.p2p.confidential.ConfidentialMessageService;
 import misq.p2p.data.DataService;
@@ -26,19 +28,18 @@ import misq.p2p.data.inventory.RequestInventoryResult;
 import misq.p2p.data.storage.Storage;
 import misq.p2p.guard.Guard;
 import misq.p2p.node.*;
+import misq.p2p.peers.PeerConfig;
 import misq.p2p.peers.PeerGroup;
+import misq.p2p.peers.PeerGroupHealth;
 import misq.p2p.peers.PeerManager;
+import misq.p2p.peers.exchange.DefaultStrategy;
 import misq.p2p.peers.exchange.PeerExchange;
-import misq.p2p.peers.exchange.PeerExchangeSelection;
-import misq.p2p.proxy.ServerInfo;
+import misq.p2p.proxy.GetServerSocketResult;
 import misq.p2p.router.gossip.GossipResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiConsumer;
@@ -71,10 +72,12 @@ public class P2pServiceImpl implements P2pService {
             Guard guard = new Guard(capabilityExchange);
             guards.put(networkType, guard);
 
-            PeerGroup peerGroup = new PeerGroup(guard, networkConfig.getPeerConfig());
-            PeerExchangeSelection peerExchangeSelection = new PeerExchangeSelection(peerGroup, networkConfig.getPeerConfig());
-            PeerExchange peerExchange = new PeerExchange(guard, peerExchangeSelection);
-            PeerManager peerManager = new PeerManager(guard, peerExchange);
+            PeerConfig peerConfig = networkConfig.getPeerConfig();
+            PeerGroup peerGroup = new PeerGroup(guard, peerConfig);
+            DefaultStrategy strategy = new DefaultStrategy(peerGroup, peerConfig);
+            PeerExchange peerExchange = new PeerExchange(guard, strategy);
+            PeerGroupHealth peerGroupHealth = new PeerGroupHealth(guard, peerGroup);
+            PeerManager peerManager = new PeerManager(guard, peerExchange, peerGroupHealth, peerGroup, peerConfig);
             peerManagers.put(networkType, peerManager);
 
             ConfidentialMessageService confidentialMessageService = new ConfidentialMessageService(guard, peerGroup);
@@ -91,7 +94,8 @@ public class P2pServiceImpl implements P2pService {
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void initializeServer(BiConsumer<ServerInfo, Throwable> resultHandler) {
+    public CompletableFuture<Boolean> initializeServer(BiConsumer<GetServerSocketResult, Throwable> resultHandler) {
+        CompletableFuture<Boolean> future = new CompletableFuture<>();
         guards.values().forEach(guard -> {
             guard.initializeServer()
                     .whenComplete((serverInfo, throwable) -> {
@@ -103,21 +107,27 @@ public class P2pServiceImpl implements P2pService {
                         }
                     });
         });
+        return future;
     }
 
     @Override
-    public void bootstrap(BiConsumer<Boolean, Throwable> resultHandler) {
+    public CompletableFuture<Boolean> bootstrap() {
+        List<CompletableFuture<Boolean>> allFutures = new ArrayList<>();
         peerManagers.values().forEach(peerManager -> {
+            CompletableFuture<Boolean> future = new CompletableFuture<>();
+            allFutures.add(future);
             peerManager.bootstrap()
-                    .whenComplete((success, throwable) -> {
-                        if (success) {
-                            resultHandler.accept(success, null);
+                    .whenComplete((success, e) -> {
+                        if (e == null) {
+                            future.complete(success); // Can be still false
                         } else {
-                            log.error(throwable.toString(), throwable);
-                            resultHandler.accept(null, throwable);
+                            future.complete(false);
                         }
                     });
         });
+        return CollectionUtil.allOf(allFutures)                                 // We require all futures the be completed
+                .thenApply(resultList -> resultList.stream().anyMatch(e -> e))  // If at least one network succeeded
+                .thenCompose(CompletableFuture::completedFuture);               // If at least one was successful we report a success
     }
 
     @Override
@@ -222,5 +232,10 @@ public class P2pServiceImpl implements P2pService {
     @Override
     public Optional<Address> getAddress(NetworkType networkType) {
         return guards.get(networkType).getMyAddress();
+    }
+
+    @VisibleForTesting
+    public PeerManager getPeerManager(NetworkType clear) {
+        return peerManagers.get(clear);
     }
 }

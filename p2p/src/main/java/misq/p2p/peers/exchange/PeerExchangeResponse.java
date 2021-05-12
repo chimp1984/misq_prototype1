@@ -32,4 +32,11 @@ class PeerExchangeResponse implements Message {
     public PeerExchangeResponse(Set<Peer> peers) {
         this.peers = peers;
     }
+
+    @Override
+    public String toString() {
+        return "PeerExchangeResponse{" +
+                "\n     peers=" + peers +
+                "\n}";
+    }
 }

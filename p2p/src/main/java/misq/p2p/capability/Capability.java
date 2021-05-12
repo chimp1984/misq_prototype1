@@ -21,13 +21,13 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import misq.p2p.NetworkType;
 import misq.p2p.node.Address;
-import misq.p2p.node.Message;
 
+import java.io.Serializable;
 import java.util.Set;
 
 @Getter
 @EqualsAndHashCode
-public class Capability implements Message {
+public class Capability implements Serializable {
     private final Address address;
     private final Set<NetworkType> supportedNetworkTypes;
 

@@ -55,12 +55,12 @@ public class TorTest extends BaseTest {
 
     // @Test
     public void testBootstrap() throws InterruptedException {
-        super.testBootstrap(2);
+        super.testInitializeServer(2);
     }
 
     @Test
     public void testConfidentialSend() throws InterruptedException {
-        super.testBootstrap(2);
+        super.testInitializeServer(2);
         super.testConfidentialSend(NetworkType.TOR);
     }
 }

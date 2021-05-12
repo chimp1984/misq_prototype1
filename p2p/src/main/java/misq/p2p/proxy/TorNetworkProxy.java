@@ -5,6 +5,7 @@ import misq.common.util.FileUtils;
 import misq.common.util.NetworkUtils;
 import misq.p2p.NetworkConfig;
 import misq.p2p.node.Address;
+import misq.torify.Constants;
 import misq.torify.TorController;
 import misq.torify.TorServerSocket;
 import misq.torify.Torify;
@@ -17,6 +18,8 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicReference;
 
+import static java.io.File.separator;
+
 
 @Slf4j
 public class TorNetworkProxy implements NetworkProxy {
@@ -27,7 +30,7 @@ public class TorNetworkProxy implements NetworkProxy {
     private volatile NetworkProxy.State state = State.NOT_STARTED;
 
     public TorNetworkProxy(NetworkConfig networkConfig) {
-        torDirPath = networkConfig.getBaseDirName() + File.separator + "tor";
+        torDirPath = networkConfig.getBaseDirName() + separator + "tor";
         torify = new Torify(torDirPath);
     }
 
@@ -46,7 +49,7 @@ public class TorNetworkProxy implements NetworkProxy {
     }
 
     @Override
-    public CompletableFuture<ServerInfo> createServerSocket(String serverId, int serverPort) {
+    public CompletableFuture<GetServerSocketResult> getServerSocket(String serverId, int serverPort) {
         log.info("Start hidden service");
         long ts = System.currentTimeMillis();
         try {
@@ -55,7 +58,7 @@ public class TorNetworkProxy implements NetworkProxy {
                     .thenApply(onionAddress -> {
                         log.info("Tor hidden service Ready. Took {} ms. Onion address={}", System.currentTimeMillis() - ts, onionAddress);
                         state = State.SERVER_SOCKET_CREATED;
-                        return new ServerInfo(serverId, torServerSocket, new Address(onionAddress.getHost(), onionAddress.getPort()));
+                        return new GetServerSocketResult(serverId, torServerSocket, new Address(onionAddress.getHost(), onionAddress.getPort()));
                     });
         } catch (IOException e) {
             return CompletableFuture.failedFuture(e);
@@ -85,7 +88,7 @@ public class TorNetworkProxy implements NetworkProxy {
 
     @Override
     public Optional<Address> getServerAddress(String serverId) {
-        String fileName = torDirPath + File.separator + "hiddenservice" + File.separator + serverId + File.separator + "hostname";
+        String fileName = torDirPath + separator + Constants.HS_DIR + separator + serverId + separator + "hostname";
         if (new File(fileName).exists()) {
             try {
                 String host = FileUtils.readAsString(fileName);

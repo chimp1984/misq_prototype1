@@ -19,14 +19,15 @@ package misq.p2p.node;
 
 
 import misq.p2p.NetworkConfig;
+import misq.p2p.proxy.GetServerSocketResult;
 import misq.p2p.proxy.NetworkProxy;
-import misq.p2p.proxy.ServerInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.EOFException;
 import java.io.IOException;
 import java.net.Socket;
+import java.net.SocketException;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Optional;
@@ -34,6 +35,7 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.stream.Stream;
 
 /**
  * Responsibility:
@@ -56,6 +58,8 @@ public class Node implements MessageListener {
     private final Set<InboundConnection> inboundConnections = new CopyOnWriteArraySet<>();
     private final Set<ConnectionListener> connectionListeners = new CopyOnWriteArraySet<>();
     private final Set<MessageListener> messageListeners = new CopyOnWriteArraySet<>();
+    private final Object isStoppedLock = new Object();
+    private volatile boolean isStopped;
 
     public Node(NetworkConfig networkConfig) {
         this.networkConfig = networkConfig;
@@ -83,7 +87,7 @@ public class Node implements MessageListener {
      *
      * @return ServerInfo
      */
-    public CompletableFuture<ServerInfo> initializeServer() {
+    public CompletableFuture<GetServerSocketResult> initializeServer() {
         return initialize()
                 .thenCompose(e -> createServerAndListen(networkConfig.getServerId(), networkConfig.getServerPort()));
     }
@@ -95,13 +99,16 @@ public class Node implements MessageListener {
      * @param serverPort
      * @return
      */
-    public CompletableFuture<ServerInfo> createServerAndListen(String serverId, int serverPort) {
-        return networkProxy.createServerSocket(serverId, serverPort)
+    public CompletableFuture<GetServerSocketResult> createServerAndListen(String serverId, int serverPort) {
+        return networkProxy.getServerSocket(serverId, serverPort)
                 .whenComplete((serverInfo, throwable) -> {
                     if (serverInfo != null) {
                         Server server = new Server(serverInfo,
-                                this::onClientSocket,
-                                exception -> serverMap.remove(serverId));
+                                socket -> onClientSocket(socket, serverInfo),
+                                exception -> {
+                                    serverMap.remove(serverId);
+                                    handleException(exception);
+                                });
                         serverMap.put(serverId, server);
                     }
                 });
@@ -120,24 +127,28 @@ public class Node implements MessageListener {
         }
     }
 
-    public void disconnect(Address address) {
-        log.info("disconnect {}", address);
-        if (outboundConnectionMap.containsKey(address)) {
-            disconnect(outboundConnectionMap.get(address));
-        }
+    public Optional<Connection> findConnection(String connectionUid) {
+        return Stream.concat(outboundConnectionMap.values().stream(), inboundConnections.stream())
+                .filter(e -> e.getUid().equals(connectionUid))
+                .findAny();
     }
 
     public void disconnect(Connection connection) {
         log.info("disconnect connection {}", connection);
         connection.close();
+        onDisconnect(connection);
+    }
+
+    public void onDisconnect(Connection connection) {
         if (connection instanceof InboundConnection) {
             inboundConnections.remove(connection);
         } else if (connection instanceof OutboundConnection) {
             outboundConnectionMap.remove(((OutboundConnection) connection).getAddress());
         }
         connection.removeMessageListener(this);
-        connectionListeners.forEach(connectionListener -> connectionListener.onDisconnect(connection));
+        connectionListeners.forEach(connectionListener -> connectionListener.onDisconnect(connection, getPeerAddress(connection)));
     }
+
 
     /**
      * Sends to outbound connection if available, otherwise create the connection and then send the message.
@@ -156,7 +167,11 @@ public class Node implements MessageListener {
     }
 
     public CompletableFuture<Connection> send(Message message, Connection connection) {
-        return connection.send(message);
+        return connection.send(message)
+                .exceptionally(exception -> {
+                    handleException(connection, exception);
+                    return connection;
+                });
     }
 
     public Optional<Address> getMyAddress() {
@@ -180,6 +195,14 @@ public class Node implements MessageListener {
     }
 
     public void shutdown() {
+        log.info("shutdown {}", getMyAddress());
+        if (isStopped) {
+            return;
+        }
+        synchronized (isStoppedLock) {
+            isStopped = true;
+        }
+
         connectionListeners.clear();
         messageListeners.clear();
 
@@ -225,39 +248,64 @@ public class Node implements MessageListener {
         return networkProxy.initialize();
     }
 
-    private void onClientSocket(Socket socket) {
+    private void onClientSocket(Socket socket, GetServerSocketResult getServerSocketResult) {
         try {
-            InboundConnection connection = new InboundConnection(socket, exception -> {
-                if (!(exception instanceof EOFException)) {
-                    log.error(exception.toString(), exception);
-                }
-            });
+            InboundConnection connection = new InboundConnection(socket, getServerSocketResult);
+            connection.listen(exception -> handleException(connection, exception));
             inboundConnections.add(connection);
-            log.info("New inbound connection");
             connectionListeners.forEach(listener -> listener.onInboundConnection(connection));
             connection.addMessageListener(this);
         } catch (IOException exception) {
-            exception.printStackTrace();
-            log.error(exception.toString());
+            handleException(exception);
         }
     }
 
     private CompletableFuture<Connection> createConnection(Address peerAddress) {
         CompletableFuture<Connection> future = new CompletableFuture<>();
+        Connection connection = null;
         try {
             Socket socket = getSocket(peerAddress);
-            OutboundConnection connection = new OutboundConnection(socket,
-                    peerAddress,
-                    future::completeExceptionally);
-            outboundConnectionMap.put(peerAddress, connection);
-            log.info("New outbound connection to {}", peerAddress);
-            connectionListeners.forEach(listener -> listener.onOutboundConnection(connection, peerAddress));
-            connection.addMessageListener(this);
-            future.complete(connection);
+            log.debug("Create new outbound connection to {}", peerAddress);
+            OutboundConnection outboundConnection = new OutboundConnection(socket, peerAddress);
+            connection = outboundConnection;
+            outboundConnection.listen(exception -> {
+                handleException(outboundConnection, exception);
+                future.completeExceptionally(exception);
+            });
+
+            outboundConnectionMap.put(peerAddress, outboundConnection);
+            connectionListeners.forEach(listener -> listener.onOutboundConnection(outboundConnection, peerAddress));
+            outboundConnection.addMessageListener(this);
+            future.complete(outboundConnection);
         } catch (IOException exception) {
-            log.error(exception.toString(), exception);
+            if (connection == null) {
+                handleException(exception);
+            } else {
+                handleException(connection, exception);
+            }
             future.completeExceptionally(exception);
         }
         return future;
+    }
+
+    private void handleException(Throwable exception) {
+        if (isStopped) {
+            return;
+        }
+        if (exception instanceof EOFException) {
+            log.debug(exception.toString(), exception);
+        } else if (exception instanceof SocketException) {
+            log.debug(exception.toString(), exception);
+        } else {
+            log.error(exception.toString(), exception);
+        }
+    }
+
+    private void handleException(Connection connection, Throwable exception) {
+        if (isStopped) {
+            return;
+        }
+        handleException(exception);
+        onDisconnect(connection);
     }
 }

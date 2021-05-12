@@ -17,12 +17,26 @@
 
 package misq.p2p.node;
 
+import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
+import misq.p2p.proxy.GetServerSocketResult;
+
 import java.io.IOException;
 import java.net.Socket;
-import java.util.function.Consumer;
 
+@Slf4j
 public class InboundConnection extends Connection {
-    public InboundConnection(Socket socket, Consumer<Exception> errorHandler) throws IOException {
-        super(socket, errorHandler);
+    @Getter
+    private final GetServerSocketResult getServerSocketResult;
+
+    public InboundConnection(Socket socket, GetServerSocketResult getServerSocketResult) throws IOException {
+        super(socket);
+        this.getServerSocketResult = getServerSocketResult;
+        log.debug("Create inboundConnection from server: {}", getServerSocketResult);
+    }
+
+    @Override
+    protected String getId() {
+        return getServerSocketResult + " / " + uid;
     }
 }

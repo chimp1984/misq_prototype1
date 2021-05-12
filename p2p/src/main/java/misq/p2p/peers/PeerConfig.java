@@ -17,29 +17,33 @@
 
 package misq.p2p.peers;
 
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import misq.p2p.node.Address;
+import misq.p2p.peers.exchange.PeerExchangeConfig;
 
 import java.util.List;
 
 @Getter
-@EqualsAndHashCode
 public class PeerConfig {
+    private final PeerExchangeConfig peerExchangeConfig;
     private final List<Address> seedNodes;
-    private final int numPersistedPeersAtBoostrap;
-    private final int numSeeNodesAtBoostrap;
     private final int minNumConnectedPeers;
     private final int maxNumConnectedPeers;
     private final int minNumReportedPeers;
 
-    public PeerConfig(List<Address> seedNodes) {
-        this.seedNodes = seedNodes;
+    public PeerConfig(PeerExchangeConfig peerExchangeConfig, List<Address> seedNodes) {
+        this(peerExchangeConfig, seedNodes, 8, 12, 1);
+    }
 
-        numPersistedPeersAtBoostrap = 10;
-        numSeeNodesAtBoostrap = 2;
-        minNumConnectedPeers = 8;
-        maxNumConnectedPeers = 12;
-        minNumReportedPeers = 50;
+    public PeerConfig(PeerExchangeConfig peerExchangeConfig,
+                      List<Address> seedNodes,
+                      int minNumConnectedPeers,
+                      int maxNumConnectedPeers,
+                      int minNumReportedPeers) {
+        this.peerExchangeConfig = peerExchangeConfig;
+        this.seedNodes = seedNodes;
+        this.minNumConnectedPeers = minNumConnectedPeers;
+        this.maxNumConnectedPeers = maxNumConnectedPeers;
+        this.minNumReportedPeers = minNumReportedPeers;
     }
 }

@@ -25,7 +25,7 @@ import java.util.concurrent.*;
 public class ThreadingUtils {
 
     public static void shutdownAndAwaitTermination(ExecutorService executor) {
-        MoreExecutors.shutdownAndAwaitTermination(executor, 1, TimeUnit.SECONDS);
+        MoreExecutors.shutdownAndAwaitTermination(executor, 10, TimeUnit.MILLISECONDS);
     }
 
     public static void shutdownAndAwaitTermination(ExecutorService executor, long timeout, TimeUnit unit) {

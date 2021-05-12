@@ -20,7 +20,7 @@ package misq.p2p.node;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import misq.common.util.ThreadingUtils;
-import misq.p2p.proxy.ServerInfo;
+import misq.p2p.proxy.GetServerSocketResult;
 
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -40,26 +40,29 @@ public class Server {
     /**
      * Server using the given ServerSocket.
      *
-     * @param serverInfo       contains serverSocket and address
-     * @param socketHandler    Consumes socket on new inbound connection
+     * @param getServerSocketResult contains serverSocket and address
+     * @param socketHandler         Consumes socket on new inbound connection
      * @param exceptionHandler
      */
-    public Server(ServerInfo serverInfo, Consumer<Socket> socketHandler, Consumer<Exception> exceptionHandler) {
-        this.serverSocket = serverInfo.getServerSocket();
+    public Server(GetServerSocketResult getServerSocketResult, Consumer<Socket> socketHandler, Consumer<Exception> exceptionHandler) {
+        this.serverSocket = getServerSocketResult.getServerSocket();
 
-        address = serverInfo.getAddress();
-        executorService = ThreadingUtils.getSingleThreadExecutor("Server-" + serverInfo);
+        address = getServerSocketResult.getAddress();
+        log.debug("Create server: {}", getServerSocketResult);
+        executorService = ThreadingUtils.getSingleThreadExecutor("Server-" + getServerSocketResult);
         executorService.execute(() -> {
             while (isNotStopped()) {
                 try {
                     Socket socket = serverSocket.accept();
-                    log.info("Accepted new connection on server: {}", serverInfo);
+                    log.debug("Accepted new connection on server: {}", getServerSocketResult);
                     if (isNotStopped()) {
                         socketHandler.accept(socket);
                     }
                 } catch (IOException e) {
-                    exceptionHandler.accept(e);
-                    stop();
+                    if (!isStopped) {
+                        exceptionHandler.accept(e);
+                        stop();
+                    }
                 }
             }
         });
@@ -70,6 +73,9 @@ public class Server {
     }
 
     public void stop() {
+        if (isStopped) {
+            return;
+        }
         synchronized (isStoppedLock) {
             isStopped = true;
         }

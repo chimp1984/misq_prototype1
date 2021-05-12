@@ -19,20 +19,18 @@ package misq.p2p.peers;
 
 import com.google.common.collect.ImmutableList;
 import lombok.Getter;
-import misq.common.util.CollectionUtil;
+import lombok.extern.slf4j.Slf4j;
 import misq.p2p.guard.Guard;
 import misq.p2p.node.*;
 import net.i2p.util.ConcurrentHashSet;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
-
-import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * Maintains different collections of peers and connections
  */
+@Slf4j
 public class PeerGroup implements ConnectionListener {
     private final Guard guard;
     @Getter
@@ -42,7 +40,8 @@ public class PeerGroup implements ConnectionListener {
     private final Set<Peer> reportedPeers = new ConcurrentHashSet<>();
     @Getter
     private final Set<Peer> persistedPeers = new ConcurrentHashSet<>();
-    private final Map<Address, Connection> connectionByAddress = new ConcurrentHashMap<>();
+    @Getter
+    private final Set<Connection> connections = new ConcurrentHashSet<>();
 
     public PeerGroup(Guard guard, PeerConfig peerConfig) {
         this.guard = guard;
@@ -56,22 +55,24 @@ public class PeerGroup implements ConnectionListener {
 
     @Override
     public void onInboundConnection(InboundConnection connection) {
-        addPeer(connection);
-        addConnection(connection);
+        onConnection(connection);
     }
 
-    private void addConnection(Connection connection) {
-        //connections.put()
-    }
 
     @Override
     public void onOutboundConnection(OutboundConnection connection, Address peerAddress) {
-        addPeer(connection);
+        onConnection(connection);
     }
 
     @Override
-    public void onDisconnect(Connection connection) {
-        guard.getPeerAddress(connection).ifPresent(connectedPeerByAddress::remove);
+    public void onDisconnect(Connection connection, Optional<Address> optionalAddress) {
+        optionalAddress.ifPresent(connectedPeerByAddress::remove);
+    }
+
+    private void onConnection(Connection connection) {
+        Peer peer = new Peer(guard.getCapability(connection));
+        connectedPeerByAddress.put(peer.getAddress(), peer);
+        connections.add(connection);
     }
 
     public Set<Address> getConnectedPeerAddresses() {
@@ -82,46 +83,28 @@ public class PeerGroup implements ConnectionListener {
         return connectedPeerByAddress.values();
     }
 
-    public Optional<Address> getRandomSeedNode() {
-        if (seedNodes.isEmpty()) {
-            return Optional.empty();
-        }
-        Address candidate = checkNotNull(CollectionUtil.getRandomElement(seedNodes));
-        return Optional.of(candidate);
-    }
-
-    public void shutdown() {
-
-    }
-
-    private void addPeer(Connection connection) {
-        Peer peer = new Peer(guard.getCapability(connection.getUid()));
-        connectedPeerByAddress.put(peer.getAddress(), peer);
-    }
-
     public void addReportedPeers(Set<Peer> peers) {
         reportedPeers.addAll(peers);
     }
-
 
     public Set<Peer> getAllConnectedPeers() {
         return new HashSet<>(connectedPeerByAddress.values());
     }
 
-   /* public List<Address> getAllConnectedPeers(long limit) {
-        return getRandomizedPeerAddresses(connectedPeerByAddress.values(), limit);
-    }*/
-
-    private List<Address> getAllRandomizedPeerAddresses(Collection<Peer> peers) {
-        return getRandomizedPeerAddresses(peers, peers.size());
+    public boolean notMyself(Address address) {
+        Optional<Address> optionalMyAddress = guard.getMyAddress();
+        return !optionalMyAddress.isPresent() || !optionalMyAddress.get().equals(address);
     }
 
-    private List<Address> getRandomizedPeerAddresses(Collection<Peer> peers, int limit) {
-        List<Address> list = peers.stream()
-                .map(Peer::getAddress)
-                .limit(limit)
-                .collect(Collectors.toList());
-        Collections.shuffle(list);
-        return list;
+    public boolean notMyself(Peer peer) {
+        return notMyself(peer.getAddress());
+    }
+
+    public boolean notASeed(Address address) {
+        return seedNodes.stream().noneMatch(e -> e.equals(address));
+    }
+
+    public boolean notASeed(Peer peer) {
+        return notASeed(peer.getAddress());
     }
 }

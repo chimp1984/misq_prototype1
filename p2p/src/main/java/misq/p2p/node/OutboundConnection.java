@@ -18,18 +18,25 @@
 package misq.p2p.node;
 
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.net.Socket;
-import java.util.function.Consumer;
 
+@Slf4j
 public class OutboundConnection extends Connection {
     @Getter
     private final Address address;
 
-    public OutboundConnection(Socket socket, Address address, Consumer<Exception> errorHandler) throws IOException {
-        super(socket, errorHandler);
+    public OutboundConnection(Socket socket, Address address) throws IOException {
+        super(socket);
 
         this.address = address;
+        log.debug("Create outboundConnection to {}", address);
+    }
+
+    @Override
+    protected String getId() {
+        return address + " / " + uid;
     }
 }

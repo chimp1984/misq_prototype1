@@ -17,26 +17,17 @@
 
 package misq.p2p.peers.exchange;
 
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import misq.p2p.node.Message;
-import misq.p2p.peers.Peer;
+import misq.common.util.Tuple2;
+import misq.p2p.node.Address;
 
-import java.util.Set;
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
-@EqualsAndHashCode
-@Getter
-class PeerExchangeRequest implements Message {
-    private final Set<Peer> peers;
+public class PeerExchangeGraph {
 
-    public PeerExchangeRequest(Set<Peer> peers) {
-        this.peers = peers;
-    }
+    private final List<Tuple2<Address, Address>> vectors = new CopyOnWriteArrayList<>();
 
-    @Override
-    public String toString() {
-        return "PeerExchangeRequest{" +
-                "\n     peers=" + peers +
-                "\n}";
+    public void add(Address source, Address target) {
+        vectors.add(new Tuple2<>(source, target));
     }
 }

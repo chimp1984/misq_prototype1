@@ -60,12 +60,12 @@ public class TorAndClearTest extends BaseTest {
 
     // @Test
     public void testBootstrap() throws InterruptedException {
-        super.testBootstrap(4);
+        super.testInitializeServer(4);
     }
 
     @Test
     public void testConfidentialSend() throws InterruptedException {
-        super.testBootstrap(4);
+        super.testInitializeServer(4);
         super.testConfidentialSend(NetworkType.CLEAR);
         super.testConfidentialSend(NetworkType.TOR);
     }

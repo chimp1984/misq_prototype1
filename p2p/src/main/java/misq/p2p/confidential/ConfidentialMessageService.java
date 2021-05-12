@@ -77,7 +77,7 @@ public class ConfidentialMessageService implements MessageListener {
         Set<Connection> connections = getConnectionsWithSupportedNetwork(peerAddress.getNetworkType());
         Connection outboundConnection = CollectionUtil.getRandomElement(connections);
         if (outboundConnection != null) {
-            //todo we need 2 diff. pubkeys for encryption here
+            //todo we need 2 diff. pub keys for encryption here
             RelayMessage relayMessage = new RelayMessage(seal(message), peerAddress);
             return guard.send(seal(relayMessage), outboundConnection);
         }

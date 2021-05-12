@@ -15,29 +15,24 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package misq.p2p.proxy;
+package misq.p2p.peers.exchange;
 
-import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
 import misq.p2p.node.Address;
+import misq.p2p.peers.Peer;
 
-import java.net.ServerSocket;
+import java.util.Set;
 
-@Slf4j
-@Getter
-public class ServerInfo {
-    private final String serverId;
-    private ServerSocket serverSocket;
-    private Address address;
+/**
+ * Strategy how to select the peers used in peer management and exchange.
+ */
+public interface PeerExchangeStrategy {
+    void addPeersFromPeerExchange(Set<Peer> peers);
 
-    public ServerInfo(String serverId, ServerSocket serverSocket, Address address) {
-        this.serverId = serverId;
-        this.serverSocket = serverSocket;
-        this.address = address;
-    }
+    Set<Peer> getPeersForPeerExchange(Address peerAddress);
 
-    @Override
-    public String toString() {
-        return serverId + "-" + address.toString();
-    }
+    Set<Address> getAddressesForBootstrap();
+
+    boolean repeatBootstrap(long numSuccess, int numFutures);
+
+    long getRepeatBootstrapDelay();
 }

@@ -101,6 +101,5 @@ public class GossipRouter implements MessageListener {
         messageListeners.clear();
 
         guard.removeMessageListener(this);
-        peerGroup.shutdown();
     }
 }

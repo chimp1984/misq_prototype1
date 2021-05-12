@@ -26,7 +26,7 @@ import misq.p2p.node.Address;
 import misq.p2p.node.Connection;
 import misq.p2p.node.Message;
 import misq.p2p.node.MessageListener;
-import misq.p2p.proxy.ServerInfo;
+import misq.p2p.proxy.GetServerSocketResult;
 import misq.p2p.router.gossip.GossipResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,11 +46,13 @@ public class MockP2pService implements P2pService {
     }
 
     @Override
-    public void initializeServer(BiConsumer<ServerInfo, Throwable> resultHandler) {
+    public CompletableFuture<Boolean> initializeServer(BiConsumer<GetServerSocketResult, Throwable> resultHandler) {
+        return CompletableFuture.completedFuture(true);
     }
 
     @Override
-    public void bootstrap(BiConsumer<Boolean, Throwable> resultHandler) {
+    public CompletableFuture<Boolean> bootstrap() {
+        return CompletableFuture.completedFuture(true);
     }
 
     @Override

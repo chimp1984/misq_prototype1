@@ -19,11 +19,11 @@ public class ClearNetNetworkProxy implements NetworkProxy {
     }
 
     public CompletableFuture<Boolean> initialize() {
-        log.info("Initialize");
+        log.debug("Initialize");
         CompletableFuture<Boolean> future = new CompletableFuture<>();
         new Thread(() -> {
             try {
-                Thread.sleep(200); // simulate tor delay
+                Thread.sleep(5); // simulate tor delay
             } catch (InterruptedException ignore) {
             }
             state = State.INITIALIZED;
@@ -33,20 +33,20 @@ public class ClearNetNetworkProxy implements NetworkProxy {
     }
 
     @Override
-    public CompletableFuture<ServerInfo> createServerSocket(String serverId, int serverPort) {
-        CompletableFuture<ServerInfo> future = new CompletableFuture<>();
-        log.info("Create serverSocket");
+    public CompletableFuture<GetServerSocketResult> getServerSocket(String serverId, int serverPort) {
+        CompletableFuture<GetServerSocketResult> future = new CompletableFuture<>();
+        log.debug("Create serverSocket");
         try {
-            Thread.sleep(200); // simulate tor delay
+            Thread.sleep(5); // simulate tor delay
         } catch (InterruptedException ignore) {
         }
 
         try {
             ServerSocket serverSocket = new ServerSocket(serverPort);
-            Address address = new Address(serverSocket.getInetAddress().getHostName(), serverSocket.getLocalPort());
+            Address address = Address.localHost(serverPort);
             state = State.SERVER_SOCKET_CREATED;
-            log.info("ServerSocket created");
-            future.complete(new ServerInfo(serverId, serverSocket, address));
+            log.debug("ServerSocket created");
+            future.complete(new GetServerSocketResult(serverId, serverSocket, address));
         } catch (IOException e) {
             future.completeExceptionally(e);
         }
@@ -54,13 +54,9 @@ public class ClearNetNetworkProxy implements NetworkProxy {
     }
 
     @Override
-    public Socket getSocket(Address address) {
-        log.info("Create new Socket");
-        try {
-            return new Socket(address.getHost(), address.getPort());
-        } catch (IOException ignore) {
-            return null;
-        }
+    public Socket getSocket(Address address) throws IOException {
+        log.debug("Create new Socket");
+        return new Socket(address.getHost(), address.getPort());
     }
 
     @Override

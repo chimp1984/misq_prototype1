@@ -65,20 +65,43 @@ public class ClearNetTest extends BaseTest {
         bob.shutdown();
     }*/
 
-    // @Test
-    public void testBootstrap() throws InterruptedException {
-        super.testBootstrap(2);
+    //  @Test
+    public void testInitializeServer() throws InterruptedException {
+        super.testInitializeServer(2);
     }
 
-    //@Test
+    // @Test
     public void testConfidentialSend() throws InterruptedException {
-        super.testBootstrap(2);
+        super.testInitializeServer(2);
         super.testConfidentialSend(NetworkType.CLEAR);
     }
 
     @Test
-    public void testConfidentialSends() throws InterruptedException {
-        super.testBootstrap(2);
-        super.testRequestAddData(NetworkType.CLEAR);
+    public void testPeerExchange() throws InterruptedException {
+      /*  bootstrapSeedNode();
+        shutDownSeed();
+
+        bootstrapSeedNodeAndNode1();
+        shutDownSeed();
+        shutDownNode1();*/
+
+        /* bootstrapSeedNodeAndNode1AndNode2();
+       shutDownSeed();
+        shutDownNode1();
+        shutDownNode2();*/
+
+        bootstrapSeedNodeAndNode1AndNode2AndNode3();
+        shutDownSeed();
+        shutDownNode1();
+        shutDownNode2();
+        shutDownNode3();
+
+    }
+
+
+    // @Test
+    public void testRequestAddData() throws InterruptedException {
+        super.testBootstrapSolo(2);
+        // super.testRequestAddData(NetworkType.CLEAR);
     }
 }

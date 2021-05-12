@@ -17,10 +17,12 @@
 
 package misq.p2p.node;
 
+import java.util.Optional;
+
 public interface ConnectionListener {
     void onInboundConnection(InboundConnection connection);
 
     void onOutboundConnection(OutboundConnection connection, Address peerAddress);
 
-    void onDisconnect(Connection connection);
+    void onDisconnect(Connection connection, Optional<Address> optionalAddress);
 }

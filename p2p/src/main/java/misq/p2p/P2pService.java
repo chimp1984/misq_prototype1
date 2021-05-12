@@ -23,7 +23,7 @@ import misq.p2p.node.Address;
 import misq.p2p.node.Connection;
 import misq.p2p.node.Message;
 import misq.p2p.node.MessageListener;
-import misq.p2p.proxy.ServerInfo;
+import misq.p2p.proxy.GetServerSocketResult;
 import misq.p2p.router.gossip.GossipResult;
 
 import java.util.Optional;
@@ -32,9 +32,9 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 public interface P2pService {
-    void initializeServer(BiConsumer<ServerInfo, Throwable> resultHandler);
+    CompletableFuture<Boolean> initializeServer(BiConsumer<GetServerSocketResult, Throwable> resultHandler);
 
-    void bootstrap(BiConsumer<Boolean, Throwable> resultHandler);
+    CompletableFuture<Boolean> bootstrap();
 
     CompletableFuture<Connection> confidentialSend(Message message, Address peerAddress);
 
@@ -54,4 +54,5 @@ public interface P2pService {
     void shutdown();
 
     Optional<Address> getAddress(NetworkType networkType);
+
 }

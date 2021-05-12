@@ -31,6 +31,7 @@ import misq.p2p.router.Router;
 import misq.p2p.router.gossip.GossipResult;
 
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
@@ -38,8 +39,15 @@ import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Responsibility:
- * -
+ * Preliminary ideas:
+ * Use a ephemeral ID (key) for mailbox msg so a receiver can pick the right msg to decode.
+ * At initial data request split the request in chunks. E.g. Give me the first 25% of your data to first node,
+ * Give me the second 25% of your data to second node, ... with some overlaps as nodes do not have all the same data.
+ * The data need to be sorted deterministically.
+ * For non-temporary data use age and deliver historical data only on extra demand.
+ * At startup give users option to use clear-net for initial sync and switch to tor after that. Might require a restart ;-(.
+ * That way the user trades of speed with loss of little privacy (the other nodes learn that that IP uses misq).
+ * Probably acceptable trade off for many users. Would be good if the restart could be avoided. Maybe not that hard...
  */
 public class DataService implements MessageListener, ConnectionListener {
     private static final long BROADCAST_TIMEOUT = 90;
@@ -103,7 +111,7 @@ public class DataService implements MessageListener, ConnectionListener {
     }
 
     @Override
-    public void onDisconnect(Connection connection) {
+    public void onDisconnect(Connection connection, Optional<Address> optionalAddress) {
         MapUtils.disposeAndRemove(connection.getUid(), responseHandlerMap);
         MapUtils.disposeAndRemove(connection.getUid(), requestHandlerMap);
     }

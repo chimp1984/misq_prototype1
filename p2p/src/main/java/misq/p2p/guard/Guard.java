@@ -22,7 +22,7 @@ import misq.p2p.NetworkType;
 import misq.p2p.capability.Capability;
 import misq.p2p.capability.CapabilityExchange;
 import misq.p2p.node.*;
-import misq.p2p.proxy.ServerInfo;
+import misq.p2p.proxy.GetServerSocketResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,6 +35,9 @@ import java.util.concurrent.CopyOnWriteArraySet;
  * Responsibility:
  * - Adds an AccessToken to the outgoing message.
  * - On received messages checks with the permissionControl if the AccessToken is valid.
+ * <p>
+ * TODO make PermissionControl mocks for BSQ bonded or LN (sphinx) based transport layer to see if other monetary token based ddos
+ * protection strategies work inside the current design
  */
 public class Guard implements MessageListener {
     private static final Logger log = LoggerFactory.getLogger(Guard.class);
@@ -42,6 +45,8 @@ public class Guard implements MessageListener {
     private final PermissionControl permissionControl;
     private final Set<MessageListener> messageListeners = new CopyOnWriteArraySet<>();
     private final CapabilityExchange capabilityExchange;
+    private final Object isStoppedLock = new Object();
+    private volatile boolean isStopped;
 
     public Guard(CapabilityExchange capabilityExchange) {
         this.capabilityExchange = capabilityExchange;
@@ -58,10 +63,9 @@ public class Guard implements MessageListener {
 
     @Override
     public void onMessage(Connection connection, Message message) {
-        if (message instanceof GuardedMessage) {
+        if (message instanceof GuardedMessage && !isStopped) {
             GuardedMessage guardedMessage = (GuardedMessage) message;
             if (permissionControl.hasPermit(guardedMessage)) {
-                log.info("Received valid restrictedMessage: {}", guardedMessage);
                 messageListeners.forEach(listener -> listener.onMessage(connection, guardedMessage.getMessage()));
             } else {
                 log.warn("Handling message at onMessage is not permitted by guard");
@@ -93,6 +97,9 @@ public class Guard implements MessageListener {
     }
 
     public void shutdown() {
+        synchronized (isStoppedLock) {
+            isStopped = true;
+        }
         messageListeners.clear();
         capabilityExchange.removeMessageListener(this);
         permissionControl.shutdown();
@@ -104,7 +111,7 @@ public class Guard implements MessageListener {
     // Delegates
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public CompletableFuture<ServerInfo> initializeServer() {
+    public CompletableFuture<GetServerSocketResult> initializeServer() {
         return capabilityExchange.initializeServer();
     }
 
@@ -136,8 +143,8 @@ public class Guard implements MessageListener {
         return capabilityExchange.getPeerAddress(connection);
     }
 
-    public Capability getCapability(String connectionUid) {
-        return capabilityExchange.getCapability(connectionUid);
+    public Capability getCapability(Connection connection) {
+        return capabilityExchange.getCapability(connection);
     }
 
 }

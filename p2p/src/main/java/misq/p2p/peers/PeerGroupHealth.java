@@ -15,28 +15,25 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package misq.p2p.peers.exchange;
+package misq.p2p.peers;
 
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import misq.p2p.node.Message;
-import misq.p2p.peers.Peer;
+import misq.p2p.guard.Guard;
 
-import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 
-@EqualsAndHashCode
-@Getter
-class PeerExchangeRequest implements Message {
-    private final Set<Peer> peers;
+public class PeerGroupHealth {
+    private final Guard guard;
+    private final PeerGroup peerGroup;
 
-    public PeerExchangeRequest(Set<Peer> peers) {
-        this.peers = peers;
+    public PeerGroupHealth(Guard guard, PeerGroup peerGroup) {
+        this.guard = guard;
+        this.peerGroup = peerGroup;
     }
 
-    @Override
-    public String toString() {
-        return "PeerExchangeRequest{" +
-                "\n     peers=" + peers +
-                "\n}";
+    public CompletableFuture<Boolean> bootstrap() {
+        return CompletableFuture.completedFuture(true);
+    }
+
+    public void shutdown() {
     }
 }

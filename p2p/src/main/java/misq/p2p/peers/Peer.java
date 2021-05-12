@@ -21,10 +21,11 @@ import lombok.Getter;
 import misq.p2p.capability.Capability;
 import misq.p2p.node.Address;
 
+import java.io.Serializable;
 import java.util.Date;
 
 @Getter
-public class Peer {
+public class Peer implements Serializable {
     private final Capability capability;
 
     private final long created;
@@ -40,5 +41,27 @@ public class Peer {
 
     public Address getAddress() {
         return capability.getAddress();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Peer)) return false;
+
+        Peer peer = (Peer) o;
+        return capability != null ? capability.equals(peer.capability) : peer.capability == null;
+    }
+
+    @Override
+    public int hashCode() {
+        return capability != null ? capability.hashCode() : 0;
+    }
+
+    @Override
+    public String toString() {
+        return "Peer{" +
+                "\n     capability=" + capability +
+                ",\n     created=" + created +
+                "\n}";
     }
 }

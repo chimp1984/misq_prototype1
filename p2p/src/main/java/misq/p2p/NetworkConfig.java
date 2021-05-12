@@ -17,12 +17,11 @@
 
 package misq.p2p;
 
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import misq.p2p.peers.PeerConfig;
+import misq.p2p.peers.exchange.PeerExchangeConfig;
 
 @Getter
-@EqualsAndHashCode
 public class NetworkConfig {
     private final String baseDirName;
     private final NetworkType networkType;
@@ -38,7 +37,7 @@ public class NetworkConfig {
                 networkType,
                 serverId,
                 serverPort,
-                new PeerConfig(new SeedNodeRepository().getNodes(networkType)));
+                new PeerConfig(new PeerExchangeConfig(), new SeedNodeRepository().getNodes(networkType)));
     }
 
     public NetworkConfig(String baseDirName,

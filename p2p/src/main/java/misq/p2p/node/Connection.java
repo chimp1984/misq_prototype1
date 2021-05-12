@@ -41,10 +41,10 @@ import java.util.function.Consumer;
  */
 @Slf4j
 public abstract class Connection {
-    private final ExecutorService outputExecutorService;
-    private final ExecutorService inputHandlerService;
-    private final ObjectInputStream objectInputStream;
-    private final ObjectOutputStream objectOutputStream;
+    private ExecutorService outputExecutor;
+    private ExecutorService inputHandler;
+    private ObjectInputStream objectInputStream;
+    private ObjectOutputStream objectOutputStream;
     private final Set<MessageListener> messageListeners = new CopyOnWriteArraySet<>();
     private final Socket socket;
     @Getter
@@ -52,33 +52,37 @@ public abstract class Connection {
     private final Object isStoppedLock = new Object();
     private volatile boolean isStopped;
 
-    public Connection(Socket socket, Consumer<Exception> errorHandler) throws IOException {
+    public Connection(Socket socket) {
         this.socket = socket;
+    }
 
-        outputExecutorService = ThreadingUtils.getSingleThreadExecutor("Connection.outputExecutorService-" + getId());
-        inputHandlerService = ThreadingUtils.getSingleThreadExecutor("Connection.inputHandlerService-" + getId());
+    public void listen(Consumer<Exception> errorHandler) throws IOException {
+        outputExecutor = ThreadingUtils.getSingleThreadExecutor("Connection.outputExecutor-" + getShortId());
+        inputHandler = ThreadingUtils.getSingleThreadExecutor("Connection.inputHandler-" + getShortId());
 
         // ObjectOutputStream need to be set before objectInputStream otherwise we get blocked...
         // https://stackoverflow.com/questions/14110986/new-objectinputstream-blocks/14111047
         objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
         objectInputStream = new ObjectInputStream(socket.getInputStream());
 
-        inputHandlerService.execute(() -> {
+        inputHandler.execute(() -> {
             while (!isStopped && !Thread.currentThread().isInterrupted()) {
                 Object object;
                 try {
                     object = objectInputStream.readObject();
-                    log.info("Received {}", object);
-                    //todo keep check outside?
+                    //todo move check to node?
                     if (object instanceof Message) {
                         Message message = (Message) object;
+                        log.debug("Received message: {} at connection: {}", message, this);
                         messageListeners.forEach(listener -> listener.onMessage(this, message));
                     } else {
                         throw new Exception("Received object is not of type Message: " + object.getClass().getName());
                     }
                 } catch (Exception exception) {
+                    if (!isStopped) {
+                        close();
+                    }
                     errorHandler.accept(exception);
-                    close();
                 }
             }
         });
@@ -86,14 +90,16 @@ public abstract class Connection {
 
     public CompletableFuture<Connection> send(Message message) {
         CompletableFuture<Connection> future = new CompletableFuture<>();
-        outputExecutorService.execute(() -> {
+        outputExecutor.execute(() -> {
             try {
                 objectOutputStream.writeObject(message);
                 objectOutputStream.flush();
-                log.info("Message sent: {}", message);
+                log.debug("Message sent: {} at connection: {}", message, this);
                 future.complete(this);
             } catch (IOException exception) {
-                close();
+                if (!isStopped) {
+                    close();
+                }
                 future.completeExceptionally(exception);
             }
         });
@@ -102,11 +108,15 @@ public abstract class Connection {
 
 
     public void close() {
+        if (isStopped) {
+            return;
+        }
+
         synchronized (isStoppedLock) {
             isStopped = true;
         }
-        ThreadingUtils.shutdownAndAwaitTermination(inputHandlerService);
-        ThreadingUtils.shutdownAndAwaitTermination(outputExecutorService);
+        ThreadingUtils.shutdownAndAwaitTermination(inputHandler);
+        ThreadingUtils.shutdownAndAwaitTermination(outputExecutor);
         try {
             socket.close();
         } catch (IOException ignore) {
@@ -125,4 +135,13 @@ public abstract class Connection {
         return uid;
     }
 
+    protected String getShortId() {
+        return uid.substring(0, 8);
+    }
+
+
+    @Override
+    public String toString() {
+        return getId();
+    }
 }

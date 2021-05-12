@@ -15,28 +15,29 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package misq.p2p.peers.exchange;
+package misq.p2p.proxy;
 
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import misq.p2p.node.Message;
-import misq.p2p.peers.Peer;
+import lombok.extern.slf4j.Slf4j;
+import misq.p2p.node.Address;
 
-import java.util.Set;
+import java.net.ServerSocket;
 
-@EqualsAndHashCode
+@Slf4j
 @Getter
-class PeerExchangeRequest implements Message {
-    private final Set<Peer> peers;
+public class GetServerSocketResult {
+    private final String serverId;
+    private final ServerSocket serverSocket;
+    private final Address address;
 
-    public PeerExchangeRequest(Set<Peer> peers) {
-        this.peers = peers;
+    public GetServerSocketResult(String serverId, ServerSocket serverSocket, Address address) {
+        this.serverId = serverId;
+        this.serverSocket = serverSocket;
+        this.address = address;
     }
 
     @Override
     public String toString() {
-        return "PeerExchangeRequest{" +
-                "\n     peers=" + peers +
-                "\n}";
+        return serverId + " @ " + address.toString();
     }
 }

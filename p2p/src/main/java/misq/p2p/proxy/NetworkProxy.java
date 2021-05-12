@@ -60,9 +60,9 @@ public interface NetworkProxy {
      *
      * @param serverId
      * @param serverPort
-     * @return ServerInfo excapsulating ServerSocket and the server address (e.g. onion address)
+     * @return ServerInfo encapsulating ServerSocket and the server address (e.g. onion address)
      */
-    CompletableFuture<ServerInfo> createServerSocket(String serverId, int serverPort);
+    CompletableFuture<GetServerSocketResult> getServerSocket(String serverId, int serverPort);
 
     /**
      * Returns a client socket

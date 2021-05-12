@@ -22,7 +22,7 @@ import misq.common.util.MapUtils;
 import misq.common.util.Tuple2;
 import misq.p2p.NetworkType;
 import misq.p2p.node.*;
-import misq.p2p.proxy.ServerInfo;
+import misq.p2p.proxy.GetServerSocketResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -52,12 +52,17 @@ public class CapabilityExchange implements ConnectionListener, MessageListener {
 
     private final Node node;
     private final Set<NetworkType> mySupportedNetworks;
+
+    // ConnectionUid is key in following maps
     private final Map<String, CapabilityResponseHandler> responseHandlerMap = new ConcurrentHashMap<>();
     private final Map<String, CapabilityRequestHandler> requestHandlerMap = new ConcurrentHashMap<>();
     private final Map<String, Capability> capabilityMap = new ConcurrentHashMap<>();
+
     private final Set<ConnectionListener> connectionListeners = new CopyOnWriteArraySet<>();
     private final Set<MessageListener> messageListeners = new CopyOnWriteArraySet<>();
     private final Map<String, List<Tuple2<Message, CompletableFuture<Connection>>>> sendQueue = new ConcurrentHashMap<>();
+    private final Object isStoppedLock = new Object();
+    private volatile boolean isStopped;
 
     public CapabilityExchange(Node node, Set<NetworkType> mySupportedNetworks) {
         this.node = node;
@@ -84,27 +89,35 @@ public class CapabilityExchange implements ConnectionListener, MessageListener {
 
     @Override
     public void onInboundConnection(InboundConnection connection) {
+        if (isStopped) {
+            return;
+        }
         checkArgument(getMyAddress().isPresent(), "My address need to be already available.");
         CapabilityResponseHandler capabilityResponseHandler = new CapabilityResponseHandler(connection,
                 getMyAddress().get(),
                 mySupportedNetworks,
                 capability -> {
-                    onHandshakeComplete(connection, capability);
-                    responseHandlerMap.remove(connection.getUid());
-                    connectionListeners.forEach(listener -> listener.onInboundConnection(connection));
+                    if (!isStopped) {
+                        onHandshakeComplete(connection, capability);
+                        responseHandlerMap.remove(connection.getUid());
+                        connectionListeners.forEach(listener -> listener.onInboundConnection(connection));
+                    }
                 });
         responseHandlerMap.put(connection.getUid(), capabilityResponseHandler);
     }
 
     @Override
     public void onOutboundConnection(OutboundConnection connection, Address peerAddress) {
+        if (isStopped) {
+            return;
+        }
         checkArgument(getMyAddress().isPresent(), "My address need to be already available.");
         CapabilityRequestHandler capabilityRequestHandler = new CapabilityRequestHandler(connection,
                 peerAddress, getMyAddress().get(), mySupportedNetworks);
         requestHandlerMap.put(connection.getUid(), capabilityRequestHandler);
         capabilityRequestHandler.request()
                 .whenComplete((capability, throwable) -> {
-                    if (capability != null) {
+                    if (capability != null && !isStopped) {
                         onHandshakeComplete(connection, capability);
                         requestHandlerMap.remove(connection.getUid());
                         connectionListeners.forEach(listener -> listener.onOutboundConnection(connection, peerAddress));
@@ -113,7 +126,7 @@ public class CapabilityExchange implements ConnectionListener, MessageListener {
     }
 
     @Override
-    public void onDisconnect(Connection connection) {
+    public void onDisconnect(Connection connection, Optional<Address> optionalAddress) {
         String uid = connection.getUid();
 
         MapUtils.disposeAndRemove(uid, requestHandlerMap);
@@ -125,7 +138,10 @@ public class CapabilityExchange implements ConnectionListener, MessageListener {
             sendQueue.remove(uid);
         }
 
-        connectionListeners.forEach(listener -> listener.onDisconnect(connection));
+        capabilityMap.remove(connection.getUid());
+
+        Optional<Address> address = optionalAddress.isPresent() ? optionalAddress : getPeerAddress(connection);
+        connectionListeners.forEach(listener -> listener.onDisconnect(connection, address));
     }
 
 
@@ -148,6 +164,9 @@ public class CapabilityExchange implements ConnectionListener, MessageListener {
     }
 
     public void shutdown() {
+        synchronized (isStoppedLock) {
+            isStopped = true;
+        }
         connectionListeners.clear();
         messageListeners.clear();
 
@@ -175,8 +194,8 @@ public class CapabilityExchange implements ConnectionListener, MessageListener {
         }
     }
 
-    public Capability getCapability(String connectionUid) {
-        return capabilityMap.get(connectionUid);
+    public Capability getCapability(Connection connection) {
+        return capabilityMap.get(connection.getUid());
     }
 
     public Optional<Connection> findConnection(Address peerAddress) {
@@ -228,7 +247,7 @@ public class CapabilityExchange implements ConnectionListener, MessageListener {
     // Delegates
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public CompletableFuture<ServerInfo> initializeServer() {
+    public CompletableFuture<GetServerSocketResult> initializeServer() {
         return node.initializeServer();
     }
 
@@ -236,8 +255,14 @@ public class CapabilityExchange implements ConnectionListener, MessageListener {
         return node.getMyAddress();
     }
 
+    // In case we have an inbound connection with that address we use that
     public CompletableFuture<Connection> getConnection(Address peerAddress) {
-        return node.getConnection(peerAddress);
+        return capabilityMap.entrySet().stream()
+                .filter(entry -> entry.getValue().getAddress().equals(peerAddress))
+                .flatMap(entry -> node.findConnection(entry.getKey()).stream())
+                .findAny()
+                .map(CompletableFuture::completedFuture)
+                .orElseGet(() -> node.getConnection(peerAddress));
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -249,6 +274,7 @@ public class CapabilityExchange implements ConnectionListener, MessageListener {
 
         String uid = connection.getUid();
         capabilityMap.put(uid, capability);
+        log.info("onHandshakeComplete: peers address: {}, connection: {}", capability.getAddress(), connection);
 
         // Only after we have completed the initial handshake we register for messages to notify our
         // clients for new messages.
@@ -265,6 +291,9 @@ public class CapabilityExchange implements ConnectionListener, MessageListener {
     }
 
     private void processSendQueue(Connection connection) {
+        if (isStopped) {
+            return;
+        }
         String uid = connection.getUid();
         if (sendQueue.containsKey(uid)) {
             List<Tuple2<Message, CompletableFuture<Connection>>> list = sendQueue.get(uid);
