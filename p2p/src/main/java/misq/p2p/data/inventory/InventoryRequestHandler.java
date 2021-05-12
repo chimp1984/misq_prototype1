@@ -20,9 +20,9 @@ package misq.p2p.data.inventory;
 import lombok.extern.slf4j.Slf4j;
 import misq.common.util.Disposable;
 import misq.p2p.data.filter.DataFilter;
-import misq.p2p.node.Connection;
-import misq.p2p.node.Message;
-import misq.p2p.node.MessageListener;
+import misq.p2p.endpoint.Connection;
+import misq.p2p.endpoint.Message;
+import misq.p2p.endpoint.MessageListener;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;

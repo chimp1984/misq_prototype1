@@ -15,28 +15,9 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package misq.p2p.guard;
+package misq.p2p.endpoint;
 
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import misq.p2p.node.Message;
+import java.io.Serializable;
 
-@EqualsAndHashCode
-@Getter
-public class GuardedMessage implements Message {
-    private final Message message;
-    private final AccessToken accessToken;
-
-    public GuardedMessage(Message message, AccessToken accessToken) {
-        this.message = message;
-        this.accessToken = accessToken;
-    }
-
-    @Override
-    public String toString() {
-        return "GuardedMessage{" +
-                "\n     message=" + message +
-                ",\n     accessToken=" + accessToken +
-                "\n}";
-    }
+public interface Message extends Serializable {
 }

@@ -15,18 +15,28 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package misq.p2p.guard;
+package misq.p2p.protection;
 
-import misq.p2p.node.Message;
+import misq.p2p.endpoint.Message;
 
 import java.util.concurrent.CompletableFuture;
 
-public interface PermissionControl {
+/**
+ * Dummy implementation. Will be pow based...
+ */
+public class NoRestriction implements PermissionControl {
 
-    boolean hasPermit(GuardedMessage guardedMessage);
+    @Override
+    public boolean hasPermit(GuardedMessage guardedMessage) {
+        return true;
+    }
 
-    CompletableFuture<AccessToken> getPermit(Message message);
+    @Override
+    public CompletableFuture<AccessToken> getPermit(Message message) {
+        return CompletableFuture.completedFuture(new AccessToken());
+    }
 
-    void shutdown();
-
+    @Override
+    public void shutdown() {
+    }
 }

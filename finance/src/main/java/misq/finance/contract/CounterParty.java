@@ -18,7 +18,7 @@
 package misq.finance.contract;
 
 import lombok.Getter;
-import misq.p2p.node.Address;
+import misq.p2p.endpoint.Address;
 
 @Getter
 public class CounterParty {

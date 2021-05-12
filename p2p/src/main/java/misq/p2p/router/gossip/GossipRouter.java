@@ -18,12 +18,12 @@
 package misq.p2p.router.gossip;
 
 import misq.common.util.CollectionUtil;
-import misq.p2p.guard.Guard;
-import misq.p2p.node.Address;
-import misq.p2p.node.Connection;
-import misq.p2p.node.Message;
-import misq.p2p.node.MessageListener;
+import misq.p2p.endpoint.Address;
+import misq.p2p.endpoint.Connection;
+import misq.p2p.endpoint.Message;
+import misq.p2p.endpoint.MessageListener;
 import misq.p2p.peers.PeerGroup;
+import misq.p2p.protection.ProtectedNode;
 
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -40,15 +40,15 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class GossipRouter implements MessageListener {
     private static final long BROADCAST_TIMEOUT = 90;
 
-    private final Guard guard;
+    private final ProtectedNode protectedNode;
     private final PeerGroup peerGroup;
     private final Set<MessageListener> messageListeners = new CopyOnWriteArraySet<>();
 
-    public GossipRouter(Guard guard, PeerGroup peerGroup) {
-        this.guard = guard;
+    public GossipRouter(ProtectedNode protectedNode, PeerGroup peerGroup) {
+        this.protectedNode = protectedNode;
         this.peerGroup = peerGroup;
 
-        guard.addMessageListener(this);
+        protectedNode.addMessageListener(this);
     }
 
     @Override
@@ -68,7 +68,7 @@ public class GossipRouter implements MessageListener {
         Set<Address> connectedPeerAddresses = peerGroup.getConnectedPeerAddresses();
         int target = connectedPeerAddresses.size();
         connectedPeerAddresses.forEach(address -> {
-            guard.send(new GossipMessage(message), address)
+            protectedNode.send(new GossipMessage(message), address)
                     .whenComplete((connection, t) -> {
                         if (connection != null) {
                             numSuccess.incrementAndGet();
@@ -100,6 +100,6 @@ public class GossipRouter implements MessageListener {
     public void shutdown() {
         messageListeners.clear();
 
-        guard.removeMessageListener(this);
+        protectedNode.removeMessageListener(this);
     }
 }

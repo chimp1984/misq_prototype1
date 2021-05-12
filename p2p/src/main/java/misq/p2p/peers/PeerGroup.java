@@ -20,8 +20,8 @@ package misq.p2p.peers;
 import com.google.common.collect.ImmutableList;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import misq.p2p.guard.Guard;
-import misq.p2p.node.*;
+import misq.p2p.endpoint.*;
+import misq.p2p.protection.ProtectedNode;
 import net.i2p.util.ConcurrentHashSet;
 
 import java.util.*;
@@ -32,7 +32,7 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 @Slf4j
 public class PeerGroup implements ConnectionListener {
-    private final Guard guard;
+    private final ProtectedNode protectedNode;
     @Getter
     private final ImmutableList<Address> seedNodes;
     private final Map<Address, Peer> connectedPeerByAddress = new ConcurrentHashMap<>();
@@ -43,14 +43,14 @@ public class PeerGroup implements ConnectionListener {
     @Getter
     private final Set<Connection> connections = new ConcurrentHashSet<>();
 
-    public PeerGroup(Guard guard, PeerConfig peerConfig) {
-        this.guard = guard;
+    public PeerGroup(ProtectedNode protectedNode, PeerConfig peerConfig) {
+        this.protectedNode = protectedNode;
 
         List<Address> seeds = new ArrayList<>(peerConfig.getSeedNodes());
         Collections.shuffle(seeds);
         seedNodes = ImmutableList.copyOf(seeds);
 
-        guard.addConnectionListener(this);
+        protectedNode.addConnectionListener(this);
     }
 
     @Override
@@ -70,7 +70,7 @@ public class PeerGroup implements ConnectionListener {
     }
 
     private void onConnection(Connection connection) {
-        Peer peer = new Peer(guard.getCapability(connection));
+        Peer peer = new Peer(protectedNode.getCapability(connection));
         connectedPeerByAddress.put(peer.getAddress(), peer);
         connections.add(connection);
     }
@@ -92,7 +92,7 @@ public class PeerGroup implements ConnectionListener {
     }
 
     public boolean notMyself(Address address) {
-        Optional<Address> optionalMyAddress = guard.getMyAddress();
+        Optional<Address> optionalMyAddress = protectedNode.getMyAddress();
         return !optionalMyAddress.isPresent() || !optionalMyAddress.get().equals(address);
     }
 

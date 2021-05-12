@@ -15,28 +15,28 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package misq.p2p.node;
+package misq.p2p.protection;
 
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
+import misq.p2p.endpoint.Message;
 
-import java.io.IOException;
-import java.net.Socket;
+@EqualsAndHashCode
+@Getter
+public class GuardedMessage implements Message {
+    private final Message message;
+    private final AccessToken accessToken;
 
-@Slf4j
-public class OutboundConnection extends Connection {
-    @Getter
-    private final Address address;
-
-    public OutboundConnection(Socket socket, Address address) throws IOException {
-        super(socket);
-
-        this.address = address;
-        log.debug("Create outboundConnection to {}", address);
+    public GuardedMessage(Message message, AccessToken accessToken) {
+        this.message = message;
+        this.accessToken = accessToken;
     }
 
     @Override
-    protected String getId() {
-        return address + " / " + uid;
+    public String toString() {
+        return "GuardedMessage{" +
+                "\n     message=" + message +
+                ",\n     accessToken=" + accessToken +
+                "\n}";
     }
 }

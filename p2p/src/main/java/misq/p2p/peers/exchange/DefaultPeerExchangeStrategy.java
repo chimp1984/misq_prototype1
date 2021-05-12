@@ -18,7 +18,7 @@
 package misq.p2p.peers.exchange;
 
 import lombok.extern.slf4j.Slf4j;
-import misq.p2p.node.Address;
+import misq.p2p.endpoint.Address;
 import misq.p2p.peers.Peer;
 import misq.p2p.peers.PeerConfig;
 import misq.p2p.peers.PeerGroup;

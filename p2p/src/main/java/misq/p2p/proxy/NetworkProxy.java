@@ -18,7 +18,7 @@
 package misq.p2p.proxy;
 
 import misq.p2p.NetworkConfig;
-import misq.p2p.node.Address;
+import misq.p2p.endpoint.Address;
 
 import java.io.IOException;
 import java.net.Socket;

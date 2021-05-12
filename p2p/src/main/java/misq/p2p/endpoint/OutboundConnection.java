@@ -15,28 +15,28 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package misq.p2p.guard;
+package misq.p2p.endpoint;
 
-import misq.p2p.node.Message;
+import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
-import java.util.concurrent.CompletableFuture;
+import java.io.IOException;
+import java.net.Socket;
 
-/**
- * Dummy implementation. Will be pow based...
- */
-public class NoRestriction implements PermissionControl {
+@Slf4j
+public class OutboundConnection extends Connection {
+    @Getter
+    private final Address address;
 
-    @Override
-    public boolean hasPermit(GuardedMessage guardedMessage) {
-        return true;
+    public OutboundConnection(Socket socket, Address address) throws IOException {
+        super(socket);
+
+        this.address = address;
+        log.debug("Create outboundConnection to {}", address);
     }
 
     @Override
-    public CompletableFuture<AccessToken> getPermit(Message message) {
-        return CompletableFuture.completedFuture(new AccessToken());
-    }
-
-    @Override
-    public void shutdown() {
+    protected String getId() {
+        return address + " / " + uid;
     }
 }

@@ -19,12 +19,12 @@ package misq.p2p.confidential;
 
 import misq.common.util.CollectionUtil;
 import misq.p2p.NetworkType;
-import misq.p2p.guard.Guard;
-import misq.p2p.node.Address;
-import misq.p2p.node.Connection;
-import misq.p2p.node.Message;
-import misq.p2p.node.MessageListener;
+import misq.p2p.endpoint.Address;
+import misq.p2p.endpoint.Connection;
+import misq.p2p.endpoint.Message;
+import misq.p2p.endpoint.MessageListener;
 import misq.p2p.peers.PeerGroup;
+import misq.p2p.protection.ProtectedNode;
 
 import java.util.Optional;
 import java.util.Set;
@@ -35,15 +35,15 @@ import java.util.stream.Collectors;
 import static com.google.common.base.Preconditions.checkArgument;
 
 public class ConfidentialMessageService implements MessageListener {
-    private final Guard guard;
+    private final ProtectedNode protectedNode;
     private final PeerGroup peerGroup;
     private final Set<MessageListener> messageListeners = new CopyOnWriteArraySet<>();
 
-    public ConfidentialMessageService(Guard guard, PeerGroup peerGroup) {
-        this.guard = guard;
+    public ConfidentialMessageService(ProtectedNode protectedNode, PeerGroup peerGroup) {
+        this.protectedNode = protectedNode;
         this.peerGroup = peerGroup;
 
-        guard.addMessageListener(this);
+        protectedNode.addMessageListener(this);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -68,29 +68,29 @@ public class ConfidentialMessageService implements MessageListener {
     }
 
     public CompletableFuture<Connection> send(Message message, Address peerAddress) {
-        return guard.send(seal(message), peerAddress);
+        return protectedNode.send(seal(message), peerAddress);
     }
 
     public CompletableFuture<Connection> relay(Message message, Address peerAddress) {
-        Optional<Address> myAddress = guard.getMyAddress();
+        Optional<Address> myAddress = protectedNode.getMyAddress();
         checkArgument(myAddress.isPresent());
         Set<Connection> connections = getConnectionsWithSupportedNetwork(peerAddress.getNetworkType());
         Connection outboundConnection = CollectionUtil.getRandomElement(connections);
         if (outboundConnection != null) {
             //todo we need 2 diff. pub keys for encryption here
             RelayMessage relayMessage = new RelayMessage(seal(message), peerAddress);
-            return guard.send(seal(relayMessage), outboundConnection);
+            return protectedNode.send(seal(relayMessage), outboundConnection);
         }
         return CompletableFuture.failedFuture(new Exception("No connection supporting that network type found."));
     }
 
     public void shutdown() {
-        guard.removeMessageListener(this);
+        protectedNode.removeMessageListener(this);
         messageListeners.clear();
     }
 
     public CompletableFuture<Connection> send(Message message, Connection connection) {
-        return guard.send(seal(message), connection);
+        return protectedNode.send(seal(message), connection);
     }
 
     public void addMessageListener(MessageListener messageListener) {
@@ -117,7 +117,7 @@ public class ConfidentialMessageService implements MessageListener {
     private Set<Connection> getConnectionsWithSupportedNetwork(NetworkType networkType) {
         return peerGroup.getConnectedPeerByAddress().stream()
                 .filter(peer -> peer.getCapability().getSupportedNetworkTypes().contains(networkType))
-                .flatMap(peer -> guard.findConnection(peer.getAddress()).stream())
+                .flatMap(peer -> protectedNode.findConnection(peer.getAddress()).stream())
                 .collect(Collectors.toSet());
     }
 }

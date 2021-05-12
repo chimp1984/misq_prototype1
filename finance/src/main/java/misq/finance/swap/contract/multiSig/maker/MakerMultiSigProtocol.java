@@ -27,8 +27,8 @@ import misq.finance.swap.contract.multiSig.MultiSigProtocol;
 import misq.finance.swap.contract.multiSig.taker.DepositTxBroadcastMessage;
 import misq.finance.swap.contract.multiSig.taker.PayoutTxBroadcastMessage;
 import misq.p2p.P2pService;
-import misq.p2p.node.Connection;
-import misq.p2p.node.Message;
+import misq.p2p.endpoint.Connection;
+import misq.p2p.endpoint.Message;
 
 import java.util.concurrent.CompletableFuture;
 

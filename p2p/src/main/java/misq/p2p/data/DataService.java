@@ -24,9 +24,9 @@ import misq.p2p.data.inventory.InventoryResponseHandler;
 import misq.p2p.data.inventory.RequestInventoryResult;
 import misq.p2p.data.storage.MapKey;
 import misq.p2p.data.storage.Storage;
-import misq.p2p.guard.Guard;
-import misq.p2p.node.*;
+import misq.p2p.endpoint.*;
 import misq.p2p.peers.PeerGroup;
+import misq.p2p.protection.ProtectedNode;
 import misq.p2p.router.Router;
 import misq.p2p.router.gossip.GossipResult;
 
@@ -52,21 +52,21 @@ import java.util.concurrent.TimeUnit;
 public class DataService implements MessageListener, ConnectionListener {
     private static final long BROADCAST_TIMEOUT = 90;
 
-    private final Guard guard;
+    private final ProtectedNode protectedNode;
     private final Router router;
     private final Storage storage;
     private final Set<DataListener> dataListeners = new CopyOnWriteArraySet<>();
     private final Map<String, InventoryResponseHandler> responseHandlerMap = new ConcurrentHashMap<>();
     private final Map<String, InventoryRequestHandler> requestHandlerMap = new ConcurrentHashMap<>();
 
-    public DataService(Guard guard, PeerGroup peerGroup, Storage storage) {
-        this.guard = guard;
+    public DataService(ProtectedNode protectedNode, PeerGroup peerGroup, Storage storage) {
+        this.protectedNode = protectedNode;
         this.storage = storage;
 
-        router = new Router(guard, peerGroup);
+        router = new Router(protectedNode, peerGroup);
 
         router.addMessageListener(this);
-        guard.addConnectionListener(this);
+        protectedNode.addConnectionListener(this);
     }
 
 
@@ -166,7 +166,7 @@ public class DataService implements MessageListener, ConnectionListener {
         long ts = System.currentTimeMillis();
         CompletableFuture<RequestInventoryResult> future = new CompletableFuture<>();
         future.orTimeout(BROADCAST_TIMEOUT, TimeUnit.SECONDS);
-        guard.getConnection(address)
+        protectedNode.getConnection(address)
                 .thenCompose(connection -> {
                     InventoryRequestHandler requestHandler = new InventoryRequestHandler(connection);
                     requestHandlerMap.put(connection.getUid(), requestHandler);

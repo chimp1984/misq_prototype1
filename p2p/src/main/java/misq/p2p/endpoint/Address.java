@@ -15,7 +15,7 @@
  * along with Misq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package misq.p2p.node;
+package misq.p2p.endpoint;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;

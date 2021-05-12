@@ -4,7 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import misq.common.util.FileUtils;
 import misq.common.util.NetworkUtils;
 import misq.p2p.NetworkConfig;
-import misq.p2p.node.Address;
+import misq.p2p.endpoint.Address;
 import misq.torify.Constants;
 import misq.torify.TorController;
 import misq.torify.TorServerSocket;

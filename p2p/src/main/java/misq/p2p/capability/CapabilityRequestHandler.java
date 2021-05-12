@@ -20,10 +20,10 @@ package misq.p2p.capability;
 import lombok.extern.slf4j.Slf4j;
 import misq.common.util.Disposable;
 import misq.p2p.NetworkType;
-import misq.p2p.node.Address;
-import misq.p2p.node.Connection;
-import misq.p2p.node.Message;
-import misq.p2p.node.MessageListener;
+import misq.p2p.endpoint.Address;
+import misq.p2p.endpoint.Connection;
+import misq.p2p.endpoint.Message;
+import misq.p2p.endpoint.MessageListener;
 
 import java.util.Random;
 import java.util.Set;

@@ -2,7 +2,7 @@ package misq.p2p.proxy;
 
 import lombok.extern.slf4j.Slf4j;
 import misq.p2p.NetworkConfig;
-import misq.p2p.node.Address;
+import misq.p2p.endpoint.Address;
 
 import java.io.IOException;
 import java.net.ServerSocket;

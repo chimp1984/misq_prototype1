@@ -19,9 +19,9 @@ package misq.p2p.peers;
 
 import com.google.common.annotations.VisibleForTesting;
 import lombok.extern.slf4j.Slf4j;
-import misq.p2p.guard.Guard;
-import misq.p2p.peers.exchange.PeerExchange;
+import misq.p2p.peers.exchange.PeerExchangeManager;
 import misq.p2p.peers.exchange.PeerExchangeStrategy;
+import misq.p2p.protection.ProtectedNode;
 
 import java.util.concurrent.CompletableFuture;
 
@@ -51,29 +51,29 @@ import java.util.concurrent.CompletableFuture;
 @Slf4j
 public class PeerManager {
 
-    private final Guard guard;
+    private final ProtectedNode protectedNode;
     private final PeerGroup peerGroup;
     private final PeerConfig peerConfig;
-    private final PeerExchange peerExchange;
+    private final PeerExchangeManager peerExchangeManager;
     private final PeerGroupHealth peerGroupHealth;
     private final Object isStoppedLock = new Object();
     private volatile boolean isStopped;
 
-    public PeerManager(Guard guard,
+    public PeerManager(ProtectedNode protectedNode,
                        PeerGroup peerGroup,
                        PeerExchangeStrategy peerExchangeStrategy,
                        PeerConfig peerConfig) {
-        this.guard = guard;
+        this.protectedNode = protectedNode;
         this.peerGroup = peerGroup;
         this.peerConfig = peerConfig;
 
-        peerExchange = new PeerExchange(guard, peerExchangeStrategy);
-        peerGroupHealth = new PeerGroupHealth(guard, peerGroup);
+        peerExchangeManager = new PeerExchangeManager(protectedNode, peerExchangeStrategy);
+        peerGroupHealth = new PeerGroupHealth(protectedNode, peerGroup);
     }
 
     public CompletableFuture<Boolean> bootstrap(String serverId, int serverPort) {
-        return guard.initializeServer(serverId, serverPort)
-                .thenCompose(serverInfo -> peerExchange.bootstrap())
+        return protectedNode.initializeServer(serverId, serverPort)
+                .thenCompose(serverInfo -> peerExchangeManager.bootstrap())
                 .thenCompose(completed -> peerGroupHealth.bootstrap());
     }
 
@@ -84,7 +84,7 @@ public class PeerManager {
         synchronized (isStoppedLock) {
             isStopped = true;
         }
-        peerExchange.shutdown();
+        peerExchangeManager.shutdown();
         peerGroupHealth.shutdown();
     }
 
@@ -106,7 +106,7 @@ public class PeerManager {
     }
 
     @VisibleForTesting
-    public Guard getGuard() {
-        return guard;
+    public ProtectedNode getGuard() {
+        return protectedNode;
     }
 }

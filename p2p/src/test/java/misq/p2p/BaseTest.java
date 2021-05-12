@@ -21,8 +21,8 @@ import com.google.common.collect.Sets;
 import lombok.extern.slf4j.Slf4j;
 import misq.common.util.OsUtils;
 import misq.p2p.data.storage.Storage;
-import misq.p2p.node.Address;
-import misq.p2p.node.Node;
+import misq.p2p.endpoint.Address;
+import misq.p2p.endpoint.EndPoint;
 import misq.p2p.peers.PeerConfig;
 import misq.p2p.peers.PeerGroup;
 import misq.p2p.peers.PeerManager;
@@ -76,7 +76,7 @@ public class BaseTest {
         String baseDirName = OsUtils.getUserDataDir().getAbsolutePath() + "/misq_test_" + role.name();
         NetworkConfig clearNet = new NetworkConfig(baseDirName,
                 NetworkType.CLEAR,
-                Node.DEFAULT_SERVER_ID,
+                EndPoint.DEFAULT_SERVER_ID,
                 serverPort);
         return clearNet;
     }
@@ -102,7 +102,7 @@ public class BaseTest {
                 minNumReportedPeers);
         NetworkConfig clearNet = new NetworkConfig(baseDirName,
                 NetworkType.CLEAR,
-                Node.DEFAULT_SERVER_ID,
+                EndPoint.DEFAULT_SERVER_ID,
                 serverPort,
                 peerConfig);
         return clearNet;

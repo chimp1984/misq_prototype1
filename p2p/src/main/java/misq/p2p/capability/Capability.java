@@ -20,7 +20,7 @@ package misq.p2p.capability;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import misq.p2p.NetworkType;
-import misq.p2p.node.Address;
+import misq.p2p.endpoint.Address;
 
 import java.io.Serializable;
 import java.util.Set;

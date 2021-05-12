@@ -15,14 +15,8 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package misq.p2p.node;
+package misq.p2p.endpoint;
 
-import java.util.Optional;
-
-public interface ConnectionListener {
-    void onInboundConnection(InboundConnection connection);
-
-    void onOutboundConnection(OutboundConnection connection, Address peerAddress);
-
-    void onDisconnect(Connection connection, Optional<Address> optionalAddress);
+public interface MessageListener {
+    void onMessage(Connection connection, Message message);
 }

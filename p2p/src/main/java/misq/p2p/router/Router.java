@@ -17,12 +17,12 @@
 
 package misq.p2p.router;
 
-import misq.p2p.guard.Guard;
-import misq.p2p.node.Address;
-import misq.p2p.node.Connection;
-import misq.p2p.node.Message;
-import misq.p2p.node.MessageListener;
+import misq.p2p.endpoint.Address;
+import misq.p2p.endpoint.Connection;
+import misq.p2p.endpoint.Message;
+import misq.p2p.endpoint.MessageListener;
 import misq.p2p.peers.PeerGroup;
+import misq.p2p.protection.ProtectedNode;
 import misq.p2p.router.gossip.GossipResult;
 import misq.p2p.router.gossip.GossipRouter;
 
@@ -40,8 +40,8 @@ public class Router implements MessageListener {
     private final GossipRouter gossipRouter;
     private final Set<MessageListener> messageListeners = new CopyOnWriteArraySet<>();
 
-    public Router(Guard guard, PeerGroup peerGroup) {
-        gossipRouter = new GossipRouter(guard, peerGroup);
+    public Router(ProtectedNode protectedNode, PeerGroup peerGroup) {
+        gossipRouter = new GossipRouter(protectedNode, peerGroup);
         gossipRouter.addMessageListener(this);
     }
 

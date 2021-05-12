@@ -31,7 +31,7 @@ import misq.finance.swap.contract.bsqBond.maker.MakerBsqBondProtocol;
 import misq.finance.swap.contract.bsqBond.taker.TakerBsqBondProtocol;
 import misq.finance.swap.offer.SwapOffer;
 import misq.p2p.P2pService;
-import misq.p2p.node.Address;
+import misq.p2p.endpoint.Address;
 import org.junit.Before;
 import org.junit.Test;
 

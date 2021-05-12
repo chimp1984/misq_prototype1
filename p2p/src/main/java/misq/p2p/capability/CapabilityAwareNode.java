@@ -21,7 +21,7 @@ package misq.p2p.capability;
 import misq.common.util.MapUtils;
 import misq.common.util.Tuple2;
 import misq.p2p.NetworkType;
-import misq.p2p.node.*;
+import misq.p2p.endpoint.*;
 import misq.p2p.proxy.GetServerSocketResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,10 +47,10 @@ import static com.google.common.base.Preconditions.checkArgument;
  * Only onDisconnect will be called in any case on connectionListeners.
  * MessageListeners on that node will only be notified about new messages after the handshake is completed.
  */
-public class CapabilityExchange implements ConnectionListener, MessageListener {
-    private static final Logger log = LoggerFactory.getLogger(CapabilityExchange.class);
+public class CapabilityAwareNode implements ConnectionListener, MessageListener {
+    private static final Logger log = LoggerFactory.getLogger(CapabilityAwareNode.class);
 
-    private final Node node;
+    private final EndPoint endPoint;
     private final Set<NetworkType> mySupportedNetworks;
 
     // ConnectionUid is key in following maps
@@ -64,11 +64,11 @@ public class CapabilityExchange implements ConnectionListener, MessageListener {
     private final Object isStoppedLock = new Object();
     private volatile boolean isStopped;
 
-    public CapabilityExchange(Node node, Set<NetworkType> mySupportedNetworks) {
-        this.node = node;
+    public CapabilityAwareNode(EndPoint endPoint, Set<NetworkType> mySupportedNetworks) {
+        this.endPoint = endPoint;
         this.mySupportedNetworks = mySupportedNetworks;
 
-        node.addConnectionListener(this);
+        endPoint.addConnectionListener(this);
     }
 
 
@@ -159,7 +159,7 @@ public class CapabilityExchange implements ConnectionListener, MessageListener {
 
     public CompletableFuture<Connection> send(Message message, Connection connection) {
         if (capabilityMap.containsKey(connection.getUid())) {
-            return node.send(message, connection);
+            return endPoint.send(message, connection);
         } else {
             return addToSendQueue(message, connection);
         }
@@ -172,8 +172,8 @@ public class CapabilityExchange implements ConnectionListener, MessageListener {
         connectionListeners.clear();
         messageListeners.clear();
 
-        node.removeMessageListener(this);
-        node.removeConnectionListener(this);
+        endPoint.removeMessageListener(this);
+        endPoint.removeConnectionListener(this);
 
         sendQueue.values().stream()
                 .flatMap(Collection::stream)
@@ -186,8 +186,8 @@ public class CapabilityExchange implements ConnectionListener, MessageListener {
     }
 
     public Optional<Address> getPeerAddress(Connection connection) {
-        if (node.getPeerAddress(connection).isPresent()) {
-            return node.getPeerAddress(connection);
+        if (endPoint.getPeerAddress(connection).isPresent()) {
+            return endPoint.getPeerAddress(connection);
         } else if (capabilityMap.containsKey(connection.getUid())) {
             return Optional.of(capabilityMap.get(connection.getUid()).getAddress());
         } else {
@@ -200,14 +200,14 @@ public class CapabilityExchange implements ConnectionListener, MessageListener {
     }
 
     public Optional<Connection> findConnection(Address peerAddress) {
-        Optional<OutboundConnection> fromOutbound = node.getOutboundConnections().stream()
+        Optional<OutboundConnection> fromOutbound = endPoint.getOutboundConnections().stream()
                 .filter(c -> peerAddress.equals(c.getAddress()))
                 .findAny();
         if (fromOutbound.isPresent()) {
             return Optional.of(fromOutbound.get());
         }
 
-        Optional<InboundConnection> fromInbound = node.getInboundConnections().stream()
+        Optional<InboundConnection> fromInbound = endPoint.getInboundConnections().stream()
                 .filter(c -> capabilityMap.get(c.getUid()).getAddress().equals(peerAddress))
                 .findAny();
         if (fromInbound.isPresent()) {
@@ -218,7 +218,7 @@ public class CapabilityExchange implements ConnectionListener, MessageListener {
     }
 
     public Set<OutboundConnection> getConnectionsWithSupportedNetwork(NetworkType networkType) {
-        Map<String, OutboundConnection> map = node.getOutboundConnections().stream()
+        Map<String, OutboundConnection> map = endPoint.getOutboundConnections().stream()
                 .collect(Collectors.toMap(Connection::getUid, Function.identity()));
         return capabilityMap.entrySet().stream()
                 .filter(e -> e.getValue().getSupportedNetworkTypes().contains(networkType))
@@ -249,21 +249,21 @@ public class CapabilityExchange implements ConnectionListener, MessageListener {
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     public CompletableFuture<GetServerSocketResult> initializeServer(String serverId, int serverPort) {
-        return node.initializeServer(serverId, serverPort);
+        return endPoint.initializeServer(serverId, serverPort);
     }
 
     public Optional<Address> getMyAddress() {
-        return node.getMyAddress();
+        return endPoint.getMyAddress();
     }
 
     // In case we have an inbound connection with that address we use that
     public CompletableFuture<Connection> getConnection(Address peerAddress) {
         return capabilityMap.entrySet().stream()
                 .filter(entry -> entry.getValue().getAddress().equals(peerAddress))
-                .flatMap(entry -> node.findConnection(entry.getKey()).stream())
+                .flatMap(entry -> endPoint.findConnection(entry.getKey()).stream())
                 .findAny()
                 .map(CompletableFuture::completedFuture)
-                .orElseGet(() -> node.getConnection(peerAddress));
+                .orElseGet(() -> endPoint.getConnection(peerAddress));
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -301,7 +301,7 @@ public class CapabilityExchange implements ConnectionListener, MessageListener {
             list.forEach(tuple -> {
                 Message message = tuple.first;
                 CompletableFuture<Connection> future = tuple.second;
-                node.send(message, connection)
+                endPoint.send(message, connection)
                         .exceptionally(e -> null)
                         .whenComplete((connection2, throwable2) -> {
                             if (connection2 != null) {

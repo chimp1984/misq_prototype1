@@ -15,7 +15,7 @@
  * along with Misq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package misq.p2p.node;
+package misq.p2p.endpoint;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;

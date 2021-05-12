@@ -18,7 +18,7 @@
 package misq.p2p.peers.exchange;
 
 import misq.common.util.Tuple2;
-import misq.p2p.node.Address;
+import misq.p2p.endpoint.Address;
 
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;

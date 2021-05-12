@@ -19,7 +19,7 @@ package misq.finance.swap.contract.multiSig;
 
 import misq.finance.contract.*;
 import misq.p2p.P2pService;
-import misq.p2p.node.MessageListener;
+import misq.p2p.endpoint.MessageListener;
 /**
  * Mock protocol for simulating the a basic 2of2 Multisig protocol (MAD).
  * Maker is BTC buyer and taker, Taker is seller and maker. There might be differences for buyer/seller roles

@@ -19,10 +19,10 @@ package misq.p2p;
 
 import misq.p2p.data.filter.DataFilter;
 import misq.p2p.data.inventory.RequestInventoryResult;
-import misq.p2p.node.Address;
-import misq.p2p.node.Connection;
-import misq.p2p.node.Message;
-import misq.p2p.node.MessageListener;
+import misq.p2p.endpoint.Address;
+import misq.p2p.endpoint.Connection;
+import misq.p2p.endpoint.Message;
+import misq.p2p.endpoint.MessageListener;
 import misq.p2p.proxy.GetServerSocketResult;
 import misq.p2p.router.gossip.GossipResult;
 

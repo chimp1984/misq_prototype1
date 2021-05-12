@@ -20,9 +20,9 @@ package misq.p2p.peers.exchange;
 import lombok.extern.slf4j.Slf4j;
 import misq.common.util.CollectionUtil;
 import misq.common.util.MapUtils;
-import misq.p2p.guard.Guard;
-import misq.p2p.node.*;
+import misq.p2p.endpoint.*;
 import misq.p2p.peers.Peer;
+import misq.p2p.protection.ProtectedNode;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
@@ -38,10 +38,10 @@ import static com.google.common.base.Preconditions.checkArgument;
  * We could use a set of different strategies and select randomly one. This could increase network resilience.
  */
 @Slf4j
-public class PeerExchange implements ConnectionListener {
+public class PeerExchangeManager implements ConnectionListener {
     public static final int TIMEOUT = 300;
 
-    private final Guard guard;
+    private final ProtectedNode protectedNode;
     private final PeerExchangeStrategy peerExchangeStrategy;
     private final Map<String, PeerExchangeResponseHandler> responseHandlerMap = new ConcurrentHashMap<>();
     private final Map<String, PeerExchangeRequestHandler> requestHandlerMap = new ConcurrentHashMap<>();
@@ -49,12 +49,12 @@ public class PeerExchange implements ConnectionListener {
     private final PeerExchangeGraph peerExchangeGraph;
     private volatile boolean isStopped;
 
-    public PeerExchange(Guard guard, PeerExchangeStrategy peerExchangeStrategy) {
-        this.guard = guard;
+    public PeerExchangeManager(ProtectedNode protectedNode, PeerExchangeStrategy peerExchangeStrategy) {
+        this.protectedNode = protectedNode;
         this.peerExchangeStrategy = peerExchangeStrategy;
 
         peerExchangeGraph = new PeerExchangeGraph();
-        guard.addConnectionListener(this);
+        protectedNode.addConnectionListener(this);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -65,13 +65,13 @@ public class PeerExchange implements ConnectionListener {
     public void onInboundConnection(InboundConnection connection) {
         // Capability exchange with address has been completed already so expect to know the peers address.
         // We do not add the requesters address to the reported peers.
-        guard.getPeerAddress(connection).ifPresent(address -> {
+        protectedNode.getPeerAddress(connection).ifPresent(address -> {
             Set<Peer> peersForPeerExchange = peerExchangeStrategy.getPeersForPeerExchange(address);
             PeerExchangeResponseHandler responseHandler = new PeerExchangeResponseHandler(connection,
                     peersForPeerExchange,
                     peers -> {
                         if (!isStopped) {
-                            peerExchangeStrategy.addPeersFromPeerExchange(peers, guard.getPeerAddress(connection).get());
+                            peerExchangeStrategy.addPeersFromPeerExchange(peers, protectedNode.getPeerAddress(connection).get());
                             responseHandlerMap.remove(connection.getUid());
                         }
                     });
@@ -96,7 +96,7 @@ public class PeerExchange implements ConnectionListener {
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     public CompletableFuture<Boolean> bootstrap() {
-        Optional<Address> optionalMyAddress = guard.getMyAddress();
+        Optional<Address> optionalMyAddress = protectedNode.getMyAddress();
         checkArgument(optionalMyAddress.isPresent(),
                 "We must have already done out capability exchange so the peers address need to be known");
         Address myAddress = optionalMyAddress.get();
@@ -125,13 +125,13 @@ public class PeerExchange implements ConnectionListener {
         synchronized (isStoppedLock) {
             isStopped = true;
         }
-        guard.removeConnectionListener(this);
+        protectedNode.removeConnectionListener(this);
         MapUtils.disposeAndRemoveAll(requestHandlerMap);
         MapUtils.disposeAndRemoveAll(responseHandlerMap);
     }
 
     private CompletableFuture<Boolean> exchangeWithPeer(Address peerAddress) {
-        return guard.getConnection(peerAddress)
+        return protectedNode.getConnection(peerAddress)
                 .thenCompose(connection -> {
                     PeerExchangeRequestHandler requestHandler = new PeerExchangeRequestHandler(connection);
                     requestHandlerMap.put(connection.getUid(), requestHandler);

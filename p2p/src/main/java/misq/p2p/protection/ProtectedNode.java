@@ -15,13 +15,13 @@
  * along with Misq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package misq.p2p.guard;
+package misq.p2p.protection;
 
 
 import misq.p2p.NetworkType;
 import misq.p2p.capability.Capability;
-import misq.p2p.capability.CapabilityExchange;
-import misq.p2p.node.*;
+import misq.p2p.capability.CapabilityAwareNode;
+import misq.p2p.endpoint.*;
 import misq.p2p.proxy.GetServerSocketResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,21 +39,21 @@ import java.util.concurrent.CopyOnWriteArraySet;
  * TODO make PermissionControl mocks for BSQ bonded or LN (sphinx) based transport layer to see if other monetary token based ddos
  * protection strategies work inside the current design
  */
-public class Guard implements MessageListener {
-    private static final Logger log = LoggerFactory.getLogger(Guard.class);
+public class ProtectedNode implements MessageListener {
+    private static final Logger log = LoggerFactory.getLogger(ProtectedNode.class);
 
     private final PermissionControl permissionControl;
     private final Set<MessageListener> messageListeners = new CopyOnWriteArraySet<>();
-    private final CapabilityExchange capabilityExchange;
+    private final CapabilityAwareNode capabilityAwareNode;
     private final Object isStoppedLock = new Object();
     private volatile boolean isStopped;
 
-    public Guard(CapabilityExchange capabilityExchange) {
-        this.capabilityExchange = capabilityExchange;
+    public ProtectedNode(CapabilityAwareNode capabilityAwareNode) {
+        this.capabilityAwareNode = capabilityAwareNode;
 
         this.permissionControl = new NoRestriction();
 
-        capabilityExchange.addMessageListener(this);
+        capabilityAwareNode.addMessageListener(this);
     }
 
 
@@ -79,13 +79,13 @@ public class Guard implements MessageListener {
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     public CompletableFuture<Connection> send(Message message, Address peerAddress) {
-        return capabilityExchange.getConnection(peerAddress)
+        return capabilityAwareNode.getConnection(peerAddress)
                 .thenCompose(connection -> send(message, connection));
     }
 
     public CompletableFuture<Connection> send(Message message, Connection connection) {
         return permissionControl.getPermit(message)
-                .thenCompose(permit -> capabilityExchange.send(new GuardedMessage(message, permit), connection));
+                .thenCompose(permit -> capabilityAwareNode.send(new GuardedMessage(message, permit), connection));
     }
 
     public void addMessageListener(MessageListener messageListener) {
@@ -101,9 +101,9 @@ public class Guard implements MessageListener {
             isStopped = true;
         }
         messageListeners.clear();
-        capabilityExchange.removeMessageListener(this);
+        capabilityAwareNode.removeMessageListener(this);
         permissionControl.shutdown();
-        capabilityExchange.shutdown();
+        capabilityAwareNode.shutdown();
     }
 
 
@@ -112,39 +112,39 @@ public class Guard implements MessageListener {
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     public CompletableFuture<GetServerSocketResult> initializeServer(String serverId, int serverPort) {
-        return capabilityExchange.initializeServer(serverId, serverPort);
+        return capabilityAwareNode.initializeServer(serverId, serverPort);
     }
 
     public void addConnectionListener(ConnectionListener listener) {
-        capabilityExchange.addConnectionListener(listener);
+        capabilityAwareNode.addConnectionListener(listener);
     }
 
     public void removeConnectionListener(ConnectionListener listener) {
-        capabilityExchange.removeConnectionListener(listener);
+        capabilityAwareNode.removeConnectionListener(listener);
     }
 
     public Optional<Address> getMyAddress() {
-        return capabilityExchange.getMyAddress();
+        return capabilityAwareNode.getMyAddress();
     }
 
     public Set<OutboundConnection> getConnectionsWithSupportedNetwork(NetworkType networkType) {
-        return capabilityExchange.getConnectionsWithSupportedNetwork(networkType);
+        return capabilityAwareNode.getConnectionsWithSupportedNetwork(networkType);
     }
 
     public CompletableFuture<Connection> getConnection(Address peerAddress) {
-        return capabilityExchange.getConnection(peerAddress);
+        return capabilityAwareNode.getConnection(peerAddress);
     }
 
     public Optional<Connection> findConnection(Address peerAddress) {
-        return capabilityExchange.findConnection(peerAddress);
+        return capabilityAwareNode.findConnection(peerAddress);
     }
 
     public Optional<Address> getPeerAddress(Connection connection) {
-        return capabilityExchange.getPeerAddress(connection);
+        return capabilityAwareNode.getPeerAddress(connection);
     }
 
     public Capability getCapability(Connection connection) {
-        return capabilityExchange.getCapability(connection);
+        return capabilityAwareNode.getCapability(connection);
     }
 
 }

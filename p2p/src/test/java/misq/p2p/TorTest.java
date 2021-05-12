@@ -19,7 +19,7 @@ package misq.p2p;
 
 import lombok.extern.slf4j.Slf4j;
 import misq.common.util.OsUtils;
-import misq.p2p.node.Node;
+import misq.p2p.endpoint.EndPoint;
 import org.junit.Test;
 
 @Slf4j
@@ -46,7 +46,7 @@ public class TorTest extends BaseTest {
         String baseDirName = OsUtils.getUserDataDir().getAbsolutePath() + "/misq_TorTest_" + role.name();
         NetworkConfig tor = new NetworkConfig(baseDirName,
                 NetworkType.TOR,
-                Node.DEFAULT_SERVER_ID,
+                EndPoint.DEFAULT_SERVER_ID,
                 serverPort);
         return tor;
     }

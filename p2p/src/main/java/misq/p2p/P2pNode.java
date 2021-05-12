@@ -19,18 +19,18 @@ package misq.p2p;
 
 
 import com.google.common.annotations.VisibleForTesting;
-import misq.p2p.capability.CapabilityExchange;
+import misq.p2p.capability.CapabilityAwareNode;
 import misq.p2p.confidential.ConfidentialMessageService;
 import misq.p2p.data.DataService;
 import misq.p2p.data.filter.DataFilter;
 import misq.p2p.data.inventory.RequestInventoryResult;
 import misq.p2p.data.storage.Storage;
-import misq.p2p.guard.Guard;
-import misq.p2p.node.*;
+import misq.p2p.endpoint.*;
 import misq.p2p.peers.PeerConfig;
 import misq.p2p.peers.PeerGroup;
 import misq.p2p.peers.PeerManager;
 import misq.p2p.peers.exchange.DefaultPeerExchangeStrategy;
+import misq.p2p.protection.ProtectedNode;
 import misq.p2p.proxy.GetServerSocketResult;
 import misq.p2p.proxy.NetworkProxy;
 import misq.p2p.router.gossip.GossipResult;
@@ -49,12 +49,12 @@ public class P2pNode {
 
     private final NetworkConfig networkConfig;
     private final Storage storage;
-    private final Node node;
+    private final EndPoint endPoint;
     private final PeerManager peerManager;
-    private final Guard guard;
+    private final ProtectedNode protectedNode;
     private final ConfidentialMessageService confidentialMessageService;
     private final DataService dataService;
-    private final CapabilityExchange capabilityExchange;
+    private final CapabilityAwareNode capabilityAwareNode;
     private final NetworkProxy networkProxy;
 
     public P2pNode(NetworkConfig networkConfig, Set<NetworkType> mySupportedNetworks, Storage storage) {
@@ -62,19 +62,19 @@ public class P2pNode {
         this.storage = storage;
 
         networkProxy = NetworkProxy.get(networkConfig);
-        node = new Node(networkProxy);
-        capabilityExchange = new CapabilityExchange(node, mySupportedNetworks);
-        guard = new Guard(capabilityExchange);
+        endPoint = new EndPoint(networkProxy);
+        capabilityAwareNode = new CapabilityAwareNode(endPoint, mySupportedNetworks);
+        protectedNode = new ProtectedNode(capabilityAwareNode);
 
 
         PeerConfig peerConfig = networkConfig.getPeerConfig();
-        PeerGroup peerGroup = new PeerGroup(guard, peerConfig);
+        PeerGroup peerGroup = new PeerGroup(protectedNode, peerConfig);
         DefaultPeerExchangeStrategy peerExchangeStrategy = new DefaultPeerExchangeStrategy(peerGroup, peerConfig);
-        peerManager = new PeerManager(guard, peerGroup, peerExchangeStrategy, peerConfig);
+        peerManager = new PeerManager(protectedNode, peerGroup, peerExchangeStrategy, peerConfig);
 
-        confidentialMessageService = new ConfidentialMessageService(guard, peerGroup);
+        confidentialMessageService = new ConfidentialMessageService(protectedNode, peerGroup);
 
-        dataService = new DataService(guard, peerGroup, storage);
+        dataService = new DataService(protectedNode, peerGroup, storage);
     }
 
 
@@ -83,7 +83,7 @@ public class P2pNode {
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     public CompletableFuture<GetServerSocketResult> initializeServer() {
-        return guard.initializeServer(networkConfig.getServerId(), networkConfig.getServerPort());
+        return protectedNode.initializeServer(networkConfig.getServerId(), networkConfig.getServerPort());
     }
 
     public CompletableFuture<Boolean> bootstrap() {
@@ -122,15 +122,15 @@ public class P2pNode {
         dataService.shutdown();
         peerManager.shutdown();
         confidentialMessageService.shutdown();
-        guard.shutdown();
-        capabilityExchange.shutdown();
-        node.shutdown();
+        protectedNode.shutdown();
+        capabilityAwareNode.shutdown();
+        endPoint.shutdown();
         networkProxy.shutdown();
         storage.shutdown();
     }
 
     public Optional<Address> getAddress() {
-        return guard.getMyAddress();
+        return protectedNode.getMyAddress();
     }
 
     @VisibleForTesting

@@ -26,8 +26,8 @@ import misq.finance.swap.contract.bsqBond.BsqBondProtocol;
 import misq.finance.swap.contract.bsqBond.maker.MakerCommitmentMessage;
 import misq.finance.swap.contract.bsqBond.maker.MakerFundsSentMessage;
 import misq.p2p.P2pService;
-import misq.p2p.node.Connection;
-import misq.p2p.node.Message;
+import misq.p2p.endpoint.Connection;
+import misq.p2p.endpoint.Message;
 
 import java.util.concurrent.CompletableFuture;
 

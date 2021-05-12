@@ -15,9 +15,14 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package misq.p2p.node;
+package misq.p2p.protection;
+
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
 
 import java.io.Serializable;
 
-public interface Message extends Serializable {
+@EqualsAndHashCode
+@Getter
+public class AccessToken implements Serializable {
 }

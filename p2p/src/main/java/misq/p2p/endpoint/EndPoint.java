@@ -15,7 +15,7 @@
  * along with Misq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package misq.p2p.node;
+package misq.p2p.endpoint;
 
 
 import misq.p2p.proxy.GetServerSocketResult;
@@ -44,8 +44,8 @@ import java.util.stream.Stream;
  * - Notifies ConnectionListeners when a new connection has been created or one has been closed.
  * - Notifies MessageListeners on messages.
  */
-public class Node implements MessageListener {
-    private static final Logger log = LoggerFactory.getLogger(Node.class);
+public class EndPoint implements MessageListener {
+    private static final Logger log = LoggerFactory.getLogger(EndPoint.class);
     public static final String DEFAULT_SERVER_ID = "default";
     public static final int DEFAULT_SERVER_PORT = 9999;
 
@@ -59,7 +59,7 @@ public class Node implements MessageListener {
     private final Object isStoppedLock = new Object();
     private volatile boolean isStopped;
 
-    public Node(NetworkProxy networkProxy) {
+    public EndPoint(NetworkProxy networkProxy) {
         this.networkProxy = networkProxy;
     }
 

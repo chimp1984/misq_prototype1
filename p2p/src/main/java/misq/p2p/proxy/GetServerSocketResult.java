@@ -19,7 +19,7 @@ package misq.p2p.proxy;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import misq.p2p.node.Address;
+import misq.p2p.endpoint.Address;
 
 import java.net.ServerSocket;
 

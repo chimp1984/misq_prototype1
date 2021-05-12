@@ -19,7 +19,7 @@ package misq.finance.swap.contract.bsqBond;
 
 import misq.finance.contract.*;
 import misq.p2p.P2pService;
-import misq.p2p.node.MessageListener;
+import misq.p2p.endpoint.MessageListener;
 /**
  * Mock protocol for simulating a BSQ bond based protocol
  * <p>

@@ -15,14 +15,18 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package misq.p2p.guard;
+package misq.p2p.protection;
 
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
+import misq.p2p.endpoint.Message;
 
-import java.io.Serializable;
+import java.util.concurrent.CompletableFuture;
 
-@EqualsAndHashCode
-@Getter
-public class AccessToken implements Serializable {
+public interface PermissionControl {
+
+    boolean hasPermit(GuardedMessage guardedMessage);
+
+    CompletableFuture<AccessToken> getPermit(Message message);
+
+    void shutdown();
+
 }
