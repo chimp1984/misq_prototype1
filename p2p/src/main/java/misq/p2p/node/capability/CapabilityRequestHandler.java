@@ -37,7 +37,7 @@ public class CapabilityRequestHandler implements RawConnection.MessageListener, 
     private final Address peersAddress;
     private final Address myAddress;
     private final Set<NetworkType> mySupportedNetworkTypes;
-    private final long requestNonce = new Random().nextLong();
+    private final int requestNonce = new Random().nextInt();
     private final CompletableFuture<Capability> future = new CompletableFuture<>();
 
     public CapabilityRequestHandler(RawConnection rawConnection,

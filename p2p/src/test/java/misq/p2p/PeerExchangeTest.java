@@ -59,32 +59,32 @@ public class PeerExchangeTest {
 
     @Test
     public void testPeerExchange() throws InterruptedException {
-     /*  bootstrapSeedNode();
+      /*  bootstrapSeedNode();
         shutDownSeed();*/
 
-     /*   bootstrapSeedNode();
+      /*  bootstrapSeedNode();
         bootstrapNode1();
         shutDownSeed();
         shutDownNode1();*/
 
-     /*   bootstrapSeedNode();
+      /*  bootstrapSeedNode();
         bootstrapNode1();
         bootstrapNode2();
         shutDownSeed();
         shutDownNode1();
         shutDownNode2();*/
 
-     /*   bootstrapSeedNode();
+        bootstrapSeedNode();
         bootstrapNode1();
         bootstrapNode2();
         bootstrapNode3();
         shutDownSeed();
         shutDownNode1();
         shutDownNode2();
-        shutDownNode3();*/
+        shutDownNode3();
 
-        bootstrapSeedNode();
-        bootstrapNodes(5);
+     /*   bootstrapSeedNode();
+        bootstrapNodes(5);*/
        /* shutDownSeed();
         shutDownNode1();*/
 
@@ -149,27 +149,28 @@ public class PeerExchangeTest {
      */
     protected void bootstrapNode2() throws InterruptedException {
         CountDownLatch latch = new CountDownLatch(1);
-        getTuple(getNetworkConfig(2002)).whenComplete((tuple, e) -> {
-            node2 = tuple.first;
-            peerGroupNode2 = tuple.second;
-            log.info("bootstrap node2");
-            // n2->s
-            node2.bootstrap()
-                    .whenComplete((success, t) -> {
-                        if (success && t == null) {
-                            log.info("node2 bootstrapped");
-                            latch.countDown();
-                            assertEquals(1, peerGroupNode2.getConnections().size());
-                            assertEquals(1, peerGroupNode2.getReportedPeers().size());
+        getTuple(getNetworkConfig(2002))
+                .whenComplete((tuple, e) -> {
+                    node2 = tuple.first;
+                    peerGroupNode2 = tuple.second;
+                    log.info("bootstrap node2");
+                    // n2->s
+                    node2.bootstrap()
+                            .whenComplete((success, t) -> {
+                                if (success && t == null) {
+                                    log.info("node2 bootstrapped");
+                                    latch.countDown();
+                                    assertEquals(1, peerGroupNode2.getConnections().size());
+                                    assertEquals(1, peerGroupNode2.getReportedPeers().size());
 
-                            assertEquals(1, peerGroupNode1.getConnections().size());
-                            assertEquals(0, peerGroupNode1.getReportedPeers().size());
+                                    assertEquals(1, peerGroupNode1.getConnections().size());
+                                    assertEquals(0, peerGroupNode1.getReportedPeers().size());
 
-                            assertEquals(2, peerGroupSeed.getConnections().size());
-                            assertEquals(0, peerGroupSeed.getReportedPeers().size());
-                        }
-                    });
-        });
+                                    assertEquals(2, peerGroupSeed.getConnections().size());
+                                    assertEquals(0, peerGroupSeed.getReportedPeers().size());
+                                }
+                            });
+                });
         boolean bootstrapped = latch.await(5, TimeUnit.SECONDS);
         assertTrue(bootstrapped);
 
@@ -358,9 +359,7 @@ public class PeerExchangeTest {
         PeerGroup peerGroup = new PeerGroup(node, peerConfig, networkConfig.getServerPort());
         DefaultPeerExchangeStrategy peerExchangeStrategy = new DefaultPeerExchangeStrategy(peerGroup, peerConfig);
         return node.initializeServer(networkConfig.getServerId(), networkConfig.getServerPort())
-                .thenApply(e -> {
-                    return new Tuple2<>(new PeerExchangeManager(node, peerExchangeStrategy), peerGroup);
-                });
+                .thenApply(e -> new Tuple2<>(new PeerExchangeManager(node, peerExchangeStrategy), peerGroup));
     }
 
     protected void shutDownSeed() {

@@ -46,6 +46,7 @@ import static misq.torify.Constants.LOCALHOST;
 
 /**
  * Open TODO:
+ * - check https://github.com/ACINQ/Tor_Onion_Proxy_Library
  * - support external running tor instance (external tor mode in netlayer)
  * - test use case with overriding existing torrc files
  * - test bridge and pluggable transports use cases

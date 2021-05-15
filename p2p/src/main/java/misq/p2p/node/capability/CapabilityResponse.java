@@ -25,9 +25,9 @@ import misq.p2p.Message;
 @Getter
 class CapabilityResponse implements Message {
     private final Capability capability;
-    private final long requestNonce;
+    private final int requestNonce;
 
-    CapabilityResponse(Capability capability, long requestNonce) {
+    CapabilityResponse(Capability capability, int requestNonce) {
         this.capability = capability;
         this.requestNonce = requestNonce;
     }

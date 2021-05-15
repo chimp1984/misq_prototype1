@@ -73,16 +73,6 @@ public class DefaultPeerExchangeStrategy implements PeerExchangeStrategy {
                 .filter(peerGroup::notASeed)
                 .filter(peer -> notDirectPeer(peerAddress, peer))
                 .collect(Collectors.toSet());
-
-        log.debug("getPeersForPeerExchange serverPort={} peerAddress={}, collect={} ## {}",
-                peerGroup.serverPort, peerAddress, collect, peerGroup.getReportedPeers());
-        if (collect.size() > 0 && peerGroup.getConnections().size() > 0 && peerGroup.serverPort == 5001 && peerAddress.toString().equals("127.0.0.1:1000")) {
-            int serverPort = peerGroup.serverPort;
-            Set<Peer> reportedPeers = peerGroup.getReportedPeers();
-            log.error("************************************************************************");
-            log.error("getPeersForPeerExchange serverPort={} peerAddress={}, collect={} ## {}",
-                    serverPort, peerAddress, collect, reportedPeers);
-        }
         return collect;
     }
 
@@ -141,11 +131,6 @@ public class DefaultPeerExchangeStrategy implements PeerExchangeStrategy {
                 /*.limit(missingConnections)*/
                 .collect(Collectors.toSet());
         usedAddresses.addAll(result);
-        if (numConnections > 8 && reported.size() < 10) {
-            log.error("#### getAddressesForBootstrap {}", result);
-
-        }
-        log.error("#### getAddressesForBootstrap {}", result);
         return result;
     }
 

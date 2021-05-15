@@ -24,10 +24,10 @@ import misq.p2p.Message;
 @EqualsAndHashCode
 @Getter
 class CapabilityRequest implements Message {
-    private final long nonce;
+    private final int nonce;
     private final Capability capability;
 
-    CapabilityRequest(Capability capability, long nonce) {
+    CapabilityRequest(Capability capability, int nonce) {
         this.capability = capability;
         this.nonce = nonce;
     }

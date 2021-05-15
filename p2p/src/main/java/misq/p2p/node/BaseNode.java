@@ -52,7 +52,7 @@ import static com.google.common.base.Preconditions.checkArgument;
  * ConnectionListeners on that node will only be notified about new connections after the handshake is completed.
  * MessageListeners on that node will only be notified about new messages after the handshake is completed.
  */
-public class BaseNode implements RawNode.ConnectionListener, MessageListener, RawConnection.MessageListener {
+public class BaseNode implements RawNode.ConnectionListener, MessageListener {
     private static final Logger log = LoggerFactory.getLogger(BaseNode.class);
 
     private final RawNode rawNode;
@@ -128,23 +128,15 @@ public class BaseNode implements RawNode.ConnectionListener, MessageListener, Ra
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
-    // Connection.MessageListener
+    // MessageListener
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
     public void onMessage(Message message, Connection connection) {
+        log.error("message={}", message);
         messageHandler.onMessage(message, connection);
     }
 
-
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-    // RawConnection.MessageListener
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-
-    @Override
-    public void onMessage(Message message) {
-
-    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // API
