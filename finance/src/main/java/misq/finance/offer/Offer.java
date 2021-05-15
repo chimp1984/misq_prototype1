@@ -19,7 +19,7 @@ package misq.finance.offer;
 
 import lombok.Getter;
 import misq.finance.ProtocolType;
-import misq.p2p.endpoint.Address;
+import misq.p2p.Address;
 
 import java.util.List;
 

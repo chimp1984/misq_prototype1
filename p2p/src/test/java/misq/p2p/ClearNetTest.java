@@ -19,7 +19,7 @@ package misq.p2p;
 
 import lombok.extern.slf4j.Slf4j;
 import misq.common.util.OsUtils;
-import misq.p2p.endpoint.EndPoint;
+import misq.p2p.node.RawNode;
 import org.junit.Test;
 
 @Slf4j
@@ -46,7 +46,7 @@ public class ClearNetTest extends BaseTest {
         String baseDirName = OsUtils.getUserDataDir().getAbsolutePath() + "/misq_test_" + role.name();
         NetworkConfig clearNet = new NetworkConfig(baseDirName,
                 NetworkType.CLEAR,
-                EndPoint.DEFAULT_SERVER_ID,
+                RawNode.DEFAULT_SERVER_ID,
                 serverPort);
         return clearNet;
     }
@@ -58,31 +58,10 @@ public class ClearNetTest extends BaseTest {
         bob.shutdown();
     }
 
-    //@Test
+    @Test
     public void testConfidentialSend() throws InterruptedException {
         super.testConfidentialSend();
         alice.shutdown();
         bob.shutdown();
-    }
-
-    @Test
-    public void testPeerExchange() throws InterruptedException {
-      /*  bootstrapSeedNode();
-        shutDownSeed();
-
-        bootstrapSeedNodeAndNode1();
-        shutDownSeed();
-        shutDownNode1();*/
-
-      /*  bootstrapSeedNodeAndNode1AndNode2();
-       shutDownSeed();
-        shutDownNode1();
-        shutDownNode2();*/
-
-        bootstrapSeedNodeAndNode1AndNode2AndNode3();
-        shutDownSeed();
-        shutDownNode1();
-        shutDownNode2();
-        shutDownNode3();
     }
 }

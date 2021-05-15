@@ -18,7 +18,7 @@
 package misq.finance.swap.contract.multiSig.maker;
 
 import lombok.Getter;
-import misq.p2p.endpoint.Message;
+import misq.p2p.Message;
 
 @Getter
 public class FundsSentMessage implements Message {

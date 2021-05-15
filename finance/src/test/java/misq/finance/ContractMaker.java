@@ -20,7 +20,7 @@ package misq.finance;
 import misq.finance.contract.CounterParty;
 import misq.finance.contract.TwoPartyContract;
 import misq.finance.offer.Offer;
-import misq.p2p.endpoint.Address;
+import misq.p2p.Address;
 
 public class ContractMaker {
     public static TwoPartyContract createMakerTrade(Address takerAddress, ProtocolType protocolType) {

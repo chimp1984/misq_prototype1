@@ -17,7 +17,7 @@
 
 package misq.p2p.data;
 
-import misq.p2p.endpoint.Message;
+import misq.p2p.Message;
 
 public interface DataListener {
     void onDataAdded(Message message);

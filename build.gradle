@@ -231,6 +231,8 @@ configure(project(':finance')) {
         implementation project(':common')
         implementation project(':p2p')
 
+        implementation "com.google.guava:guava:$guavaVersion"
+
         implementation "org.jetbrains:annotations:$jetbrainsAnnotationsVersion"
         implementation "com.google.code.findbugs:jsr305:$findbugsVersion"
 

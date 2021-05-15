@@ -20,17 +20,17 @@ package misq.p2p.peers.exchange;
 import lombok.extern.slf4j.Slf4j;
 import misq.common.util.CollectionUtil;
 import misq.common.util.MapUtils;
-import misq.p2p.endpoint.*;
+import misq.p2p.Address;
+import misq.p2p.node.Connection;
+import misq.p2p.node.ConnectionListener;
+import misq.p2p.node.Node;
 import misq.p2p.peers.Peer;
-import misq.p2p.protection.ProtectedNode;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
-
-import static com.google.common.base.Preconditions.checkArgument;
 
 /**
  * Responsible for executing the peer exchange protocol with the given peer.
@@ -41,7 +41,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 public class PeerExchangeManager implements ConnectionListener {
     public static final int TIMEOUT = 300;
 
-    private final ProtectedNode protectedNode;
+    private final Node node;
     private final PeerExchangeStrategy peerExchangeStrategy;
     private final Map<String, PeerExchangeResponseHandler> responseHandlerMap = new ConcurrentHashMap<>();
     private final Map<String, PeerExchangeRequestHandler> requestHandlerMap = new ConcurrentHashMap<>();
@@ -49,12 +49,12 @@ public class PeerExchangeManager implements ConnectionListener {
     private final PeerExchangeGraph peerExchangeGraph;
     private volatile boolean isStopped;
 
-    public PeerExchangeManager(ProtectedNode protectedNode, PeerExchangeStrategy peerExchangeStrategy) {
-        this.protectedNode = protectedNode;
+    public PeerExchangeManager(Node node, PeerExchangeStrategy peerExchangeStrategy) {
+        this.node = node;
         this.peerExchangeStrategy = peerExchangeStrategy;
 
         peerExchangeGraph = new PeerExchangeGraph();
-        protectedNode.addConnectionListener(this);
+        node.addConnectionListener(this);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -62,32 +62,28 @@ public class PeerExchangeManager implements ConnectionListener {
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void onInboundConnection(InboundConnection connection) {
-        // Capability exchange with address has been completed already so expect to know the peers address.
-        // We do not add the requesters address to the reported peers.
-        protectedNode.getPeerAddress(connection).ifPresent(address -> {
-            Set<Peer> peersForPeerExchange = peerExchangeStrategy.getPeersForPeerExchange(address);
-            PeerExchangeResponseHandler responseHandler = new PeerExchangeResponseHandler(connection,
-                    peersForPeerExchange,
-                    peers -> {
-                        if (!isStopped) {
-                            peerExchangeStrategy.addPeersFromPeerExchange(peers, protectedNode.getPeerAddress(connection).get());
-                            responseHandlerMap.remove(connection.getUid());
-                        }
-                    });
-            responseHandlerMap.put(connection.getUid(), responseHandler);
-        });
+    public void onConnection(Connection connection) {
+        Address peerAddress = connection.getPeerAddress();
+        Set<Peer> peersForPeerExchange = peerExchangeStrategy.getPeersForPeerExchange(peerAddress);
+        PeerExchangeResponseHandler responseHandler = new PeerExchangeResponseHandler(node,
+                connection.getId(),
+                peersForPeerExchange,
+                peers -> {
+                    log.error("PeerExchangeManager.onConnection {}", connection);
+                    if (!isStopped) {
+                        peerExchangeStrategy.addPeersFromPeerExchange(peers, peerAddress);
+                        // We do not remove the handler as we might do repeated exchanges
+                    }
+                });
+        responseHandlerMap.put(connection.getId(), responseHandler);
     }
 
-    @Override
-    public void onOutboundConnection(OutboundConnection connection, Address peerAddress) {
-    }
 
     @Override
-    public void onDisconnect(Connection connection, Optional<Address> optionalAddress) {
-        String uid = connection.getUid();
-        MapUtils.disposeAndRemove(uid, requestHandlerMap);
-        MapUtils.disposeAndRemove(uid, requestHandlerMap);
+    public void onDisconnect(Connection connection) {
+        String connectionId = connection.getId();
+        MapUtils.disposeAndRemove(connectionId, requestHandlerMap);
+        MapUtils.disposeAndRemove(connectionId, requestHandlerMap);
     }
 
 
@@ -96,27 +92,34 @@ public class PeerExchangeManager implements ConnectionListener {
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     public CompletableFuture<Boolean> bootstrap() {
-        Optional<Address> optionalMyAddress = protectedNode.getMyAddress();
-        checkArgument(optionalMyAddress.isPresent(),
-                "We must have already done out capability exchange so the peers address need to be known");
-        Address myAddress = optionalMyAddress.get();
+        Address myAddress = node.getMyAddress();
         Set<Address> addressesForBootstrap = peerExchangeStrategy.getAddressesForBootstrap();
-        log.info("bootstrap {} to {}", optionalMyAddress, addressesForBootstrap);
         List<CompletableFuture<Boolean>> allFutures = addressesForBootstrap.stream()
                 .map(address -> exchangeWithPeer(address)
-                        .whenComplete((success, throwable) -> peerExchangeGraph.add(myAddress, address))
+                        .whenComplete((success, throwable) -> {
+                            // log.error("exchangeWithPeer whenComplete myAddress={} peerAddress={}", myAddress, address);
+                            peerExchangeGraph.add(myAddress, address);
+                        })
                 )
                 .collect(Collectors.toList());
         if (allFutures.isEmpty()) {
+            //  maybeRepeatBootstrap(myAddress, 0, 0);
             return CompletableFuture.completedFuture(true);
         } else {
-            return CollectionUtil.allOf(allFutures)                                 // We require all futures the be completed
-                    .thenApply(resultList -> resultList.stream().filter(e -> e).count())
+            return CollectionUtil.allOf(allFutures)
+                    .whenComplete((s, e) -> {
+                        log.error("");
+                    })                            // We require all futures the be completed
+                    .thenApply(resultList -> {
+                        return resultList.stream().filter(e -> e).count();
+                    })
                     .orTimeout(TIMEOUT, TimeUnit.SECONDS)
                     .thenCompose(numSuccess -> {
-                        maybeRepeatBootstrap(myAddress, numSuccess, allFutures.size());
+                        //  maybeRepeatBootstrap(myAddress, numSuccess, allFutures.size());
                         // Even we don't have any connection (first peer in network case) we return true.
                         return CompletableFuture.completedFuture(true);
+                    }).whenComplete((s, e) -> {
+                        log.error("");
                     });
         }
     }
@@ -125,23 +128,31 @@ public class PeerExchangeManager implements ConnectionListener {
         synchronized (isStoppedLock) {
             isStopped = true;
         }
-        protectedNode.removeConnectionListener(this);
+        node.removeConnectionListener(this);
         MapUtils.disposeAndRemoveAll(requestHandlerMap);
         MapUtils.disposeAndRemoveAll(responseHandlerMap);
     }
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // Private
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
     private CompletableFuture<Boolean> exchangeWithPeer(Address peerAddress) {
-        return protectedNode.getConnection(peerAddress)
+        return node.getConnection(peerAddress)
                 .thenCompose(connection -> {
-                    PeerExchangeRequestHandler requestHandler = new PeerExchangeRequestHandler(connection);
-                    requestHandlerMap.put(connection.getUid(), requestHandler);
-                    return requestHandler.request(peerExchangeStrategy.getPeersForPeerExchange(peerAddress));
+                    PeerExchangeRequestHandler requestHandler = new PeerExchangeRequestHandler(node, connection.getId());
+                    requestHandlerMap.put(connection.getId(), requestHandler);
+                    return requestHandler.request(peerExchangeStrategy.getPeersForPeerExchange(peerAddress), peerAddress);
                 })
                 .thenCompose(peers -> {
                     peerExchangeStrategy.addPeersFromPeerExchange(peers, peerAddress);
                     return CompletableFuture.completedFuture(true);
                 })
-                .exceptionally(e -> false);
+                .exceptionally(e -> {
+                    log.error(e.toString());
+                    return false;
+                });
     }
 
     private void maybeRepeatBootstrap(Address myAddress, long numSuccess, int numFutures) {

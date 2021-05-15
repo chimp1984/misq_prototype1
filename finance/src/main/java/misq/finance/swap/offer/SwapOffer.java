@@ -21,7 +21,7 @@ import lombok.Getter;
 import misq.finance.Asset;
 import misq.finance.offer.Offer;
 import misq.finance.swap.SwapProtocolType;
-import misq.p2p.endpoint.Address;
+import misq.p2p.Address;
 
 import java.util.List;
 import java.util.Optional;

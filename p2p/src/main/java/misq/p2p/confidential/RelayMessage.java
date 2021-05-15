@@ -19,8 +19,8 @@ package misq.p2p.confidential;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import misq.p2p.endpoint.Address;
-import misq.p2p.endpoint.Message;
+import misq.p2p.Address;
+import misq.p2p.Message;
 
 @EqualsAndHashCode(callSuper = true)
 @Getter

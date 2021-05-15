@@ -17,7 +17,7 @@
 
 package misq.p2p.peers.exchange;
 
-import misq.p2p.endpoint.Address;
+import misq.p2p.Address;
 import misq.p2p.peers.Peer;
 
 import java.util.Set;

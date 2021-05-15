@@ -18,7 +18,7 @@
 package misq.finance.contract;
 
 import misq.p2p.P2pService;
-import misq.p2p.endpoint.MessageListener;
+import misq.p2p.node.MessageListener;
 
 public abstract class TwoPartyProtocol extends Protocol implements MessageListener {
     protected final CounterParty counterParty;

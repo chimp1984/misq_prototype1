@@ -17,7 +17,7 @@
 
 package misq.p2p;
 
-import misq.p2p.proxy.GetServerSocketResult;
+import misq.p2p.node.proxy.GetServerSocketResult;
 
 public interface BoostrapListener {
     void onBootstrapped(GetServerSocketResult getServerSocketResult);

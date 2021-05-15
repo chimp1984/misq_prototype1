@@ -18,8 +18,8 @@
 package misq.p2p.peers;
 
 import lombok.Getter;
-import misq.p2p.capability.Capability;
-import misq.p2p.endpoint.Address;
+import misq.p2p.Address;
+import misq.p2p.node.capability.Capability;
 
 import java.io.Serializable;
 import java.util.Date;

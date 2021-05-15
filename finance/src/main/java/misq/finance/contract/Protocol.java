@@ -19,7 +19,7 @@ package misq.finance.contract;
 
 import lombok.Getter;
 import misq.p2p.P2pService;
-import misq.p2p.endpoint.MessageListener;
+import misq.p2p.node.MessageListener;
 
 import java.util.HashSet;
 import java.util.Set;

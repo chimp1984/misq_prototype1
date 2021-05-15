@@ -20,8 +20,10 @@ package misq.p2p.peers;
 import com.google.common.collect.ImmutableList;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import misq.p2p.endpoint.*;
-import misq.p2p.protection.ProtectedNode;
+import misq.p2p.Address;
+import misq.p2p.node.Connection;
+import misq.p2p.node.ConnectionListener;
+import misq.p2p.node.Node;
 import net.i2p.util.ConcurrentHashSet;
 
 import java.util.*;
@@ -32,47 +34,45 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 @Slf4j
 public class PeerGroup implements ConnectionListener {
-    private final ProtectedNode protectedNode;
+    private final Node node;
     @Getter
     private final ImmutableList<Address> seedNodes;
     private final Map<Address, Peer> connectedPeerByAddress = new ConcurrentHashMap<>();
-    @Getter
+    public final int serverPort;
+
+
+    public Set<Peer> getReportedPeers() {
+        return reportedPeers;
+    }
+
+    // @Getter
     private final Set<Peer> reportedPeers = new ConcurrentHashSet<>();
     @Getter
     private final Set<Peer> persistedPeers = new ConcurrentHashSet<>();
     @Getter
     private final Set<Connection> connections = new ConcurrentHashSet<>();
 
-    public PeerGroup(ProtectedNode protectedNode, PeerConfig peerConfig) {
-        this.protectedNode = protectedNode;
+    public PeerGroup(Node node, PeerConfig peerConfig, int serverPort) {
+        this.serverPort = serverPort;
+        this.node = node;
 
         List<Address> seeds = new ArrayList<>(peerConfig.getSeedNodes());
         Collections.shuffle(seeds);
         seedNodes = ImmutableList.copyOf(seeds);
 
-        protectedNode.addConnectionListener(this);
+        node.addConnectionListener(this);
     }
 
     @Override
-    public void onInboundConnection(InboundConnection connection) {
-        onConnection(connection);
-    }
-
-
-    @Override
-    public void onOutboundConnection(OutboundConnection connection, Address peerAddress) {
-        onConnection(connection);
-    }
-
-    @Override
-    public void onDisconnect(Connection connection, Optional<Address> optionalAddress) {
-        optionalAddress.ifPresent(connectedPeerByAddress::remove);
-    }
-
-    private void onConnection(Connection connection) {
-        Peer peer = new Peer(protectedNode.getCapability(connection));
+    public void onConnection(Connection connection) {
+        Peer peer = new Peer(connection.getCapability());
         connectedPeerByAddress.put(peer.getAddress(), peer);
         connections.add(connection);
+    }
+
+    @Override
+    public void onDisconnect(Connection connection) {
+        connectedPeerByAddress.remove(connection.getPeerAddress());
     }
 
     public Set<Address> getConnectedPeerAddresses() {
@@ -92,7 +92,7 @@ public class PeerGroup implements ConnectionListener {
     }
 
     public boolean notMyself(Address address) {
-        Optional<Address> optionalMyAddress = protectedNode.getMyAddress();
+        Optional<Address> optionalMyAddress = node.findMyAddress();
         return !optionalMyAddress.isPresent() || !optionalMyAddress.get().equals(address);
     }
 

@@ -18,15 +18,15 @@
 package misq;
 
 
+import misq.p2p.Address;
+import misq.p2p.Message;
 import misq.p2p.NetworkType;
 import misq.p2p.P2pService;
 import misq.p2p.data.filter.DataFilter;
 import misq.p2p.data.inventory.RequestInventoryResult;
-import misq.p2p.endpoint.Address;
-import misq.p2p.endpoint.Connection;
-import misq.p2p.endpoint.Message;
-import misq.p2p.endpoint.MessageListener;
-import misq.p2p.proxy.GetServerSocketResult;
+import misq.p2p.node.Connection;
+import misq.p2p.node.MessageListener;
+import misq.p2p.node.proxy.GetServerSocketResult;
 import misq.p2p.router.gossip.GossipResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -69,7 +69,7 @@ public class MockP2pService implements P2pService {
                 Thread.sleep(100);
             } catch (InterruptedException ignore) {
             }
-            messageListeners.forEach(e -> e.onMessage(null, message));
+            messageListeners.forEach(e -> e.onMessage(message, null));
         }).start();
 
         return future;

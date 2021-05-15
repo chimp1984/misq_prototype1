@@ -19,9 +19,9 @@ package misq.p2p.peers;
 
 import com.google.common.annotations.VisibleForTesting;
 import lombok.extern.slf4j.Slf4j;
+import misq.p2p.node.Node;
 import misq.p2p.peers.exchange.PeerExchangeManager;
 import misq.p2p.peers.exchange.PeerExchangeStrategy;
-import misq.p2p.protection.ProtectedNode;
 
 import java.util.concurrent.CompletableFuture;
 
@@ -51,7 +51,7 @@ import java.util.concurrent.CompletableFuture;
 @Slf4j
 public class PeerManager {
 
-    private final ProtectedNode protectedNode;
+    private final Node node;
     private final PeerGroup peerGroup;
     private final PeerConfig peerConfig;
     private final PeerExchangeManager peerExchangeManager;
@@ -59,20 +59,20 @@ public class PeerManager {
     private final Object isStoppedLock = new Object();
     private volatile boolean isStopped;
 
-    public PeerManager(ProtectedNode protectedNode,
+    public PeerManager(Node node,
                        PeerGroup peerGroup,
                        PeerExchangeStrategy peerExchangeStrategy,
                        PeerConfig peerConfig) {
-        this.protectedNode = protectedNode;
+        this.node = node;
         this.peerGroup = peerGroup;
         this.peerConfig = peerConfig;
 
-        peerExchangeManager = new PeerExchangeManager(protectedNode, peerExchangeStrategy);
-        peerGroupHealth = new PeerGroupHealth(protectedNode, peerGroup);
+        peerExchangeManager = new PeerExchangeManager(node, peerExchangeStrategy);
+        peerGroupHealth = new PeerGroupHealth(node, peerGroup);
     }
 
     public CompletableFuture<Boolean> bootstrap(String serverId, int serverPort) {
-        return protectedNode.initializeServer(serverId, serverPort)
+        return node.initializeServer(serverId, serverPort)
                 .thenCompose(serverInfo -> peerExchangeManager.bootstrap())
                 .thenCompose(completed -> peerGroupHealth.bootstrap());
     }
@@ -106,7 +106,7 @@ public class PeerManager {
     }
 
     @VisibleForTesting
-    public ProtectedNode getGuard() {
-        return protectedNode;
+    public Node getGuard() {
+        return node;
     }
 }

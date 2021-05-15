@@ -19,9 +19,10 @@ package misq.p2p.peers.exchange;
 
 import lombok.extern.slf4j.Slf4j;
 import misq.common.util.Disposable;
-import misq.p2p.endpoint.Connection;
-import misq.p2p.endpoint.Message;
-import misq.p2p.endpoint.MessageListener;
+import misq.p2p.Message;
+import misq.p2p.node.Connection;
+import misq.p2p.node.MessageListener;
+import misq.p2p.node.Node;
 import misq.p2p.peers.Peer;
 
 import java.util.Set;
@@ -29,30 +30,33 @@ import java.util.function.Consumer;
 
 @Slf4j
 public class PeerExchangeResponseHandler implements MessageListener, Disposable {
-    private final Connection connection;
+    private final Node node;
+    private final String connectionId;
     private final Set<Peer> peers;
     private final Consumer<Set<Peer>> resultHandler;
 
-    public PeerExchangeResponseHandler(Connection connection,
+    public PeerExchangeResponseHandler(Node node,
+                                       String connectionId,
                                        Set<Peer> peers,
                                        Consumer<Set<Peer>> resultHandler) {
-        this.connection = connection;
+        this.node = node;
+        this.connectionId = connectionId;
         this.peers = peers;
         this.resultHandler = resultHandler;
-
-        connection.addMessageListener(this);
+        node.addMessageListener(this);
     }
 
     public void dispose() {
-        connection.removeMessageListener(this);
+        node.removeMessageListener(this);
     }
 
     @Override
-    public void onMessage(Connection connection, Message message) {
-        if (message instanceof PeerExchangeRequest) {
+    public void onMessage(Message message, Connection connection) {
+        if (connectionId.equals(connection.getId()) && message instanceof PeerExchangeRequest) {
             PeerExchangeRequest peerExchangeRequest = (PeerExchangeRequest) message;
-            connection.send(new PeerExchangeResponse(peers));
-            connection.removeMessageListener(this);
+            PeerExchangeResponse response = new PeerExchangeResponse(peers);
+            node.send(response, connection);
+            // We do not remove the MessageListener as we might do repeated exchanges
             resultHandler.accept(peerExchangeRequest.getPeers());
         }
     }

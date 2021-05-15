@@ -19,9 +19,11 @@ package misq.p2p.peers.exchange;
 
 import lombok.extern.slf4j.Slf4j;
 import misq.common.util.Disposable;
-import misq.p2p.endpoint.Connection;
-import misq.p2p.endpoint.Message;
-import misq.p2p.endpoint.MessageListener;
+import misq.p2p.Address;
+import misq.p2p.Message;
+import misq.p2p.node.Connection;
+import misq.p2p.node.MessageListener;
+import misq.p2p.node.Node;
 import misq.p2p.peers.Peer;
 
 import java.util.Set;
@@ -32,30 +34,32 @@ import java.util.concurrent.TimeUnit;
 public class PeerExchangeRequestHandler implements MessageListener, Disposable {
     private static final long TIMEOUT_SEC = 90;
 
-    private final Connection connection;
+    private final Node node;
+    private final String connectionId;
     private final CompletableFuture<Set<Peer>> future = new CompletableFuture<>();
 
-    public PeerExchangeRequestHandler(Connection connection) {
-        this.connection = connection;
+    public PeerExchangeRequestHandler(Node node, String connectionId) {
+        this.node = node;
+        this.connectionId = connectionId;
     }
 
-    public CompletableFuture<Set<Peer>> request(Set<Peer> peers) {
+    public CompletableFuture<Set<Peer>> request(Set<Peer> peers, Address peerAddress) {
         future.orTimeout(TIMEOUT_SEC, TimeUnit.SECONDS);
-        connection.addMessageListener(this);
-        connection.send(new PeerExchangeRequest(peers));
+        node.addMessageListener(this);
+        node.send(new PeerExchangeRequest(peers), peerAddress);
         return future;
     }
 
     public void dispose() {
-        connection.removeMessageListener(this);
+        node.removeMessageListener(this);
         future.cancel(true);
     }
 
     @Override
-    public void onMessage(Connection connection, Message message) {
-        if (message instanceof PeerExchangeResponse) {
+    public void onMessage(Message message, Connection connection) {
+        if (connectionId.equals(connection.getId()) && message instanceof PeerExchangeResponse) {
             PeerExchangeResponse peerExchangeResponse = (PeerExchangeResponse) message;
-            connection.removeMessageListener(this);
+            node.removeMessageListener(this);
             future.complete(peerExchangeResponse.getPeers());
         }
     }

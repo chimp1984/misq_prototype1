@@ -19,7 +19,7 @@ package misq.p2p.confidential;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import misq.p2p.endpoint.Message;
+import misq.p2p.Message;
 
 @EqualsAndHashCode
 @Getter

@@ -17,16 +17,16 @@
 
 package misq.p2p.peers;
 
-import misq.p2p.protection.ProtectedNode;
+import misq.p2p.node.Node;
 
 import java.util.concurrent.CompletableFuture;
 
 public class PeerGroupHealth {
-    private final ProtectedNode protectedNode;
+    private final Node node;
     private final PeerGroup peerGroup;
 
-    public PeerGroupHealth(ProtectedNode protectedNode, PeerGroup peerGroup) {
-        this.protectedNode = protectedNode;
+    public PeerGroupHealth(Node node, PeerGroup peerGroup) {
+        this.node = node;
         this.peerGroup = peerGroup;
     }
 

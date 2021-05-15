@@ -18,20 +18,23 @@
 package misq.p2p.data;
 
 import misq.common.util.MapUtils;
+import misq.p2p.Address;
+import misq.p2p.Message;
 import misq.p2p.data.filter.DataFilter;
 import misq.p2p.data.inventory.InventoryRequestHandler;
 import misq.p2p.data.inventory.InventoryResponseHandler;
 import misq.p2p.data.inventory.RequestInventoryResult;
 import misq.p2p.data.storage.MapKey;
 import misq.p2p.data.storage.Storage;
-import misq.p2p.endpoint.*;
+import misq.p2p.node.Connection;
+import misq.p2p.node.ConnectionListener;
+import misq.p2p.node.MessageListener;
+import misq.p2p.node.Node;
 import misq.p2p.peers.PeerGroup;
-import misq.p2p.protection.ProtectedNode;
 import misq.p2p.router.Router;
 import misq.p2p.router.gossip.GossipResult;
 
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
@@ -52,21 +55,21 @@ import java.util.concurrent.TimeUnit;
 public class DataService implements MessageListener, ConnectionListener {
     private static final long BROADCAST_TIMEOUT = 90;
 
-    private final ProtectedNode protectedNode;
+    private final Node node;
     private final Router router;
     private final Storage storage;
     private final Set<DataListener> dataListeners = new CopyOnWriteArraySet<>();
     private final Map<String, InventoryResponseHandler> responseHandlerMap = new ConcurrentHashMap<>();
     private final Map<String, InventoryRequestHandler> requestHandlerMap = new ConcurrentHashMap<>();
 
-    public DataService(ProtectedNode protectedNode, PeerGroup peerGroup, Storage storage) {
-        this.protectedNode = protectedNode;
+    public DataService(Node node, PeerGroup peerGroup, Storage storage) {
+        this.node = node;
         this.storage = storage;
 
-        router = new Router(protectedNode, peerGroup);
+        router = new Router(node, peerGroup);
 
         router.addMessageListener(this);
-        protectedNode.addConnectionListener(this);
+        node.addConnectionListener(this);
     }
 
 
@@ -75,7 +78,7 @@ public class DataService implements MessageListener, ConnectionListener {
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void onMessage(Connection connection, Message message) {
+    public void onMessage(Message message, Connection connection) {
         if (message instanceof AddDataRequest) {
             AddDataRequest addDataRequest = (AddDataRequest) message;
             if (canAdd(addDataRequest)) {
@@ -97,23 +100,19 @@ public class DataService implements MessageListener, ConnectionListener {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
-    // ConnectionListener
+    // Node.ConnectionListener
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void onInboundConnection(InboundConnection connection) {
+    public void onConnection(Connection connection) {
         addResponseHandler(connection);
     }
 
     @Override
-    public void onOutboundConnection(OutboundConnection connection, Address peerAddress) {
-        addResponseHandler(connection);
-    }
-
-    @Override
-    public void onDisconnect(Connection connection, Optional<Address> optionalAddress) {
-        MapUtils.disposeAndRemove(connection.getUid(), responseHandlerMap);
-        MapUtils.disposeAndRemove(connection.getUid(), requestHandlerMap);
+    public void onDisconnect(Connection connection) {
+        String id = connection.getId();
+        MapUtils.disposeAndRemove(id, responseHandlerMap);
+        MapUtils.disposeAndRemove(id, requestHandlerMap);
     }
 
 
@@ -166,10 +165,10 @@ public class DataService implements MessageListener, ConnectionListener {
         long ts = System.currentTimeMillis();
         CompletableFuture<RequestInventoryResult> future = new CompletableFuture<>();
         future.orTimeout(BROADCAST_TIMEOUT, TimeUnit.SECONDS);
-        protectedNode.getConnection(address)
+        node.getConnection(address)
                 .thenCompose(connection -> {
-                    InventoryRequestHandler requestHandler = new InventoryRequestHandler(connection);
-                    requestHandlerMap.put(connection.getUid(), requestHandler);
+                    InventoryRequestHandler requestHandler = new InventoryRequestHandler(node, connection);
+                    requestHandlerMap.put(connection.getId(), requestHandler);
                     return requestHandler.request(dataFilter);
                 })
                 .whenComplete((inventory, throwable) -> {
@@ -184,10 +183,10 @@ public class DataService implements MessageListener, ConnectionListener {
 
 
     private void addResponseHandler(Connection connection) {
-        InventoryResponseHandler responseHandler = new InventoryResponseHandler(connection,
+      /*  InventoryResponseHandler responseHandler = new InventoryResponseHandler(connection,
                 storage::getInventory,
-                () -> responseHandlerMap.remove(connection.getUid()));
-        responseHandlerMap.put(connection.getUid(), responseHandler);
+                () -> responseHandlerMap.remove(connection.getId()));
+        responseHandlerMap.put(connection.getId(), responseHandler);*/
     }
 
     private boolean canAdd(AddDataRequest message) {

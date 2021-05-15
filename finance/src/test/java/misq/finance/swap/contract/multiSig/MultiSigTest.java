@@ -32,8 +32,8 @@ import misq.finance.swap.SwapProtocolType;
 import misq.finance.swap.contract.multiSig.maker.MakerMultiSigProtocol;
 import misq.finance.swap.contract.multiSig.taker.TakerMultiSigProtocol;
 import misq.finance.swap.offer.SwapOffer;
+import misq.p2p.Address;
 import misq.p2p.P2pService;
-import misq.p2p.endpoint.Address;
 import org.junit.Before;
 
 import java.util.List;

@@ -18,7 +18,7 @@
 package misq.p2p.peers.exchange;
 
 import lombok.extern.slf4j.Slf4j;
-import misq.p2p.endpoint.Address;
+import misq.p2p.Address;
 import misq.p2p.peers.Peer;
 import misq.p2p.peers.PeerConfig;
 import misq.p2p.peers.PeerGroup;
@@ -50,6 +50,15 @@ public class DefaultPeerExchangeStrategy implements PeerExchangeStrategy {
                 .filter(peerGroup::notMyself)
                 .collect(Collectors.toSet());
         peerGroup.addReportedPeers(collect);
+        log.debug("addPeersFromPeerExchange at {} from {} peers={}, collect={} ## {}", peerGroup.serverPort, senderAddress, peers, collect, peerGroup.getReportedPeers().size());
+        if (peerGroup.getConnections().size() > 1 && peerGroup.serverPort == 1000 && senderAddress.toString().equals("127.0.0.1:5001")) {
+            int serverPort = peerGroup.serverPort;
+            log.error("addPeersFromPeerExchange at {} from {} peers={}, collect={} ## {}", serverPort, senderAddress, peers, collect, peerGroup.getReportedPeers().size());
+        }
+        if (peerGroup.getConnections().size() > 1 && peerGroup.serverPort == 5001) {
+            int serverPort = peerGroup.serverPort;
+            log.error("addPeersFromPeerExchange at {} from {} peers={}, collect={} ## {}", serverPort, senderAddress, peers, collect, peerGroup.getReportedPeers().size());
+        }
     }
 
     @Override
@@ -60,10 +69,21 @@ public class DefaultPeerExchangeStrategy implements PeerExchangeStrategy {
                 .collect(Collectors.toList());
         Set<Peer> allConnectedPeers = peerGroup.getAllConnectedPeers();
         list.addAll(allConnectedPeers);
-        return list.stream()
+        Set<Peer> collect = list.stream()
                 .filter(peerGroup::notASeed)
                 .filter(peer -> notDirectPeer(peerAddress, peer))
                 .collect(Collectors.toSet());
+
+        log.debug("getPeersForPeerExchange serverPort={} peerAddress={}, collect={} ## {}",
+                peerGroup.serverPort, peerAddress, collect, peerGroup.getReportedPeers());
+        if (collect.size() > 0 && peerGroup.getConnections().size() > 0 && peerGroup.serverPort == 5001 && peerAddress.toString().equals("127.0.0.1:1000")) {
+            int serverPort = peerGroup.serverPort;
+            Set<Peer> reportedPeers = peerGroup.getReportedPeers();
+            log.error("************************************************************************");
+            log.error("getPeersForPeerExchange serverPort={} peerAddress={}, collect={} ## {}",
+                    serverPort, peerAddress, collect, reportedPeers);
+        }
+        return collect;
     }
 
     @Override
@@ -83,19 +103,22 @@ public class DefaultPeerExchangeStrategy implements PeerExchangeStrategy {
         // as well it could be that other nodes have started peer exchange to ourself before we start the peer exchange.
         Set<Address> reported = peerGroup.getReportedPeers().stream()
                 .map(Peer::getAddress)
-                .filter(this::notUsedYet)
-                .limit(numReportedPeersAtBoostrap)
+                .filter(peerGroup::notMyself)
+                /* .filter(this::notUsedYet)
+                 .limit(numReportedPeersAtBoostrap)*/
                 .collect(Collectors.toSet()); //4
 
         Set<Address> persisted = peerGroup.getPersistedPeers().stream()
                 .map(Peer::getAddress)
-                .filter(this::notUsedYet)
-                .limit(numPersistedPeersAtBoostrap)
+                .filter(peerGroup::notMyself)
+                /* .filter(this::notUsedYet)
+                 .limit(numPersistedPeersAtBoostrap)*/
                 .collect(Collectors.toSet()); //8
 
         Set<Address> connectedPeerAddresses = peerGroup.getConnectedPeerAddresses().stream()
-                .filter(this::notUsedYet)
-                .filter(peerGroup::notASeed)
+                .filter(peerGroup::notMyself)
+                /* .filter(this::notUsedYet)
+                 .filter(peerGroup::notASeed)*/
                 .collect(Collectors.toSet());
 
         // If we have already connections (at repeated bootstraps) we limit the new set to what is missing to reach out
@@ -115,16 +138,23 @@ public class DefaultPeerExchangeStrategy implements PeerExchangeStrategy {
         all.addAll(connectedPeerAddresses);
 
         Set<Address> result = all.stream()
-                .limit(missingConnections)
+                /*.limit(missingConnections)*/
                 .collect(Collectors.toSet());
         usedAddresses.addAll(result);
+        if (numConnections > 8 && reported.size() < 10) {
+            log.error("#### getAddressesForBootstrap {}", result);
+
+        }
+        log.error("#### getAddressesForBootstrap {}", result);
         return result;
     }
 
     @Override
     public boolean repeatBootstrap(long numSuccess, int numFutures) {
+        long failures = numFutures - numSuccess;
+        boolean moreThenHalfFailed = failures > numFutures / 2;
         return numSuccess == 0 ||
-                numFutures - numSuccess > 4 ||
+                moreThenHalfFailed ||
                 !sufficientConnections() ||
                 !sufficientReportedPeers();
     }
@@ -143,7 +173,7 @@ public class DefaultPeerExchangeStrategy implements PeerExchangeStrategy {
     }
 
     private boolean notUsedYet(Address address) {
-        return !usedAddresses.contains(address);
+        return true || !usedAddresses.contains(address);
     }
 
     private boolean notDirectPeer(Address peerAddress, Peer peer) {
