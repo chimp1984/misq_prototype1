@@ -21,11 +21,10 @@ import misq.p2p.P2pService;
 import misq.p2p.node.MessageListener;
 
 public abstract class TwoPartyProtocol extends Protocol implements MessageListener {
-    protected final CounterParty counterParty;
+    protected final Party counterParty;
 
     public TwoPartyProtocol(TwoPartyContract contract, P2pService p2pService) {
         super(contract, p2pService);
-
         counterParty = contract.getCounterParty();
     }
 }

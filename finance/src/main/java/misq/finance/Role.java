@@ -18,10 +18,11 @@
 package misq.finance;
 
 public enum Role {
-    Maker,
-    Taker;
+    MAKER,
+    TAKER,
+    ESCROW_AGENT;
 
     public Role peer() {
-        return this == Role.Maker ? Role.Taker : Role.Maker;
+        return this == Role.MAKER ? Role.TAKER : this == Role.TAKER ? MAKER : null;
     }
 }

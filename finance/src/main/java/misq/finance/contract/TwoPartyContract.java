@@ -17,19 +17,16 @@
 
 package misq.finance.contract;
 
-
 import lombok.Getter;
 import misq.finance.ProtocolType;
 import misq.finance.Role;
 
 @Getter
 public class TwoPartyContract extends Contract {
+    protected final Party counterParty;
 
-    protected final CounterParty counterParty;
-
-    public TwoPartyContract(ProtocolType protocolType, Role myRole, CounterParty counterParty) {
+    public TwoPartyContract(ProtocolType protocolType, Role myRole, Party counterParty) {
         super(protocolType, myRole);
-
         this.counterParty = counterParty;
     }
 }

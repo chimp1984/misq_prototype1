@@ -21,10 +21,10 @@ import lombok.Getter;
 import misq.p2p.Address;
 
 @Getter
-public class CounterParty {
+public class Party {
     private final Address address;
 
-    public CounterParty(Address address) {
+    public Party(Address address) {
         this.address = address;
     }
 }

@@ -17,20 +17,40 @@
 
 package misq.finance;
 
-import misq.finance.contract.CounterParty;
+import misq.finance.contract.ManyPartyContract;
+import misq.finance.contract.Party;
 import misq.finance.contract.TwoPartyContract;
 import misq.finance.offer.Offer;
 import misq.p2p.Address;
 
+import java.util.Map;
+
 public class ContractMaker {
     public static TwoPartyContract createMakerTrade(Address takerAddress, ProtocolType protocolType) {
-        CounterParty counterParty = new CounterParty(takerAddress);
-        return new TwoPartyContract(protocolType, Role.Maker, counterParty);
+        Party counterParty = new Party(takerAddress);
+        return new TwoPartyContract(protocolType, Role.MAKER, counterParty);
     }
 
     public static TwoPartyContract createTakerTrade(Offer offer, ProtocolType protocolType) {
         Address makerAddress = offer.getMakerAddress();
-        CounterParty counterParty = new CounterParty(makerAddress);
-        return new TwoPartyContract(protocolType, Role.Taker, counterParty);
+        Party counterParty = new Party(makerAddress);
+        return new TwoPartyContract(protocolType, Role.TAKER, counterParty);
+    }
+
+    public static ManyPartyContract createMakerTrade(Address takerAddress, Address escrowAgentAddress, ProtocolType protocolType) {
+        Party taker = new Party(takerAddress);
+        Party escrowAgent = new Party(escrowAgentAddress);
+        return new ManyPartyContract(protocolType, Role.MAKER, Map.of(Role.MAKER, self(), Role.TAKER, taker, Role.ESCROW_AGENT, escrowAgent));
+    }
+
+    public static ManyPartyContract createTakerTrade(Offer offer, Address escrowAgentAddress, ProtocolType protocolType) {
+        Address makerAddress = offer.getMakerAddress();
+        Party maker = new Party(makerAddress);
+        Party escrowAgent = new Party(escrowAgentAddress);
+        return new ManyPartyContract(protocolType, Role.TAKER, Map.of(Role.MAKER, maker, Role.TAKER, self(), Role.ESCROW_AGENT, escrowAgent));
+    }
+
+    private static Party self() {
+        return new Party(Address.localHost(1000));
     }
 }
