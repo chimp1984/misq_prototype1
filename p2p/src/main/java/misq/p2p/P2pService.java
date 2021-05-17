@@ -39,8 +39,13 @@ public interface P2pService {
     CompletableFuture<Boolean> bootstrap();
 
     //todo just temp until api is more stable
-    default CompletableFuture<Connection> confidentialSend(Message message, Address peerAddress) throws GeneralSecurityException {
-        return confidentialSend(message, peerAddress, null, null);
+    default CompletableFuture<Connection> confidentialSend(Message message, Address peerAddress) {
+        CompletableFuture<Connection> connectionCompletableFuture = null;
+        try {
+            connectionCompletableFuture = confidentialSend(message, peerAddress, null, null);
+        } catch (GeneralSecurityException ignore) {
+        }
+        return connectionCompletableFuture;
     }
 
     CompletableFuture<Connection> confidentialSend(Message message, Address peerAddress,
