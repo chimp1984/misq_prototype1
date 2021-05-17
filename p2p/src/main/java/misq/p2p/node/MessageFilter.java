@@ -18,7 +18,7 @@
 package misq.p2p.node;
 
 import lombok.extern.slf4j.Slf4j;
-import misq.p2p.Message;
+import misq.p2p.message.Message;
 import misq.p2p.node.protection.GuardedMessage;
 import misq.p2p.node.protection.PermissionControl;
 

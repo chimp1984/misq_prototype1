@@ -19,7 +19,7 @@ package misq.p2p.router.gossip;
 
 import misq.common.util.CollectionUtil;
 import misq.p2p.Address;
-import misq.p2p.Message;
+import misq.p2p.message.Message;
 import misq.p2p.node.Connection;
 import misq.p2p.node.MessageListener;
 import misq.p2p.node.Node;

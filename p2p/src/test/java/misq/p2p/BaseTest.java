@@ -19,14 +19,21 @@ package misq.p2p;
 
 import com.google.common.collect.Sets;
 import lombok.extern.slf4j.Slf4j;
+import misq.common.security.KeyPairGeneratorUtil;
 import misq.common.util.OsUtils;
 import misq.p2p.data.storage.Storage;
 import misq.p2p.node.RawNode;
 
+import java.security.GeneralSecurityException;
+import java.security.KeyPair;
+import java.security.PrivateKey;
+import java.security.PublicKey;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static org.junit.Assert.*;
 
 @Slf4j
@@ -70,8 +77,35 @@ public class BaseTest {
         return clearNet;
     }
 
+    private static KeyPair keyPairAlice, keyPairBob;
+
+    static {
+        try {
+            keyPairAlice = KeyPairGeneratorUtil.generateKeyPair();
+            keyPairBob = KeyPairGeneratorUtil.generateKeyPair();
+        } catch (GeneralSecurityException e) {
+            e.printStackTrace();
+        }
+    }
+
+
+    Function<PublicKey, PrivateKey> aliceKeyRepository = new Function<PublicKey, PrivateKey>() {
+        @Override
+        public PrivateKey apply(PublicKey publicKey) {
+            checkArgument(publicKey.equals(keyPairAlice.getPublic()));
+            return keyPairAlice.getPrivate();
+        }
+    };
+    Function<PublicKey, PrivateKey> bobKeyRepository = new Function<PublicKey, PrivateKey>() {
+        @Override
+        public PrivateKey apply(PublicKey publicKey) {
+            checkArgument(publicKey.equals(keyPairBob.getPublic()));
+            return keyPairBob.getPrivate();
+        }
+    };
+
     protected void testBootstrapSolo(int count) throws InterruptedException {
-        alice = new P2pNode(getNetworkConfig(Role.Alice), mySupportedNetworks, storage);
+        alice = new P2pNode(getNetworkConfig(Role.Alice), mySupportedNetworks, storage, aliceKeyRepository);
         CountDownLatch bootstrappedLatch = new CountDownLatch(count);
         alice.bootstrap().whenComplete((success, t) -> {
             if (success && t == null) {
@@ -85,8 +119,8 @@ public class BaseTest {
     }
 
     protected void testInitializeServer(int serversReadyLatchCount) throws InterruptedException {
-        alice = new P2pNode(getNetworkConfig(Role.Alice), mySupportedNetworks, storage);
-        bob = new P2pNode(getNetworkConfig(Role.Bob), mySupportedNetworks, storage);
+        alice = new P2pNode(getNetworkConfig(Role.Alice), mySupportedNetworks, storage, aliceKeyRepository);
+        bob = new P2pNode(getNetworkConfig(Role.Bob), mySupportedNetworks, storage, bobKeyRepository);
         CountDownLatch serversReadyLatch = new CountDownLatch(serversReadyLatchCount);
         alice.initializeServer().whenComplete((result, throwable) -> {
             serversReadyLatch.countDown();
@@ -99,7 +133,7 @@ public class BaseTest {
         assertTrue(serversReady);
     }
 
-    protected void testConfidentialSend() throws InterruptedException {
+    protected void testConfidentialSend() throws InterruptedException, GeneralSecurityException {
         testInitializeServer(2);
         NetworkConfig networkConfigBob = getNetworkConfig(Role.Bob);
         String msg = "hello";
@@ -112,7 +146,7 @@ public class BaseTest {
         CountDownLatch sentLatch = new CountDownLatch(1);
 
         Address peerAddress = Address.localHost(networkConfigBob.getServerPort());
-        alice.confidentialSend(new MockMessage(msg), peerAddress)
+        alice.confidentialSend(new MockMessage(msg), peerAddress, keyPairBob.getPublic(), keyPairAlice)
                 .whenComplete((connection, throwable) -> {
                     if (connection != null) {
                         sentLatch.countDown();

@@ -19,8 +19,8 @@ package misq.p2p.node;
 
 
 import misq.p2p.Address;
-import misq.p2p.Message;
 import misq.p2p.NetworkConfig;
+import misq.p2p.message.Message;
 import misq.p2p.node.connection.InboundConnection;
 import misq.p2p.node.connection.OutboundConnection;
 import misq.p2p.node.connection.RawConnection;

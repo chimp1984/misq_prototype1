@@ -19,11 +19,11 @@ package misq;
 
 
 import misq.p2p.Address;
-import misq.p2p.Message;
 import misq.p2p.NetworkType;
 import misq.p2p.P2pService;
 import misq.p2p.data.filter.DataFilter;
 import misq.p2p.data.inventory.RequestInventoryResult;
+import misq.p2p.message.Message;
 import misq.p2p.node.Connection;
 import misq.p2p.node.MessageListener;
 import misq.p2p.node.proxy.GetServerSocketResult;
@@ -31,6 +31,8 @@ import misq.p2p.router.gossip.GossipResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.security.KeyPair;
+import java.security.PublicKey;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
@@ -56,7 +58,7 @@ public class MockP2pService implements P2pService {
     }
 
     @Override
-    public CompletableFuture<Connection> confidentialSend(Message message, Address peerAddress) {
+    public CompletableFuture<Connection> confidentialSend(Message message, Address peerAddress, PublicKey peersPublicKey, KeyPair myKeyPair) {
         CompletableFuture<Connection> future = new CompletableFuture<>();
         new Thread(() -> {
             try {

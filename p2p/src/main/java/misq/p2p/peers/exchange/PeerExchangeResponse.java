@@ -19,7 +19,7 @@ package misq.p2p.peers.exchange;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import misq.p2p.Message;
+import misq.p2p.message.Message;
 import misq.p2p.peers.Peer;
 
 import java.util.Set;

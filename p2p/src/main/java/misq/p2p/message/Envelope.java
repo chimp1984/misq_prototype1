@@ -15,16 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package misq.finance.swap.contract.bsqBond.messages;
+package misq.p2p.message;
 
-import lombok.Getter;
-import misq.p2p.message.Message;
-
-public abstract class CommitmentMessage implements Message {
-    @Getter
-    private final String commitment;
-
-    public CommitmentMessage(String commitment) {
-        this.commitment = commitment;
-    }
+public class Envelope implements Message {
 }

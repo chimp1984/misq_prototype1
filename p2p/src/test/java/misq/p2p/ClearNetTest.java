@@ -22,6 +22,8 @@ import misq.common.util.OsUtils;
 import misq.p2p.node.RawNode;
 import org.junit.Test;
 
+import java.security.GeneralSecurityException;
+
 @Slf4j
 public class ClearNetTest extends BaseTest {
     protected int getTimeout() {
@@ -59,7 +61,7 @@ public class ClearNetTest extends BaseTest {
     }
 
     @Test
-    public void testConfidentialSend() throws InterruptedException {
+    public void testConfidentialSend() throws InterruptedException, GeneralSecurityException {
         super.testConfidentialSend();
         alice.shutdown();
         bob.shutdown();

@@ -18,7 +18,7 @@
 package misq.p2p.router;
 
 import misq.p2p.Address;
-import misq.p2p.Message;
+import misq.p2p.message.Message;
 import misq.p2p.node.Connection;
 import misq.p2p.node.MessageListener;
 import misq.p2p.node.Node;

@@ -28,12 +28,12 @@ import java.security.PublicKey;
 import static com.google.common.base.Preconditions.checkArgument;
 
 public class HybridEncryption {
-    public static SealedMessage encrypt(byte[] message, PublicKey peersPublicKey, KeyPair myKeyPair) throws GeneralSecurityException {
+    public static Seal encrypt(byte[] message, PublicKey receiverPublicKey, KeyPair senderKeyPair) throws GeneralSecurityException {
         // Symmetric key setup
         SecretKey sessionKey = SymEncryptionUtil.generateAESKey();
 
         // Encrypt sessionKey
-        byte[] encryptedSessionKey = AsymEncryptionUtil.encryptSecretKey(sessionKey, peersPublicKey);
+        byte[] encryptedSessionKey = AsymEncryptionUtil.encryptSecretKey(sessionKey, receiverPublicKey);
 
         // Encrypt message
         IvParameterSpec ivSpec = SymEncryptionUtil.generateIv();
@@ -42,32 +42,33 @@ public class HybridEncryption {
         // Hmac of encryptedMessage
         SecretKey hmacSessionKey = SymEncryptionUtil.generateAESKey();
         byte[] hmac = Hmac.createHmac(encryptedMessage, hmacSessionKey);
-        byte[] encryptedHmacSessionKey = AsymEncryptionUtil.encryptSecretKey(hmacSessionKey, peersPublicKey);
+        byte[] encryptedHmacSessionKey = AsymEncryptionUtil.encryptSecretKey(hmacSessionKey, receiverPublicKey);
 
         // Combine bitStream of all data
         byte[] iv = ivSpec.getIV();
         byte[] bitStream = getBitStream(encryptedHmacSessionKey, encryptedSessionKey, hmac, iv, encryptedMessage);
 
         // Create signature over bitstream
-        byte[] signature = SignatureUtil.sign(bitStream, myKeyPair.getPrivate());
+        byte[] signature = SignatureUtil.sign(bitStream, senderKeyPair.getPrivate());
 
-        return new SealedMessage(encryptedHmacSessionKey, encryptedSessionKey, hmac, iv, encryptedMessage, signature, myKeyPair.getPublic().getEncoded());
+        return new Seal(encryptedHmacSessionKey, encryptedSessionKey, hmac, iv, encryptedMessage, signature,
+                senderKeyPair.getPublic().getEncoded());
     }
 
-    public static byte[] decrypt(SealedMessage sealedMessage, PrivateKey privateKey) throws GeneralSecurityException {
-        byte[] encryptedHmacSessionKey = sealedMessage.getEncryptedHmacSessionKey();
-        byte[] encryptedSessionKey = sealedMessage.getEncryptedSessionKey();
-        byte[] hmac = sealedMessage.getHmac();
-        byte[] iv = sealedMessage.getIv();
-        byte[] encryptedMessage = sealedMessage.getEncryptedMessage();
-        byte[] signature = sealedMessage.getSignature();
-        PublicKey publicKey = KeyPairGeneratorUtil.generatePublic(sealedMessage.getPublicKey());
+    public static byte[] decrypt(Seal seal, PrivateKey privateKey) throws GeneralSecurityException {
+        byte[] encryptedHmacSessionKey = seal.getEncryptedHmacSessionKey();
+        byte[] encryptedSessionKey = seal.getEncryptedSessionKey();
+        byte[] hmac = seal.getHmac();
+        byte[] iv = seal.getIv();
+        byte[] encryptedMessage = seal.getEncryptedMessage();
+        byte[] signature = seal.getSignature();
+        PublicKey senderPublicKey = KeyPairGeneratorUtil.generatePublic(seal.getSenderPublicKey());
 
         // Create bitstream
         byte[] bitStream = getBitStream(encryptedHmacSessionKey, encryptedSessionKey, hmac, iv, encryptedMessage);
 
         // Verify signature
-        checkArgument(SignatureUtil.verify(bitStream, signature, publicKey), "Invalid signature");
+        checkArgument(SignatureUtil.verify(bitStream, signature, senderPublicKey), "Invalid signature");
 
         // Decrypt encryptedHmacSessionKey
         SecretKey hmacSessionKey = AsymEncryptionUtil.decryptSecretKey(encryptedHmacSessionKey, privateKey);

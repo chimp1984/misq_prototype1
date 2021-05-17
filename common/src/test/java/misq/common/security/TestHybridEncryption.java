@@ -42,28 +42,28 @@ public class TestHybridEncryption {
         log.error("Generating 2 key pairs took {} ms", System.currentTimeMillis() - ts);
 
         ts = System.currentTimeMillis();
-        SealedMessage sealedMessage = HybridEncryption.encrypt(message, keyPairReceiver.getPublic(), keyPairSender);
+        Seal seal = HybridEncryption.encrypt(message, keyPairReceiver.getPublic(), keyPairSender);
         log.error("Encryption took {} ms", System.currentTimeMillis() - ts);
 
         ts = System.currentTimeMillis();
-        byte[] decrypted = HybridEncryption.decrypt(sealedMessage, keyPairReceiver.getPrivate());
+        byte[] decrypted = HybridEncryption.decrypt(seal, keyPairReceiver.getPrivate());
         assertArrayEquals(message, decrypted);
         log.error("Decryption took {} ms", System.currentTimeMillis() - ts);
 
-        byte[] encryptedHmacSessionKey = sealedMessage.getEncryptedHmacSessionKey();
-        byte[] encryptedSessionKey = sealedMessage.getEncryptedSessionKey();
-        byte[] hmac = sealedMessage.getHmac();
-        byte[] iv = sealedMessage.getIv();
-        byte[] encryptedMessage = sealedMessage.getEncryptedMessage();
-        byte[] signature = sealedMessage.getSignature();
-        byte[] publicKey = sealedMessage.getPublicKey();
+        byte[] encryptedHmacSessionKey = seal.getEncryptedHmacSessionKey();
+        byte[] encryptedSessionKey = seal.getEncryptedSessionKey();
+        byte[] hmac = seal.getHmac();
+        byte[] iv = seal.getIv();
+        byte[] encryptedMessage = seal.getEncryptedMessage();
+        byte[] signature = seal.getSignature();
+        byte[] senderPublicKey = seal.getSenderPublicKey();
 
         // If sig and pubkey are matching but changed we do not detect that. Receiver need to check
         // if pubkey is the expected one. This is outside of the scope of the HybridEncryption.
         KeyPair fakeKeyPair = KeyPairGeneratorUtil.generateKeyPair();
         byte[] bitStream = HybridEncryption.getBitStream(encryptedHmacSessionKey, encryptedSessionKey, hmac, iv, encryptedMessage);
         byte[] fakeSignature = SignatureUtil.sign(bitStream, fakeKeyPair.getPrivate());
-        SealedMessage withFakeSigAndPubKey = new SealedMessage(encryptedHmacSessionKey, encryptedSessionKey, hmac, iv,
+        Seal withFakeSigAndPubKey = new Seal(encryptedHmacSessionKey, encryptedSessionKey, hmac, iv,
                 encryptedMessage, fakeSignature, fakeKeyPair.getPublic().getEncoded());
         decrypted = HybridEncryption.decrypt(withFakeSigAndPubKey, keyPairReceiver.getPrivate());
         assertArrayEquals(message, decrypted);
@@ -71,15 +71,15 @@ public class TestHybridEncryption {
 
         // fake sig or fake signed message throw SignatureException
         try {
-            SealedMessage withFakeSig = new SealedMessage(encryptedHmacSessionKey, encryptedSessionKey, hmac, iv,
-                    encryptedMessage, "signature".getBytes(), publicKey);
+            Seal withFakeSig = new Seal(encryptedHmacSessionKey, encryptedSessionKey, hmac, iv,
+                    encryptedMessage, "signature".getBytes(), senderPublicKey);
             HybridEncryption.decrypt(withFakeSig, keyPairReceiver.getPrivate());
             expectedException.expect(SignatureException.class);
         } catch (Throwable ignore) {
         }
         try {
-            SealedMessage withFakeIv = new SealedMessage(encryptedHmacSessionKey, encryptedSessionKey, hmac, "iv".getBytes(),
-                    encryptedMessage, signature, publicKey);
+            Seal withFakeIv = new Seal(encryptedHmacSessionKey, encryptedSessionKey, hmac, "iv".getBytes(),
+                    encryptedMessage, signature, senderPublicKey);
             HybridEncryption.decrypt(withFakeIv, keyPairReceiver.getPrivate());
             expectedException.expect(SignatureException.class);
         } catch (Throwable ignore) {

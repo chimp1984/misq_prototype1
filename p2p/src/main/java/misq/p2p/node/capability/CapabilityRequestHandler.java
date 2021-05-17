@@ -20,8 +20,8 @@ package misq.p2p.node.capability;
 import lombok.extern.slf4j.Slf4j;
 import misq.common.util.Disposable;
 import misq.p2p.Address;
-import misq.p2p.Message;
 import misq.p2p.NetworkType;
+import misq.p2p.message.Message;
 import misq.p2p.node.connection.RawConnection;
 
 import java.util.Random;

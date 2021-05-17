@@ -22,6 +22,7 @@ import misq.common.util.CollectionUtil;
 import misq.p2p.data.filter.DataFilter;
 import misq.p2p.data.inventory.RequestInventoryResult;
 import misq.p2p.data.storage.Storage;
+import misq.p2p.message.Message;
 import misq.p2p.node.Connection;
 import misq.p2p.node.MessageListener;
 import misq.p2p.node.proxy.GetServerSocketResult;
@@ -29,11 +30,16 @@ import misq.p2p.router.gossip.GossipResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.security.GeneralSecurityException;
+import java.security.KeyPair;
+import java.security.PrivateKey;
+import java.security.PublicKey;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -44,14 +50,14 @@ public class P2pServiceImpl implements P2pService {
 
     private final Map<NetworkType, P2pNode> p2pNodes = new ConcurrentHashMap<>();
 
-    public P2pServiceImpl(List<NetworkConfig> networkConfigs) {
+    public P2pServiceImpl(List<NetworkConfig> networkConfigs, Function<PublicKey, PrivateKey> keyRepository) {
         Storage storage = new Storage();
         Set<NetworkType> mySupportedNetworks = networkConfigs.stream()
                 .map(NetworkConfig::getNetworkType)
                 .collect(Collectors.toSet());
         networkConfigs.forEach(networkConfig -> {
             NetworkType networkType = networkConfig.getNetworkType();
-            P2pNode p2pNode = new P2pNode(networkConfig, mySupportedNetworks, storage);
+            P2pNode p2pNode = new P2pNode(networkConfig, mySupportedNetworks, storage, keyRepository);
             p2pNodes.put(networkType, p2pNode);
         });
     }
@@ -99,13 +105,16 @@ public class P2pServiceImpl implements P2pService {
                 .thenCompose(CompletableFuture::completedFuture);               // If at least one was successful we report a success
     }
 
+
     @Override
-    public CompletableFuture<Connection> confidentialSend(Message message, Address peerAddress) {
+    public CompletableFuture<Connection> confidentialSend(Message message, Address peerAddress,
+                                                          PublicKey peersPublicKey, KeyPair myKeyPair)
+            throws GeneralSecurityException {
         CompletableFuture<Connection> future = new CompletableFuture<>();
         NetworkType networkType = peerAddress.getNetworkType();
         if (p2pNodes.containsKey(networkType)) {
             p2pNodes.get(networkType)
-                    .confidentialSend(message, peerAddress)
+                    .confidentialSend(message, peerAddress, peersPublicKey, myKeyPair)
                     .whenComplete((connection, throwable) -> {
                         if (connection != null) {
                             future.complete(connection);

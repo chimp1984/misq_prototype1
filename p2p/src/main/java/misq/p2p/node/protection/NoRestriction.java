@@ -17,7 +17,7 @@
 
 package misq.p2p.node.protection;
 
-import misq.p2p.Message;
+import misq.p2p.message.Message;
 
 import java.util.concurrent.CompletableFuture;
 

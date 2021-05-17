@@ -22,6 +22,8 @@ import misq.common.util.OsUtils;
 import misq.p2p.node.RawNode;
 import org.junit.Test;
 
+import java.security.GeneralSecurityException;
+
 @Slf4j
 public class TorTest extends BaseTest {
     protected int getTimeout() {
@@ -57,7 +59,7 @@ public class TorTest extends BaseTest {
     }
 
     @Test
-    public void testConfidentialSend() throws InterruptedException {
+    public void testConfidentialSend() throws InterruptedException, GeneralSecurityException {
         super.testInitializeServer(2);
         super.testConfidentialSend();
     }

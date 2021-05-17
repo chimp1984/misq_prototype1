@@ -20,7 +20,7 @@ package misq.p2p.confidential;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import misq.p2p.Address;
-import misq.p2p.Message;
+import misq.p2p.message.Message;
 
 @EqualsAndHashCode(callSuper = true)
 @Getter
@@ -28,7 +28,8 @@ public class RelayMessage extends ConfidentialMessage {
     private final Address targetAddress;
 
     public RelayMessage(Message message, Address targetAddress) {
-        super(message);
+        super(null, null);
+        // super(message, peersPublicKey);
         this.targetAddress = targetAddress;
     }
 }

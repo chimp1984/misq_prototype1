@@ -18,7 +18,7 @@
 package misq.p2p.data.storage;
 
 import lombok.EqualsAndHashCode;
-import misq.p2p.Message;
+import misq.p2p.message.Message;
 
 @EqualsAndHashCode
 public class MapKey {

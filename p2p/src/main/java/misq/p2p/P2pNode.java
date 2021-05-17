@@ -24,6 +24,7 @@ import misq.p2p.data.DataService;
 import misq.p2p.data.filter.DataFilter;
 import misq.p2p.data.inventory.RequestInventoryResult;
 import misq.p2p.data.storage.Storage;
+import misq.p2p.message.Message;
 import misq.p2p.node.Connection;
 import misq.p2p.node.MessageListener;
 import misq.p2p.node.Node;
@@ -36,9 +37,14 @@ import misq.p2p.router.gossip.GossipResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.security.GeneralSecurityException;
+import java.security.KeyPair;
+import java.security.PrivateKey;
+import java.security.PublicKey;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Function;
 
 /**
  * High level API for the p2p network.
@@ -48,14 +54,16 @@ public class P2pNode {
 
     private final NetworkConfig networkConfig;
     private final Storage storage;
+    private final Function<PublicKey, PrivateKey> keyRepository;
     private final PeerManager peerManager;
     private final Node node;
     private final ConfidentialMessageService confidentialMessageService;
     private final DataService dataService;
 
-    public P2pNode(NetworkConfig networkConfig, Set<NetworkType> mySupportedNetworks, Storage storage) {
+    public P2pNode(NetworkConfig networkConfig, Set<NetworkType> mySupportedNetworks, Storage storage, Function<PublicKey, PrivateKey> keyRepository) {
         this.networkConfig = networkConfig;
         this.storage = storage;
+        this.keyRepository = keyRepository;
 
         node = new Node(networkConfig, mySupportedNetworks);
 
@@ -65,7 +73,7 @@ public class P2pNode {
         DefaultPeerExchangeStrategy peerExchangeStrategy = new DefaultPeerExchangeStrategy(peerGroup, peerConfig);
         peerManager = new PeerManager(node, peerGroup, peerExchangeStrategy, peerConfig);
 
-        confidentialMessageService = new ConfidentialMessageService(node, peerGroup);
+        confidentialMessageService = new ConfidentialMessageService(node, peerGroup, keyRepository);
 
         dataService = new DataService(node, peerGroup, storage);
     }
@@ -83,8 +91,10 @@ public class P2pNode {
         return peerManager.bootstrap(networkConfig.getServerId(), networkConfig.getServerPort());
     }
 
-    public CompletableFuture<Connection> confidentialSend(Message message, Address peerAddress) {
-        return confidentialMessageService.send(message, peerAddress);
+    public CompletableFuture<Connection> confidentialSend(Message message, Address peerAddress,
+                                                          PublicKey peersPublicKey, KeyPair myKeyPair)
+            throws GeneralSecurityException {
+        return confidentialMessageService.send(message, peerAddress, peersPublicKey, myKeyPair);
     }
 
     public CompletableFuture<Connection> relay(Message message, Address peerAddress) {

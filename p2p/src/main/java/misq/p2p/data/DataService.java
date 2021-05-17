@@ -19,13 +19,13 @@ package misq.p2p.data;
 
 import misq.common.util.MapUtils;
 import misq.p2p.Address;
-import misq.p2p.Message;
 import misq.p2p.data.filter.DataFilter;
 import misq.p2p.data.inventory.InventoryRequestHandler;
 import misq.p2p.data.inventory.InventoryResponseHandler;
 import misq.p2p.data.inventory.RequestInventoryResult;
 import misq.p2p.data.storage.MapKey;
 import misq.p2p.data.storage.Storage;
+import misq.p2p.message.Message;
 import misq.p2p.node.Connection;
 import misq.p2p.node.ConnectionListener;
 import misq.p2p.node.MessageListener;

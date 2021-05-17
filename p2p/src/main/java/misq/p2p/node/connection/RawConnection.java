@@ -21,7 +21,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import misq.common.util.ThreadingUtils;
-import misq.p2p.Message;
+import misq.p2p.message.Message;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;

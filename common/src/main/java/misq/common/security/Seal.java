@@ -17,31 +17,36 @@
 
 package misq.common.security;
 
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
+import java.io.Serializable;
+
+@EqualsAndHashCode
 @Getter
-public class SealedMessage {
+public class Seal implements Serializable {
     private final byte[] encryptedHmacSessionKey;
     private final byte[] encryptedSessionKey;
     private final byte[] hmac;
     private final byte[] iv;
     private final byte[] encryptedMessage;
     private final byte[] signature;
-    private final byte[] publicKey;
+    private final byte[] senderPublicKey;
 
-    public SealedMessage(byte[] encryptedHmacSessionKey,
-                         byte[] encryptedSessionKey,
-                         byte[] hmac,
-                         byte[] iv,
-                         byte[] encryptedMessage,
-                         byte[] signature,
-                         byte[] publicKey) {
+    public Seal(byte[] encryptedHmacSessionKey,
+                byte[] encryptedSessionKey,
+                byte[] hmac,
+                byte[] iv,
+                byte[] encryptedMessage,
+                byte[] signature,
+                byte[] senderPublicKey) {
         this.encryptedHmacSessionKey = encryptedHmacSessionKey;
         this.encryptedSessionKey = encryptedSessionKey;
         this.hmac = hmac;
         this.iv = iv;
         this.encryptedMessage = encryptedMessage;
         this.signature = signature;
-        this.publicKey = publicKey;
+        this.senderPublicKey = senderPublicKey;
+
     }
 }

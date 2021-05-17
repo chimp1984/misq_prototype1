@@ -19,11 +19,15 @@ package misq.p2p;
 
 import misq.p2p.data.filter.DataFilter;
 import misq.p2p.data.inventory.RequestInventoryResult;
+import misq.p2p.message.Message;
 import misq.p2p.node.Connection;
 import misq.p2p.node.MessageListener;
 import misq.p2p.node.proxy.GetServerSocketResult;
 import misq.p2p.router.gossip.GossipResult;
 
+import java.security.GeneralSecurityException;
+import java.security.KeyPair;
+import java.security.PublicKey;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.BiConsumer;
@@ -34,7 +38,13 @@ public interface P2pService {
 
     CompletableFuture<Boolean> bootstrap();
 
-    CompletableFuture<Connection> confidentialSend(Message message, Address peerAddress);
+    //todo just temp until api is more stable
+    default CompletableFuture<Connection> confidentialSend(Message message, Address peerAddress) throws GeneralSecurityException {
+        return confidentialSend(message, peerAddress, null, null);
+    }
+
+    CompletableFuture<Connection> confidentialSend(Message message, Address peerAddress,
+                                                   PublicKey peersPublicKey, KeyPair myKeyPair) throws GeneralSecurityException;
 
     void requestAddData(Message message,
                         Consumer<GossipResult> resultHandler);

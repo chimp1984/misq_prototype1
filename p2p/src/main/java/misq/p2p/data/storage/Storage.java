@@ -18,9 +18,9 @@
 package misq.p2p.data.storage;
 
 
-import misq.p2p.Message;
 import misq.p2p.data.filter.DataFilter;
 import misq.p2p.data.inventory.Inventory;
+import misq.p2p.message.Message;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

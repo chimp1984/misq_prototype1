@@ -19,9 +19,9 @@ package misq.p2p.node;
 
 
 import misq.p2p.Address;
-import misq.p2p.Message;
 import misq.p2p.NetworkConfig;
 import misq.p2p.NetworkType;
+import misq.p2p.message.Message;
 import misq.p2p.node.protection.GuardedMessage;
 import misq.p2p.node.protection.NoRestriction;
 import misq.p2p.node.protection.PermissionControl;

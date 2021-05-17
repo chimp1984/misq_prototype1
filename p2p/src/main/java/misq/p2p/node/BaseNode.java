@@ -20,9 +20,9 @@ package misq.p2p.node;
 
 import misq.common.util.MapUtils;
 import misq.p2p.Address;
-import misq.p2p.Message;
 import misq.p2p.NetworkConfig;
 import misq.p2p.NetworkType;
+import misq.p2p.message.Message;
 import misq.p2p.node.capability.Capability;
 import misq.p2p.node.capability.CapabilityRequestHandler;
 import misq.p2p.node.capability.CapabilityResponseHandler;
