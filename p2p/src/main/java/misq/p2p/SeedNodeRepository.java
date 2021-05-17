@@ -18,8 +18,6 @@
 package misq.p2p;
 
 
-import misq.p2p.node.Address;
-
 import java.util.Arrays;
 import java.util.List;
 

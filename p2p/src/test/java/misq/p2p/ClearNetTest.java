@@ -19,10 +19,10 @@ package misq.p2p;
 
 import lombok.extern.slf4j.Slf4j;
 import misq.common.util.OsUtils;
-import misq.p2p.node.Node;
+import misq.p2p.node.RawNode;
 import org.junit.Test;
 
-import java.util.List;
+import java.security.GeneralSecurityException;
 
 @Slf4j
 public class ClearNetTest extends BaseTest {
@@ -30,7 +30,7 @@ public class ClearNetTest extends BaseTest {
         return 10;
     }
 
-    protected List<NetworkConfig> getNetworkConfig(Role role) {
+    protected NetworkConfig getNetworkConfig(Role role) {
         int serverPort;
         switch (role) {
             case Alice:
@@ -48,37 +48,22 @@ public class ClearNetTest extends BaseTest {
         String baseDirName = OsUtils.getUserDataDir().getAbsolutePath() + "/misq_test_" + role.name();
         NetworkConfig clearNet = new NetworkConfig(baseDirName,
                 NetworkType.CLEAR,
-                Node.DEFAULT_SERVER_ID,
+                RawNode.DEFAULT_SERVER_ID,
                 serverPort);
-        return List.of(clearNet);
-    }
-
-  /*  @Before
-    public void setup() {
-        alice = new P2pService(getNetworkConfig(Role.Alice));
-        bob = new P2pService(getNetworkConfig(Role.Bob));
-    }
-
-    @After
-    public void shutdown() {
-        alice.shutdown();
-        bob.shutdown();
-    }*/
-
-    // @Test
-    public void testBootstrap() throws InterruptedException {
-        super.testBootstrap(2);
+        return clearNet;
     }
 
     //@Test
-    public void testConfidentialSend() throws InterruptedException {
-        super.testBootstrap(2);
-        super.testConfidentialSend(NetworkType.CLEAR);
+    public void testInitializeServer() throws InterruptedException {
+        super.testInitializeServer(2);
+        alice.shutdown();
+        bob.shutdown();
     }
 
     @Test
-    public void testConfidentialSends() throws InterruptedException {
-        super.testBootstrap(2);
-        super.testRequestAddData(NetworkType.CLEAR);
+    public void testConfidentialSend() throws InterruptedException, GeneralSecurityException {
+        super.testConfidentialSend();
+        alice.shutdown();
+        bob.shutdown();
     }
 }

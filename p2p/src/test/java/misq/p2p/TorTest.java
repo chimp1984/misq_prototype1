@@ -19,10 +19,10 @@ package misq.p2p;
 
 import lombok.extern.slf4j.Slf4j;
 import misq.common.util.OsUtils;
-import misq.p2p.node.Node;
+import misq.p2p.node.RawNode;
 import org.junit.Test;
 
-import java.util.List;
+import java.security.GeneralSecurityException;
 
 @Slf4j
 public class TorTest extends BaseTest {
@@ -30,7 +30,7 @@ public class TorTest extends BaseTest {
         return 180;
     }
 
-    protected List<NetworkConfig> getNetworkConfig(Role role) {
+    protected NetworkConfig getNetworkConfig(Role role) {
         int serverPort;
         switch (role) {
             case Alice:
@@ -48,19 +48,19 @@ public class TorTest extends BaseTest {
         String baseDirName = OsUtils.getUserDataDir().getAbsolutePath() + "/misq_TorTest_" + role.name();
         NetworkConfig tor = new NetworkConfig(baseDirName,
                 NetworkType.TOR,
-                Node.DEFAULT_SERVER_ID,
+                RawNode.DEFAULT_SERVER_ID,
                 serverPort);
-        return List.of(tor);
+        return tor;
     }
 
     // @Test
     public void testBootstrap() throws InterruptedException {
-        super.testBootstrap(2);
+        super.testInitializeServer(2);
     }
 
     @Test
-    public void testConfidentialSend() throws InterruptedException {
-        super.testBootstrap(2);
-        super.testConfidentialSend(NetworkType.TOR);
+    public void testConfidentialSend() throws InterruptedException, GeneralSecurityException {
+        super.testInitializeServer(2);
+        super.testConfidentialSend();
     }
 }

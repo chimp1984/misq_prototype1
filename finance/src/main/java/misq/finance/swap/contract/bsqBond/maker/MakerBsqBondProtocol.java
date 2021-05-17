@@ -26,8 +26,8 @@ import misq.finance.swap.contract.bsqBond.BsqBondProtocol;
 import misq.finance.swap.contract.bsqBond.taker.TakerCommitmentMessage;
 import misq.finance.swap.contract.bsqBond.taker.TakerFundsSentMessage;
 import misq.p2p.P2pService;
+import misq.p2p.message.Message;
 import misq.p2p.node.Connection;
-import misq.p2p.node.Message;
 
 import java.util.concurrent.CompletableFuture;
 
@@ -38,7 +38,7 @@ public class MakerBsqBondProtocol extends BsqBondProtocol {
     }
 
     @Override
-    public void onMessage(Connection connection, Message message) {
+    public void onMessage(Message message, Connection connection) {
         if (message instanceof TakerCommitmentMessage) {
             TakerCommitmentMessage bondCommitmentMessage = (TakerCommitmentMessage) message;
             security.verifyBondCommitmentMessage(bondCommitmentMessage)

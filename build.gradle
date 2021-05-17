@@ -30,6 +30,7 @@ configure(subprojects) {
     sourceCompatibility = 1.10
 
     ext { // in alphabetical order
+        bcVersion = '1.63'
         findbugsVersion = '3.0.2'
         grpcVersion = '1.25.0'
         gsonVersion = '2.8.5'
@@ -149,6 +150,8 @@ configure(project(':common')) {
     dependencies {
         implementation "com.google.guava:guava:$guavaVersion"
 
+        compile "org.bouncycastle:bcpg-jdk15on:$bcVersion"
+
         implementation "org.jetbrains:annotations:$jetbrainsAnnotationsVersion"
         implementation "com.google.code.findbugs:jsr305:$findbugsVersion"
 
@@ -230,6 +233,8 @@ configure(project(':finance')) {
     dependencies {
         implementation project(':common')
         implementation project(':p2p')
+
+        implementation "com.google.guava:guava:$guavaVersion"
 
         implementation "org.jetbrains:annotations:$jetbrainsAnnotationsVersion"
         implementation "com.google.code.findbugs:jsr305:$findbugsVersion"

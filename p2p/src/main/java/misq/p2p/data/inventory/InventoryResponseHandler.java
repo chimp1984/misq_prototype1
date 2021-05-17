@@ -20,39 +20,43 @@ package misq.p2p.data.inventory;
 import lombok.extern.slf4j.Slf4j;
 import misq.common.util.Disposable;
 import misq.p2p.data.filter.DataFilter;
+import misq.p2p.message.Message;
 import misq.p2p.node.Connection;
-import misq.p2p.node.Message;
 import misq.p2p.node.MessageListener;
+import misq.p2p.node.Node;
 
 import java.util.function.Function;
 
 @Slf4j
 public class InventoryResponseHandler implements MessageListener, Disposable {
+    private final Node node;
     private final Connection connection;
     private final Function<DataFilter, Inventory> inventoryProvider;
     private final Runnable completeHandler;
 
-    public InventoryResponseHandler(Connection connection,
+    public InventoryResponseHandler(Node node,
+                                    Connection connection,
                                     Function<DataFilter, Inventory> inventoryProvider,
                                     Runnable completeHandler) {
+        this.node = node;
         this.connection = connection;
         this.inventoryProvider = inventoryProvider;
         this.completeHandler = completeHandler;
 
-        connection.addMessageListener(this);
+        node.addMessageListener(this);
     }
 
     public void dispose() {
-        connection.removeMessageListener(this);
+        node.removeMessageListener(this);
     }
 
     @Override
-    public void onMessage(Connection connection, Message message) {
-        if (message instanceof InventoryRequest) {
+    public void onMessage(Message message, Connection connection) {
+        if (this.connection.getId().equals(connection.getId()) && message instanceof InventoryRequest) {
             InventoryRequest request = (InventoryRequest) message;
             Inventory inventory = inventoryProvider.apply(request.getDataFilter());
-            connection.send(new InventoryResponse(inventory));
-            connection.removeMessageListener(this);
+            node.send(new InventoryResponse(inventory), connection);
+            node.removeMessageListener(this);
             completeHandler.run();
         }
     }

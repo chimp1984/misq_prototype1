@@ -18,9 +18,7 @@
 package misq.p2p.node;
 
 public interface ConnectionListener {
-    void onInboundConnection(InboundConnection connection);
-
-    void onOutboundConnection(OutboundConnection connection, Address peerAddress);
+    void onConnection(Connection connection);
 
     void onDisconnect(Connection connection);
 }

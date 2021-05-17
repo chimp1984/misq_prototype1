@@ -17,36 +17,44 @@
 
 package misq.p2p;
 
+import com.google.common.collect.Sets;
 import lombok.extern.slf4j.Slf4j;
+import misq.common.security.KeyPairGeneratorUtil;
 import misq.common.util.OsUtils;
-import misq.p2p.node.Address;
-import misq.p2p.node.Node;
-import org.junit.After;
-import org.junit.Before;
+import misq.p2p.data.storage.Storage;
+import misq.p2p.node.RawNode;
 
-import java.util.List;
-import java.util.Optional;
+import java.security.GeneralSecurityException;
+import java.security.KeyPair;
+import java.security.PrivateKey;
+import java.security.PublicKey;
+import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static org.junit.Assert.*;
 
 @Slf4j
 public class BaseTest {
-    public enum Role {
+    private Set<NetworkType> mySupportedNetworks = Sets.newHashSet(NetworkType.CLEAR);
+    private Storage storage = new Storage();
+
+    protected enum Role {
         Alice,
         Bob,
         Carol
     }
 
-    protected P2pServiceImpl alice;
-    protected P2pServiceImpl bob;
+    protected P2pNode alice;
+    protected P2pNode bob;
 
     protected int getTimeout() {
         return 10;
     }
 
-    protected List<NetworkConfig> getNetworkConfig(Role role) {
+    protected NetworkConfig getNetworkConfig(Role role) {
         int serverPort;
         switch (role) {
             case Alice:
@@ -64,29 +72,60 @@ public class BaseTest {
         String baseDirName = OsUtils.getUserDataDir().getAbsolutePath() + "/misq_test_" + role.name();
         NetworkConfig clearNet = new NetworkConfig(baseDirName,
                 NetworkType.CLEAR,
-                Node.DEFAULT_SERVER_ID,
+                RawNode.DEFAULT_SERVER_ID,
                 serverPort);
-        return List.of(clearNet);
+        return clearNet;
     }
 
-    @Before
-    public void setup() {
-        alice = new P2pServiceImpl(getNetworkConfig(Role.Alice));
-        bob = new P2pServiceImpl(getNetworkConfig(Role.Bob));
+    private static KeyPair keyPairAlice, keyPairBob;
+
+    static {
+        try {
+            keyPairAlice = KeyPairGeneratorUtil.generateKeyPair();
+            keyPairBob = KeyPairGeneratorUtil.generateKeyPair();
+        } catch (GeneralSecurityException e) {
+            e.printStackTrace();
+        }
     }
 
-    @After
-    public void shutdown() {
+
+    Function<PublicKey, PrivateKey> aliceKeyRepository = new Function<PublicKey, PrivateKey>() {
+        @Override
+        public PrivateKey apply(PublicKey publicKey) {
+            checkArgument(publicKey.equals(keyPairAlice.getPublic()));
+            return keyPairAlice.getPrivate();
+        }
+    };
+    Function<PublicKey, PrivateKey> bobKeyRepository = new Function<PublicKey, PrivateKey>() {
+        @Override
+        public PrivateKey apply(PublicKey publicKey) {
+            checkArgument(publicKey.equals(keyPairBob.getPublic()));
+            return keyPairBob.getPrivate();
+        }
+    };
+
+    protected void testBootstrapSolo(int count) throws InterruptedException {
+        alice = new P2pNode(getNetworkConfig(Role.Alice), mySupportedNetworks, storage, aliceKeyRepository);
+        CountDownLatch bootstrappedLatch = new CountDownLatch(count);
+        alice.bootstrap().whenComplete((success, t) -> {
+            if (success && t == null) {
+                bootstrappedLatch.countDown();
+            }
+        });
+
+        boolean bootstrapped = bootstrappedLatch.await(getTimeout(), TimeUnit.SECONDS);
+        assertTrue(bootstrapped);
         alice.shutdown();
-        bob.shutdown();
     }
 
-    public void testBootstrap(int serversReadyLatchCount) throws InterruptedException {
+    protected void testInitializeServer(int serversReadyLatchCount) throws InterruptedException {
+        alice = new P2pNode(getNetworkConfig(Role.Alice), mySupportedNetworks, storage, aliceKeyRepository);
+        bob = new P2pNode(getNetworkConfig(Role.Bob), mySupportedNetworks, storage, bobKeyRepository);
         CountDownLatch serversReadyLatch = new CountDownLatch(serversReadyLatchCount);
-        alice.initializeServer((serverInfo, throwable) -> {
+        alice.initializeServer().whenComplete((result, throwable) -> {
             serversReadyLatch.countDown();
         });
-        bob.initializeServer((serverInfo, throwable) -> {
+        bob.initializeServer().whenComplete((result, throwable) -> {
             serversReadyLatch.countDown();
         });
 
@@ -94,20 +133,20 @@ public class BaseTest {
         assertTrue(serversReady);
     }
 
-    public void testConfidentialSend(NetworkType networkType) throws InterruptedException {
+    protected void testConfidentialSend() throws InterruptedException, GeneralSecurityException {
+        testInitializeServer(2);
+        NetworkConfig networkConfigBob = getNetworkConfig(Role.Bob);
         String msg = "hello";
         CountDownLatch receivedLatch = new CountDownLatch(1);
-        bob.addMessageListener((connection, message) -> {
+        bob.addMessageListener((message, connection) -> {
             assertTrue(message instanceof MockMessage);
             assertEquals(((MockMessage) message).getMsg(), msg);
             receivedLatch.countDown();
         });
         CountDownLatch sentLatch = new CountDownLatch(1);
 
-        Optional<Address> address = bob.getAddress(networkType);
-        assertTrue(address.isPresent());
-        Address peerAddress = address.get();
-        alice.confidentialSend(new MockMessage(msg), peerAddress)
+        Address peerAddress = Address.localHost(networkConfigBob.getServerPort());
+        alice.confidentialSend(new MockMessage(msg), peerAddress, keyPairBob.getPublic(), keyPairAlice)
                 .whenComplete((connection, throwable) -> {
                     if (connection != null) {
                         sentLatch.countDown();
@@ -120,13 +159,5 @@ public class BaseTest {
 
         boolean received = receivedLatch.await(getTimeout(), TimeUnit.SECONDS);
         assertTrue(received);
-    }
-
-    public void testRequestAddData(NetworkType networkType) throws InterruptedException {
-        String msg = "data1";
-
-        alice.requestAddData(new MockMessage(msg), gossipResult -> {
-
-        });
     }
 }

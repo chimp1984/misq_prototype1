@@ -18,11 +18,11 @@
 package misq.p2p.router.gossip;
 
 import misq.common.util.CollectionUtil;
-import misq.p2p.guard.Guard;
-import misq.p2p.node.Address;
+import misq.p2p.Address;
+import misq.p2p.message.Message;
 import misq.p2p.node.Connection;
-import misq.p2p.node.Message;
 import misq.p2p.node.MessageListener;
+import misq.p2p.node.Node;
 import misq.p2p.peers.PeerGroup;
 
 import java.util.Set;
@@ -40,22 +40,22 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class GossipRouter implements MessageListener {
     private static final long BROADCAST_TIMEOUT = 90;
 
-    private final Guard guard;
+    private final Node node;
     private final PeerGroup peerGroup;
     private final Set<MessageListener> messageListeners = new CopyOnWriteArraySet<>();
 
-    public GossipRouter(Guard guard, PeerGroup peerGroup) {
-        this.guard = guard;
+    public GossipRouter(Node node, PeerGroup peerGroup) {
+        this.node = node;
         this.peerGroup = peerGroup;
 
-        guard.addMessageListener(this);
+        node.addMessageListener(this);
     }
 
     @Override
-    public void onMessage(Connection connection, Message message) {
+    public void onMessage(Message message, Connection connection) {
         if (message instanceof GossipMessage) {
             GossipMessage gossipMessage = (GossipMessage) message;
-            messageListeners.forEach(listener -> listener.onMessage(connection, gossipMessage.getMessage()));
+            messageListeners.forEach(listener -> listener.onMessage(gossipMessage.getMessage(), connection));
         }
     }
 
@@ -68,7 +68,7 @@ public class GossipRouter implements MessageListener {
         Set<Address> connectedPeerAddresses = peerGroup.getConnectedPeerAddresses();
         int target = connectedPeerAddresses.size();
         connectedPeerAddresses.forEach(address -> {
-            guard.send(new GossipMessage(message), address)
+            node.send(new GossipMessage(message), address)
                     .whenComplete((connection, t) -> {
                         if (connection != null) {
                             numSuccess.incrementAndGet();
@@ -100,7 +100,6 @@ public class GossipRouter implements MessageListener {
     public void shutdown() {
         messageListeners.clear();
 
-        guard.removeMessageListener(this);
-        peerGroup.shutdown();
+        node.removeMessageListener(this);
     }
 }

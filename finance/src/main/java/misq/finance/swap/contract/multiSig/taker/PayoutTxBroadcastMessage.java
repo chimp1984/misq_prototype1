@@ -18,7 +18,7 @@
 package misq.finance.swap.contract.multiSig.taker;
 
 import lombok.Getter;
-import misq.p2p.node.Message;
+import misq.p2p.message.Message;
 
 @Getter
 public class PayoutTxBroadcastMessage implements Message {

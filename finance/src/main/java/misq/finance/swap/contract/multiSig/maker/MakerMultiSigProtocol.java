@@ -26,8 +26,8 @@ import misq.finance.swap.contract.multiSig.MultiSigProtocol;
 import misq.finance.swap.contract.multiSig.taker.DepositTxBroadcastMessage;
 import misq.finance.swap.contract.multiSig.taker.PayoutTxBroadcastMessage;
 import misq.p2p.P2pService;
+import misq.p2p.message.Message;
 import misq.p2p.node.Connection;
-import misq.p2p.node.Message;
 
 import java.util.concurrent.CompletableFuture;
 
@@ -38,7 +38,7 @@ public class MakerMultiSigProtocol extends MultiSigProtocol implements MultiSig.
     }
 
     @Override
-    public void onMessage(Connection connection, Message message) {
+    public void onMessage(Message message, Connection connection) {
         if (message instanceof DepositTxBroadcastMessage) {
             DepositTxBroadcastMessage depositTxBroadcastMessage = (DepositTxBroadcastMessage) message;
             multiSig.verifyDepositTxBroadcastMessage(depositTxBroadcastMessage)

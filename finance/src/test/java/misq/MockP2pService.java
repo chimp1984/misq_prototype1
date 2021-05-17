@@ -18,19 +18,21 @@
 package misq;
 
 
+import misq.p2p.Address;
 import misq.p2p.NetworkType;
 import misq.p2p.P2pService;
 import misq.p2p.data.filter.DataFilter;
 import misq.p2p.data.inventory.RequestInventoryResult;
-import misq.p2p.node.Address;
+import misq.p2p.message.Message;
 import misq.p2p.node.Connection;
-import misq.p2p.node.Message;
 import misq.p2p.node.MessageListener;
-import misq.p2p.proxy.ServerInfo;
+import misq.p2p.node.proxy.GetServerSocketResult;
 import misq.p2p.router.gossip.GossipResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.security.KeyPair;
+import java.security.PublicKey;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -46,15 +48,17 @@ public class MockP2pService implements P2pService {
     }
 
     @Override
-    public void initializeServer(BiConsumer<ServerInfo, Throwable> resultHandler) {
+    public CompletableFuture<Boolean> initializeServer(BiConsumer<GetServerSocketResult, Throwable> resultHandler) {
+        return CompletableFuture.completedFuture(true);
     }
 
     @Override
-    public void bootstrap(BiConsumer<Boolean, Throwable> resultHandler) {
+    public CompletableFuture<Boolean> bootstrap() {
+        return CompletableFuture.completedFuture(true);
     }
 
     @Override
-    public CompletableFuture<Connection> confidentialSend(Message message, Address peerAddress) {
+    public CompletableFuture<Connection> confidentialSend(Message message, Address peerAddress, PublicKey peersPublicKey, KeyPair myKeyPair) {
         CompletableFuture<Connection> future = new CompletableFuture<>();
         new Thread(() -> {
             try {
@@ -67,7 +71,7 @@ public class MockP2pService implements P2pService {
                 Thread.sleep(100);
             } catch (InterruptedException ignore) {
             }
-            messageListeners.forEach(e -> e.onMessage(null, message));
+            messageListeners.forEach(e -> e.onMessage(message, null));
         }).start();
 
         return future;

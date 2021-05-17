@@ -20,9 +20,10 @@ package misq.p2p.data.inventory;
 import lombok.extern.slf4j.Slf4j;
 import misq.common.util.Disposable;
 import misq.p2p.data.filter.DataFilter;
+import misq.p2p.message.Message;
 import misq.p2p.node.Connection;
-import misq.p2p.node.Message;
 import misq.p2p.node.MessageListener;
+import misq.p2p.node.Node;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
@@ -31,30 +32,32 @@ import java.util.concurrent.TimeUnit;
 public class InventoryRequestHandler implements MessageListener, Disposable {
     private static final long TIMEOUT_SEC = 90;
 
+    private final Node node;
     private final Connection connection;
     private final CompletableFuture<Inventory> future = new CompletableFuture<>();
 
-    public InventoryRequestHandler(Connection connection) {
+    public InventoryRequestHandler(Node node, Connection connection) {
+        this.node = node;
         this.connection = connection;
     }
 
     public CompletableFuture<Inventory> request(DataFilter dataFilter) {
         future.orTimeout(TIMEOUT_SEC, TimeUnit.SECONDS);
-        connection.addMessageListener(this);
-        connection.send(new InventoryRequest(dataFilter));
+        node.addMessageListener(this);
+        node.send(new InventoryRequest(dataFilter), connection);
         return future;
     }
 
     public void dispose() {
-        connection.removeMessageListener(this);
+        node.removeMessageListener(this);
         future.cancel(true);
     }
 
     @Override
-    public void onMessage(Connection connection, Message message) {
-        if (message instanceof InventoryResponse) {
+    public void onMessage(Message message, Connection connection) {
+        if (this.connection.getId().equals(connection.getId()) && message instanceof InventoryResponse) {
             InventoryResponse inventoryResponse = (InventoryResponse) message;
-            connection.removeMessageListener(this);
+            node.removeMessageListener(this);
             future.complete(inventoryResponse.getInventory());
         }
     }

@@ -19,24 +19,37 @@ package misq.p2p;
 
 import misq.p2p.data.filter.DataFilter;
 import misq.p2p.data.inventory.RequestInventoryResult;
-import misq.p2p.node.Address;
+import misq.p2p.message.Message;
 import misq.p2p.node.Connection;
-import misq.p2p.node.Message;
 import misq.p2p.node.MessageListener;
-import misq.p2p.proxy.ServerInfo;
+import misq.p2p.node.proxy.GetServerSocketResult;
 import misq.p2p.router.gossip.GossipResult;
 
+import java.security.GeneralSecurityException;
+import java.security.KeyPair;
+import java.security.PublicKey;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 public interface P2pService {
-    void initializeServer(BiConsumer<ServerInfo, Throwable> resultHandler);
+    CompletableFuture<Boolean> initializeServer(BiConsumer<GetServerSocketResult, Throwable> resultHandler);
 
-    void bootstrap(BiConsumer<Boolean, Throwable> resultHandler);
+    CompletableFuture<Boolean> bootstrap();
 
-    CompletableFuture<Connection> confidentialSend(Message message, Address peerAddress);
+    //todo just temp until api is more stable
+    default CompletableFuture<Connection> confidentialSend(Message message, Address peerAddress) {
+        CompletableFuture<Connection> connectionCompletableFuture = null;
+        try {
+            connectionCompletableFuture = confidentialSend(message, peerAddress, null, null);
+        } catch (GeneralSecurityException ignore) {
+        }
+        return connectionCompletableFuture;
+    }
+
+    CompletableFuture<Connection> confidentialSend(Message message, Address peerAddress,
+                                                   PublicKey peersPublicKey, KeyPair myKeyPair) throws GeneralSecurityException;
 
     void requestAddData(Message message,
                         Consumer<GossipResult> resultHandler);
@@ -54,4 +67,5 @@ public interface P2pService {
     void shutdown();
 
     Optional<Address> getAddress(NetworkType networkType);
+
 }

@@ -19,17 +19,29 @@ package misq.p2p.peers.exchange;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import misq.p2p.node.Message;
+import misq.p2p.message.Message;
 import misq.p2p.peers.Peer;
 
 import java.util.Set;
+import java.util.UUID;
 
 @EqualsAndHashCode
 @Getter
 class PeerExchangeRequest implements Message {
     private final Set<Peer> peers;
+    private final String uid;
 
     public PeerExchangeRequest(Set<Peer> peers) {
         this.peers = peers;
+        uid = UUID.randomUUID().toString();
+    }
+
+
+    @Override
+    public String toString() {
+        return "PeerExchangeRequest{" +
+                "\n     peers=" + peers +
+                ",\n     uid='" + uid + '\'' +
+                "\n}";
     }
 }

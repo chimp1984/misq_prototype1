@@ -18,31 +18,28 @@
 package misq.p2p;
 
 
-import misq.p2p.capability.CapabilityExchange;
-import misq.p2p.confidential.ConfidentialMessageService;
-import misq.p2p.data.DataService;
+import misq.common.util.CollectionUtil;
 import misq.p2p.data.filter.DataFilter;
 import misq.p2p.data.inventory.RequestInventoryResult;
 import misq.p2p.data.storage.Storage;
-import misq.p2p.guard.Guard;
-import misq.p2p.node.*;
-import misq.p2p.peers.PeerGroup;
-import misq.p2p.peers.PeerManager;
-import misq.p2p.peers.exchange.PeerExchange;
-import misq.p2p.peers.exchange.PeerExchangeSelection;
-import misq.p2p.proxy.ServerInfo;
+import misq.p2p.message.Message;
+import misq.p2p.node.Connection;
+import misq.p2p.node.MessageListener;
+import misq.p2p.node.proxy.GetServerSocketResult;
 import misq.p2p.router.gossip.GossipResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.security.GeneralSecurityException;
+import java.security.KeyPair;
+import java.security.PrivateKey;
+import java.security.PublicKey;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -51,37 +48,17 @@ import java.util.stream.Collectors;
 public class P2pServiceImpl implements P2pService {
     private static final Logger log = LoggerFactory.getLogger(P2pServiceImpl.class);
 
-    private final Storage storage;
-    private final Map<NetworkType, Node> nodes = new ConcurrentHashMap<>();
-    private final Map<NetworkType, PeerManager> peerManagers = new ConcurrentHashMap<>();
-    private final Map<NetworkType, Guard> guards = new ConcurrentHashMap<>();
-    private final Map<NetworkType, ConfidentialMessageService> confidentialMessageServices = new ConcurrentHashMap<>();
-    private final Map<NetworkType, DataService> dataServices = new ConcurrentHashMap<>();
+    private final Map<NetworkType, P2pNode> p2pNodes = new ConcurrentHashMap<>();
 
-    public P2pServiceImpl(List<NetworkConfig> networkConfigs) {
-        storage = new Storage();
+    public P2pServiceImpl(List<NetworkConfig> networkConfigs, Function<PublicKey, PrivateKey> keyRepository) {
+        Storage storage = new Storage();
         Set<NetworkType> mySupportedNetworks = networkConfigs.stream()
                 .map(NetworkConfig::getNetworkType)
                 .collect(Collectors.toSet());
         networkConfigs.forEach(networkConfig -> {
             NetworkType networkType = networkConfig.getNetworkType();
-
-            Node node = new Node(networkConfig);
-            CapabilityExchange capabilityExchange = new CapabilityExchange(node, mySupportedNetworks);
-            Guard guard = new Guard(capabilityExchange);
-            guards.put(networkType, guard);
-
-            PeerGroup peerGroup = new PeerGroup(guard, networkConfig.getPeerConfig());
-            PeerExchangeSelection peerExchangeSelection = new PeerExchangeSelection(peerGroup, networkConfig.getPeerConfig());
-            PeerExchange peerExchange = new PeerExchange(guard, peerExchangeSelection);
-            PeerManager peerManager = new PeerManager(guard, peerExchange);
-            peerManagers.put(networkType, peerManager);
-
-            ConfidentialMessageService confidentialMessageService = new ConfidentialMessageService(guard, peerGroup);
-            confidentialMessageServices.put(networkType, confidentialMessageService);
-
-            DataService dataService = new DataService(guard, peerGroup, storage);
-            dataServices.put(networkType, dataService);
+            P2pNode p2pNode = new P2pNode(networkConfig, mySupportedNetworks, storage, keyRepository);
+            p2pNodes.put(networkType, p2pNode);
         });
     }
 
@@ -91,9 +68,11 @@ public class P2pServiceImpl implements P2pService {
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void initializeServer(BiConsumer<ServerInfo, Throwable> resultHandler) {
-        guards.values().forEach(guard -> {
-            guard.initializeServer()
+    public CompletableFuture<Boolean> initializeServer(BiConsumer<GetServerSocketResult, Throwable> resultHandler) {
+        CompletableFuture<Boolean> future = new CompletableFuture<>();
+
+        p2pNodes.values().forEach(p2pNode -> {
+            p2pNode.initializeServer()
                     .whenComplete((serverInfo, throwable) -> {
                         if (serverInfo != null) {
                             resultHandler.accept(serverInfo, null);
@@ -103,30 +82,39 @@ public class P2pServiceImpl implements P2pService {
                         }
                     });
         });
+        return future;
     }
 
     @Override
-    public void bootstrap(BiConsumer<Boolean, Throwable> resultHandler) {
-        peerManagers.values().forEach(peerManager -> {
-            peerManager.bootstrap()
-                    .whenComplete((success, throwable) -> {
-                        if (success) {
-                            resultHandler.accept(success, null);
+    public CompletableFuture<Boolean> bootstrap() {
+        List<CompletableFuture<Boolean>> allFutures = new ArrayList<>();
+        p2pNodes.values().forEach(p2pNode -> {
+            CompletableFuture<Boolean> future = new CompletableFuture<>();
+            allFutures.add(future);
+            p2pNode.bootstrap()
+                    .whenComplete((success, e) -> {
+                        if (e == null) {
+                            future.complete(success); // Can be still false
                         } else {
-                            log.error(throwable.toString(), throwable);
-                            resultHandler.accept(null, throwable);
+                            future.complete(false);
                         }
                     });
         });
+        return CollectionUtil.allOf(allFutures)                                 // We require all futures the be completed
+                .thenApply(resultList -> resultList.stream().anyMatch(e -> e))  // If at least one network succeeded
+                .thenCompose(CompletableFuture::completedFuture);               // If at least one was successful we report a success
     }
 
+
     @Override
-    public CompletableFuture<Connection> confidentialSend(Message message, Address peerAddress) {
+    public CompletableFuture<Connection> confidentialSend(Message message, Address peerAddress,
+                                                          PublicKey peersPublicKey, KeyPair myKeyPair)
+            throws GeneralSecurityException {
         CompletableFuture<Connection> future = new CompletableFuture<>();
         NetworkType networkType = peerAddress.getNetworkType();
-        if (confidentialMessageServices.containsKey(networkType)) {
-            confidentialMessageServices.get(networkType)
-                    .send(message, peerAddress)
+        if (p2pNodes.containsKey(networkType)) {
+            p2pNodes.get(networkType)
+                    .confidentialSend(message, peerAddress, peersPublicKey, myKeyPair)
                     .whenComplete((connection, throwable) -> {
                         if (connection != null) {
                             future.complete(connection);
@@ -136,8 +124,8 @@ public class P2pServiceImpl implements P2pService {
                         }
                     });
         } else {
-            confidentialMessageServices.values().forEach(service -> {
-                service.relay(message, peerAddress)
+            p2pNodes.values().forEach(p2pNode -> {
+                p2pNode.relay(message, peerAddress)
                         .whenComplete((connection, throwable) -> {
                             if (connection != null) {
                                 future.complete(connection);
@@ -154,8 +142,8 @@ public class P2pServiceImpl implements P2pService {
     @Override
     public void requestAddData(Message message,
                                Consumer<GossipResult> resultHandler) {
-        dataServices.values().forEach(dataService -> {
-            dataService.requestAddData(message)
+        p2pNodes.values().forEach(p2pNode -> {
+            p2pNode.requestAddData(message)
                     .whenComplete((gossipResult, throwable) -> {
                         if (gossipResult != null) {
                             resultHandler.accept(gossipResult);
@@ -169,7 +157,7 @@ public class P2pServiceImpl implements P2pService {
     @Override
     public void requestRemoveData(Message message,
                                   Consumer<GossipResult> resultHandler) {
-        dataServices.values().forEach(dataService -> {
+        p2pNodes.values().forEach(dataService -> {
             dataService.requestRemoveData(message)
                     .whenComplete((gossipResult, throwable) -> {
                         if (gossipResult != null) {
@@ -184,8 +172,8 @@ public class P2pServiceImpl implements P2pService {
     @Override
     public void requestInventory(DataFilter dataFilter,
                                  Consumer<RequestInventoryResult> resultHandler) {
-        dataServices.values().forEach(dataService -> {
-            dataService.requestInventory(dataFilter)
+        p2pNodes.values().forEach(p2pNode -> {
+            p2pNode.requestInventory(dataFilter)
                     .whenComplete((requestInventoryResult, throwable) -> {
                         if (requestInventoryResult != null) {
                             resultHandler.accept(requestInventoryResult);
@@ -198,29 +186,25 @@ public class P2pServiceImpl implements P2pService {
 
     @Override
     public void addMessageListener(MessageListener messageListener) {
-        confidentialMessageServices.values().forEach(service -> {
-            service.addMessageListener(messageListener);
+        p2pNodes.values().forEach(p2pNode -> {
+            p2pNode.addMessageListener(messageListener);
         });
     }
 
     @Override
     public void removeMessageListener(MessageListener messageListener) {
-        confidentialMessageServices.values().forEach(service -> {
-            service.removeMessageListener(messageListener);
+        p2pNodes.values().forEach(p2pNode -> {
+            p2pNode.removeMessageListener(messageListener);
         });
     }
 
     @Override
     public void shutdown() {
-        confidentialMessageServices.values().forEach(ConfidentialMessageService::shutdown);
-        dataServices.values().forEach(DataService::shutdown);
-        peerManagers.values().forEach(PeerManager::shutdown);
-        guards.values().forEach(Guard::shutdown);
-        storage.shutdown();
+        p2pNodes.values().forEach(P2pNode::shutdown);
     }
 
     @Override
     public Optional<Address> getAddress(NetworkType networkType) {
-        return guards.get(networkType).getMyAddress();
+        return p2pNodes.get(networkType).getAddress();
     }
 }

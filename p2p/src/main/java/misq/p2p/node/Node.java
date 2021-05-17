@@ -18,49 +18,63 @@
 package misq.p2p.node;
 
 
+import misq.p2p.Address;
 import misq.p2p.NetworkConfig;
-import misq.p2p.proxy.NetworkProxy;
-import misq.p2p.proxy.ServerInfo;
+import misq.p2p.NetworkType;
+import misq.p2p.message.Message;
+import misq.p2p.node.protection.GuardedMessage;
+import misq.p2p.node.protection.NoRestriction;
+import misq.p2p.node.protection.PermissionControl;
+import misq.p2p.node.proxy.GetServerSocketResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.EOFException;
-import java.io.IOException;
-import java.net.Socket;
-import java.util.Collection;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
+
+import static com.google.common.base.Preconditions.checkArgument;
 
 /**
  * Responsibility:
- * - Creates networkProxy from given networkType
- * - Creates multiple Servers kept in a map by serverId.
- * - Creates inbound and outbound connections.
- * - Checks if a connection has been created when sending a message and creates one otherwise.
- * - Notifies ConnectionListeners when a new connection has been created or one has been closed.
+ * - Creates BaseNode
+ * - Adds an AccessToken to the outgoing message.
+ * - On received messages checks with the permissionControl if the AccessToken is valid.
+ * <p>
+ * TODO make PermissionControl mocks for BSQ bonded or LN (sphinx) based transport layer to see if other monetary token based ddos
+ * protection strategies work inside the current design
  */
-public class Node implements MessageListener {
+public class Node implements MessageListener, ConnectionListener {
     private static final Logger log = LoggerFactory.getLogger(Node.class);
-    public static final String DEFAULT_SERVER_ID = "default";
-    public static final int DEFAULT_SERVER_PORT = 9999;
 
-    private final NetworkConfig networkConfig;
-    private final NetworkProxy networkProxy;
-
-    private final Map<String, Server> serverMap = new ConcurrentHashMap<>();
-    private final Map<Address, OutboundConnection> outboundConnectionMap = new ConcurrentHashMap<>();
-    private final Set<InboundConnection> inboundConnections = new CopyOnWriteArraySet<>();
-    private final Set<ConnectionListener> connectionListeners = new CopyOnWriteArraySet<>();
+    private final PermissionControl permissionControl;
     private final Set<MessageListener> messageListeners = new CopyOnWriteArraySet<>();
+    private final Set<ConnectionListener> connectionListeners = new CopyOnWriteArraySet<>();
+    private final BaseNode baseNode;
+    private final Object isStoppedLock = new Object();
+    private volatile boolean isStopped;
 
-    public Node(NetworkConfig networkConfig) {
-        this.networkConfig = networkConfig;
+    public Node(NetworkConfig networkConfig, Set<NetworkType> mySupportedNetworks) {
+        baseNode = new BaseNode(networkConfig, mySupportedNetworks, this);
+        permissionControl = new NoRestriction();
 
-        networkProxy = NetworkProxy.get(networkConfig);
+        baseNode.addConnectionListener(this);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // ConnectionListener
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public void onConnection(Connection connection) {
+        connectionListeners.forEach(listener -> listener.onConnection(connection));
+    }
+
+
+    @Override
+    public void onDisconnect(Connection connection) {
+        connectionListeners.forEach(listener -> listener.onDisconnect(connection));
     }
 
 
@@ -69,8 +83,17 @@ public class Node implements MessageListener {
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void onMessage(Connection connection, Message message) {
-        messageListeners.forEach(listener -> listener.onMessage(connection, message));
+    public void onMessage(Message message, Connection connection) {
+        if (message instanceof GuardedMessage && !isStopped) {
+            GuardedMessage guardedMessage = (GuardedMessage) message;
+            if (permissionControl.hasPermit(guardedMessage)) {
+                Message payload = guardedMessage.getPayload();
+                // connection.notifyListeners(payload);
+                messageListeners.forEach(listener -> listener.onMessage(payload, connection));
+            } else {
+                log.warn("Handling message at onMessage is not permitted by guard");
+            }
+        }
     }
 
 
@@ -78,127 +101,32 @@ public class Node implements MessageListener {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    /**
-     * Combines initialize and createServerAndListen
-     *
-     * @return ServerInfo
-     */
-    public CompletableFuture<ServerInfo> initializeServer() {
-        return initialize()
-                .thenCompose(e -> createServerAndListen(networkConfig.getServerId(), networkConfig.getServerPort()));
-    }
-
-    /**
-     * Creates server socket and starts server
-     *
-     * @param serverId
-     * @param serverPort
-     * @return
-     */
-    public CompletableFuture<ServerInfo> createServerAndListen(String serverId, int serverPort) {
-        return networkProxy.createServerSocket(serverId, serverPort)
-                .whenComplete((serverInfo, throwable) -> {
-                    if (serverInfo != null) {
-                        Server server = new Server(serverInfo,
-                                this::onClientSocket,
-                                exception -> serverMap.remove(serverId));
-                        serverMap.put(serverId, server);
-                    }
-                });
-    }
-
-    public Socket getSocket(Address address) throws IOException {
-        return networkProxy.getSocket(address);
-    }
-
-    public CompletableFuture<Connection> getConnection(Address peerAddress) {
-        if (outboundConnectionMap.containsKey(peerAddress)) {
-            Connection connection = outboundConnectionMap.get(peerAddress);
-            return CompletableFuture.completedFuture(connection);
-        } else {
-            return createConnection(peerAddress);
-        }
-    }
-
-    public void disconnect(Address address) {
-        log.info("disconnect {}", address);
-        if (outboundConnectionMap.containsKey(address)) {
-            disconnect(outboundConnectionMap.get(address));
-        }
-    }
-
-    public void disconnect(Connection connection) {
-        log.info("disconnect connection {}", connection);
-        connection.close();
-        if (connection instanceof InboundConnection) {
-            inboundConnections.remove(connection);
-        } else if (connection instanceof OutboundConnection) {
-            outboundConnectionMap.remove(((OutboundConnection) connection).getAddress());
-        }
-        connection.removeMessageListener(this);
-        connectionListeners.forEach(connectionListener -> connectionListener.onDisconnect(connection));
-    }
-
-    /**
-     * Sends to outbound connection if available, otherwise create the connection and then send the message.
-     *
-     * @param message
-     * @param address
-     * @return
-     */
-    public CompletableFuture<Connection> send(Message message, Address address) {
-        if (!outboundConnectionMap.containsKey(address)) {
-            return getConnection(address)
-                    .thenCompose(connection -> send(message, connection));
-        } else {
-            return send(message, outboundConnectionMap.get(address));
-        }
+    public CompletableFuture<Connection> send(Message message, Address peerAddress) {
+        return baseNode.getConnection(peerAddress)
+                .thenCompose(connection -> send(message, connection));
     }
 
     public CompletableFuture<Connection> send(Message message, Connection connection) {
-        return connection.send(message);
-    }
-
-    public Optional<Address> getMyAddress() {
-        return getMyAddress(DEFAULT_SERVER_ID);
-    }
-
-    public Optional<Address> getMyAddress(String serverId) {
-        if (serverMap.containsKey(serverId)) {
-            return Optional.of(serverMap.get(serverId).getAddress());
-        } else {
-            return Optional.empty();
-        }
-    }
-
-    public Optional<Address> getPeerAddress(Connection connection) {
-        if (connection instanceof OutboundConnection) {
-            return Optional.of(((OutboundConnection) connection).getAddress());
-        } else {
-            return Optional.empty();
-        }
+        return permissionControl.getPermit(message)
+                .thenCompose(permit -> baseNode.send(new GuardedMessage(message, permit), connection));
     }
 
     public void shutdown() {
-        connectionListeners.clear();
+        synchronized (isStoppedLock) {
+            isStopped = true;
+        }
         messageListeners.clear();
-
-        serverMap.values().forEach(Server::stop);
-        serverMap.clear();
-        outboundConnectionMap.values().forEach(Connection::close);
-        outboundConnectionMap.clear();
-        inboundConnections.forEach(Connection::close);
-        inboundConnections.clear();
-
-        networkProxy.shutdown();
+        connectionListeners.clear();
+        baseNode.removeConnectionListener(this);
+        permissionControl.shutdown();
+        baseNode.shutdown();
     }
 
-    public void addConnectionListener(ConnectionListener connectionListener) {
-        connectionListeners.add(connectionListener);
-    }
-
-    public void removeConnectionListener(ConnectionListener connectionListener) {
-        connectionListeners.remove(connectionListener);
+    // Only to be used when we know that we have already created the default server
+    public Address getMyAddress() {
+        Optional<Address> myAddress = baseNode.findMyAddress();
+        checkArgument(myAddress.isPresent(), "myAddress need to be present at a getMyAddress call");
+        return myAddress.get();
     }
 
     public void addMessageListener(MessageListener messageListener) {
@@ -209,55 +137,33 @@ public class Node implements MessageListener {
         messageListeners.remove(messageListener);
     }
 
-    public Collection<OutboundConnection> getOutboundConnections() {
-        return outboundConnectionMap.values();
+    public void addConnectionListener(ConnectionListener connectionListener) {
+        connectionListeners.add(connectionListener);
     }
 
-    public Set<InboundConnection> getInboundConnections() {
-        return inboundConnections;
+    public void removeConnectionListener(ConnectionListener connectionListener) {
+        connectionListeners.remove(connectionListener);
     }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
-    // Private
+    // Delegates
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    private CompletableFuture<Boolean> initialize() {
-        return networkProxy.initialize();
+    public CompletableFuture<GetServerSocketResult> initializeServer(String serverId, int serverPort) {
+        return baseNode.initializeServer(serverId, serverPort);
     }
 
-    private void onClientSocket(Socket socket) {
-        try {
-            InboundConnection connection = new InboundConnection(socket, exception -> {
-                if (!(exception instanceof EOFException)) {
-                    log.error(exception.toString(), exception);
-                }
-            });
-            inboundConnections.add(connection);
-            log.info("New inbound connection");
-            connectionListeners.forEach(listener -> listener.onInboundConnection(connection));
-            connection.addMessageListener(this);
-        } catch (IOException exception) {
-            exception.printStackTrace();
-            log.error(exception.toString());
-        }
+    public Optional<Address> findMyAddress() {
+        return baseNode.findMyAddress();
     }
 
-    private CompletableFuture<Connection> createConnection(Address peerAddress) {
-        CompletableFuture<Connection> future = new CompletableFuture<>();
-        try {
-            Socket socket = getSocket(peerAddress);
-            OutboundConnection connection = new OutboundConnection(socket,
-                    peerAddress,
-                    future::completeExceptionally);
-            outboundConnectionMap.put(peerAddress, connection);
-            log.info("New outbound connection to {}", peerAddress);
-            connectionListeners.forEach(listener -> listener.onOutboundConnection(connection, peerAddress));
-            connection.addMessageListener(this);
-            future.complete(connection);
-        } catch (IOException exception) {
-            log.error(exception.toString(), exception);
-            future.completeExceptionally(exception);
-        }
-        return future;
+
+    public CompletableFuture<Connection> getConnection(Address peerAddress) {
+        return baseNode.getConnection(peerAddress);
+    }
+
+    public Optional<Connection> findConnection(Address peerAddress) {
+        return baseNode.findConnection(peerAddress);
     }
 }
