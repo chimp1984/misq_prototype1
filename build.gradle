@@ -6,7 +6,6 @@ buildscript {
         classpath 'com.google.protobuf:protobuf-gradle-plugin:0.8.10'
         classpath 'com.google.gradle:osdetector-gradle-plugin:1.6.0'
         classpath 'com.github.jengelman.gradle.plugins:shadow:5.2.0'
-        classpath files('gradle/witness/gradle-witness.jar')
     }
 }
 
@@ -319,8 +318,6 @@ configure(project(':cli')) {
 
 configure(project(':jfx')) {
     apply plugin: 'com.github.johnrengelman.shadow'
-    /* apply plugin: 'witness'
-     apply from: '../gradle/witness/gradle-witness.gradle'*/
     /*  apply from: 'package/package.gradle'*/
 
     version = '0.0.1-SNAPSHOT'
