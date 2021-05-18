@@ -22,8 +22,16 @@ import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
 
 import java.security.GeneralSecurityException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 @Slf4j
 public class I2pTest extends BaseTest {
@@ -78,7 +86,7 @@ public class I2pTest extends BaseTest {
         }
     }
 
-    @Test
+    // @Test
     public void testConfidentialSend() throws InterruptedException, GeneralSecurityException {
         try {
             super.testConfidentialSend();
@@ -86,5 +94,61 @@ public class I2pTest extends BaseTest {
             alice.shutdown();
             bob.shutdown();
         }
+    }
+
+    // First msg 560 ms, others 15-380 ms
+    // First msg 524 ms, others 20-380 ms, average 150ms
+    // Total: 61077 ms / 17012 ms / 17487 ms / 5825 ms
+    @Test
+    public void repeatedSend() throws InterruptedException, GeneralSecurityException {
+        long ts = System.currentTimeMillis();
+        testInitializeServer(2);
+
+        int numMsg = 10;
+        Map<Integer, Long> tsMap = new HashMap<>();
+        CountDownLatch receivedLatch = new CountDownLatch(numMsg);
+        bob.addMessageListener((message, connection) -> {
+            assertTrue(message instanceof MockMessage);
+            // assertEquals(((MockMessage) message).getMsg(), msg);
+            int key = Integer.parseInt(((MockMessage) message).getMsg());
+            if (tsMap.containsKey(key)) {
+                log.error("Sending msg {} took {}", key, System.currentTimeMillis() - tsMap.get(key));
+            }
+            receivedLatch.countDown();
+        });
+        CountDownLatch sentLatch = new CountDownLatch(numMsg);
+
+        Address peerAddress = getPeerAddress(Config.Role.Bob);
+        send(sentLatch, peerAddress, new AtomicInteger(0), tsMap);
+        boolean sent = sentLatch.await(getTimeout(), TimeUnit.SECONDS);
+        assertTrue(sent);
+
+        boolean received = receivedLatch.await(getTimeout(), TimeUnit.SECONDS);
+        assertTrue(received);
+
+        alice.shutdown();
+        bob.shutdown();
+        log.error("Took {} ms", System.currentTimeMillis() - ts);
+    }
+
+    private void send(CountDownLatch sentLatch, Address peerAddress, AtomicInteger i, Map<Integer, Long> tsMap) throws GeneralSecurityException {
+        tsMap.put(i.get(), System.currentTimeMillis());
+        log.error("Send msg {}", i.get());
+        alice.confidentialSend(new MockMessage(String.valueOf(i.get())), peerAddress, Config.keyPairBob.getPublic(), Config.keyPairAlice)
+                .whenComplete((connection, throwable) -> {
+                    if (connection != null) {
+                        sentLatch.countDown();
+                        if (sentLatch.getCount() > 0) {
+                            try {
+                                i.incrementAndGet();
+                                send(sentLatch, peerAddress, i, tsMap);
+                            } catch (GeneralSecurityException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                    } else {
+                        fail();
+                    }
+                });
     }
 }
