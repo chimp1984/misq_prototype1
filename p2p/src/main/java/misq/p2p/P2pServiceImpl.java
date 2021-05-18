@@ -37,6 +37,7 @@ import java.security.PublicKey;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -70,15 +71,26 @@ public class P2pServiceImpl implements P2pService {
     @Override
     public CompletableFuture<Boolean> initializeServer(BiConsumer<GetServerSocketResult, Throwable> resultHandler) {
         CompletableFuture<Boolean> future = new CompletableFuture<>();
-
+        AtomicInteger completed = new AtomicInteger(0);
+        AtomicInteger failed = new AtomicInteger(0);
+        int numNodes = p2pNodes.size();
         p2pNodes.values().forEach(p2pNode -> {
             p2pNode.initializeServer()
                     .whenComplete((serverInfo, throwable) -> {
                         if (serverInfo != null) {
                             resultHandler.accept(serverInfo, null);
+                            int compl = completed.incrementAndGet();
+                            if (compl == numNodes) {
+                                future.complete(true);
+                            } else if (compl + failed.get() == numNodes) {
+                                future.complete(false);
+                            }
                         } else {
                             log.error(throwable.toString(), throwable);
                             resultHandler.accept(null, throwable);
+                            if (failed.incrementAndGet() + completed.get() == numNodes) {
+                                future.complete(false);
+                            }
                         }
                     });
         });

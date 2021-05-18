@@ -19,13 +19,11 @@ package misq.p2p;
 
 import com.google.common.collect.Sets;
 import lombok.extern.slf4j.Slf4j;
-import misq.common.util.OsUtils;
-import misq.p2p.node.RawNode;
 import org.junit.Test;
 
 import java.security.GeneralSecurityException;
-import java.util.HashSet;
 import java.util.Optional;
+import java.util.Set;
 
 @Slf4j
 public class I2pTest extends BaseTest {
@@ -35,18 +33,17 @@ public class I2pTest extends BaseTest {
     }
 
     @Override
-    protected HashSet<NetworkType> getNetworkTypes() {
+    protected Set<NetworkType> getNetworkTypes() {
         return Sets.newHashSet(NetworkType.I2P);
     }
 
     @Override
-    protected NetworkConfig getNetworkConfig(Role role) {
-        String baseDirName = OsUtils.getUserDataDir().getAbsolutePath() + "/misq_test_" + role.name();
-        return new NetworkConfig(baseDirName, NetworkType.I2P, RawNode.DEFAULT_SERVER_ID + role.name(), -1);
+    protected NetworkConfig getNetworkConfig(Config.Role role) {
+        return Config.getI2pNetworkConfig(role);
     }
 
     @Override
-    protected Address getPeerAddress(Role role) {
+    protected Address getPeerAddress(Config.Role role) {
         P2pNode p2pNode;
         String persisted = "undefined";
         switch (role) {

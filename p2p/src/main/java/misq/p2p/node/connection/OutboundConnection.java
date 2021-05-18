@@ -19,6 +19,7 @@ package misq.p2p.node.connection;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import misq.common.util.StringUtils;
 import misq.p2p.Address;
 
 import java.io.IOException;
@@ -38,6 +39,6 @@ public class OutboundConnection extends RawConnection {
 
     @Override
     public String toString() {
-        return address.toString().substring(0, 8) + " / " + id;
+        return StringUtils.truncate(address.toString()) + " / " + id;
     }
 }

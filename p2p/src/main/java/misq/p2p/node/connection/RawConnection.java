@@ -158,7 +158,7 @@ public abstract class RawConnection {
     }
 
     private String getShortId() {
-        return id.substring(0, 8);
+        return id.substring(0, 24);
     }
 
     @Override

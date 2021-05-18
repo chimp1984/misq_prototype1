@@ -172,7 +172,7 @@ public class SamClient {
         maybeCreateSession(sessionId);
         SamConnection samConnection = startSamControlConnection();
 
-        String request = String.format("STREAM ACCEPT ID=%s SILENT=false", sessionId);
+        String request = String.format("STREAM ACCEPT ID=%s SILENT=true", sessionId);
         samConnection.doHandShake(request);
         return samConnection;
     }

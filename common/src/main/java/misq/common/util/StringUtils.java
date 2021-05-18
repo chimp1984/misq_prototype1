@@ -15,30 +15,14 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package misq.p2p.node.proxy;
+package misq.common.util;
 
-import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
-import misq.common.util.StringUtils;
-import misq.p2p.Address;
-
-import java.net.ServerSocket;
-
-@Slf4j
-@Getter
-public class GetServerSocketResult {
-    private final String serverId;
-    private final ServerSocket serverSocket;
-    private final Address address;
-
-    public GetServerSocketResult(String serverId, ServerSocket serverSocket, Address address) {
-        this.serverId = serverId;
-        this.serverSocket = serverSocket;
-        this.address = address;
+public class StringUtils {
+    public static String truncate(String value) {
+        return truncate(value, 16);
     }
 
-    @Override
-    public String toString() {
-        return serverId + " @ " + StringUtils.truncate(address.toString());
+    public static String truncate(String value, int maxLength) {
+        return value.substring(0, Math.min(value.length(), maxLength)) + "...";
     }
 }

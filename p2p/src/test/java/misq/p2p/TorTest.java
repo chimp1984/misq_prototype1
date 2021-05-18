@@ -19,13 +19,11 @@ package misq.p2p;
 
 import com.google.common.collect.Sets;
 import lombok.extern.slf4j.Slf4j;
-import misq.common.util.OsUtils;
-import misq.p2p.node.RawNode;
 import org.junit.Test;
 
 import java.security.GeneralSecurityException;
-import java.util.HashSet;
 import java.util.Optional;
+import java.util.Set;
 
 @Slf4j
 public class TorTest extends BaseTest {
@@ -34,34 +32,17 @@ public class TorTest extends BaseTest {
     }
 
     @Override
-    protected HashSet<NetworkType> getNetworkTypes() {
+    protected Set<NetworkType> getNetworkTypes() {
         return Sets.newHashSet(NetworkType.TOR);
     }
 
-    protected NetworkConfig getNetworkConfig(Role role) {
-        int serverPort;
-        switch (role) {
-            case Alice:
-                serverPort = 1111;
-                break;
-            case Bob:
-                serverPort = 2222;
-                break;
-            case Carol:
-            default:
-                serverPort = 3333;
-                break;
-        }
-
-        String baseDirName = OsUtils.getUserDataDir().getAbsolutePath() + "/misq_test_" + role.name();
-        return new NetworkConfig(baseDirName,
-                NetworkType.TOR,
-                RawNode.DEFAULT_SERVER_ID,
-                serverPort);
+    @Override
+    protected NetworkConfig getNetworkConfig(Config.Role role) {
+        return Config.getTorNetworkConfig(role);
     }
 
     @Override
-    protected Address getPeerAddress(Role role) {
+    protected Address getPeerAddress(Config.Role role) {
         P2pNode p2pNode;
         int serverPort;
         String persisted = "undefined";

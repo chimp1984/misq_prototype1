@@ -270,9 +270,9 @@ public class RawNode {
             return;
         }
         if (exception instanceof EOFException) {
-            log.debug(exception.toString(), exception);
+           // log.debug(exception.toString(), exception);
         } else if (exception instanceof SocketException) {
-            log.debug(exception.toString(), exception);
+            // log.debug(exception.toString(), exception);
         } else {
             log.error(exception.toString(), exception);
         }

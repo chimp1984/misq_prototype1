@@ -18,68 +18,31 @@
 package misq.p2p;
 
 import lombok.extern.slf4j.Slf4j;
-import misq.common.security.KeyPairGeneratorUtil;
 import misq.p2p.data.storage.Storage;
 
 import java.security.GeneralSecurityException;
-import java.security.KeyPair;
-import java.security.PrivateKey;
-import java.security.PublicKey;
-import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Function;
 
-import static com.google.common.base.Preconditions.checkArgument;
 import static org.junit.Assert.*;
 
 @Slf4j
 public abstract class BaseTest {
-    private static KeyPair keyPairAlice, keyPairBob;
 
-    static {
-        try {
-            keyPairAlice = KeyPairGeneratorUtil.generateKeyPair();
-            keyPairBob = KeyPairGeneratorUtil.generateKeyPair();
-        } catch (GeneralSecurityException e) {
-            e.printStackTrace();
-        }
-    }
-
-    protected enum Role {
-        Alice,
-        Bob,
-        Carol
-    }
-
-    private final Storage storage = new Storage();
+    protected final Storage storage = new Storage();
     protected P2pNode alice, bob, carol;
 
     protected abstract int getTimeout();
 
-    protected abstract HashSet<NetworkType> getNetworkTypes();
+    protected abstract Set<NetworkType> getNetworkTypes();
 
-    protected abstract NetworkConfig getNetworkConfig(Role role);
+    protected abstract NetworkConfig getNetworkConfig(Config.Role role);
 
-    protected abstract Address getPeerAddress(Role role);
-
-    private final Function<PublicKey, PrivateKey> aliceKeyRepository = new Function<>() {
-        @Override
-        public PrivateKey apply(PublicKey publicKey) {
-            checkArgument(publicKey.equals(keyPairAlice.getPublic()));
-            return keyPairAlice.getPrivate();
-        }
-    };
-    private final Function<PublicKey, PrivateKey> bobKeyRepository = new Function<>() {
-        @Override
-        public PrivateKey apply(PublicKey publicKey) {
-            checkArgument(publicKey.equals(keyPairBob.getPublic()));
-            return keyPairBob.getPrivate();
-        }
-    };
+    protected abstract Address getPeerAddress(Config.Role role);
 
     protected void testBootstrapSolo(int count) throws InterruptedException {
-        alice = new P2pNode(getNetworkConfig(Role.Alice), getNetworkTypes(), storage, aliceKeyRepository);
+        alice = new P2pNode(getNetworkConfig(Config.Role.Alice), getNetworkTypes(), storage, Config.aliceKeyRepository);
         CountDownLatch bootstrappedLatch = new CountDownLatch(count);
         alice.bootstrap().whenComplete((success, t) -> {
             if (success && t == null) {
@@ -93,8 +56,18 @@ public abstract class BaseTest {
     }
 
     protected void testInitializeServer(int serversReadyLatchCount) throws InterruptedException {
-        alice = new P2pNode(getNetworkConfig(Role.Alice), getNetworkTypes(), storage, aliceKeyRepository);
-        bob = new P2pNode(getNetworkConfig(Role.Bob), getNetworkTypes(), storage, bobKeyRepository);
+        testInitializeServer(serversReadyLatchCount,
+                getNetworkConfig(Config.Role.Alice), getNetworkConfig(Config.Role.Bob),
+                getNetworkTypes(), getNetworkTypes());
+    }
+
+    protected void testInitializeServer(int serversReadyLatchCount,
+                                        NetworkConfig networkConfigAlice,
+                                        NetworkConfig networkConfigBob,
+                                        Set<NetworkType> supportedNetworkTypesAlice,
+                                        Set<NetworkType> supportedNetworkTypesBob) throws InterruptedException {
+        alice = new P2pNode(networkConfigAlice, supportedNetworkTypesAlice, storage, Config.aliceKeyRepository);
+        bob = new P2pNode(networkConfigBob, supportedNetworkTypesBob, storage, Config.bobKeyRepository);
         CountDownLatch serversReadyLatch = new CountDownLatch(serversReadyLatchCount);
         alice.initializeServer().whenComplete((result, throwable) -> {
             assertNotNull(result);
@@ -120,8 +93,8 @@ public abstract class BaseTest {
         });
         CountDownLatch sentLatch = new CountDownLatch(1);
 
-        Address peerAddress = getPeerAddress(Role.Bob);
-        alice.confidentialSend(new MockMessage(msg), peerAddress, keyPairBob.getPublic(), keyPairAlice)
+        Address peerAddress = getPeerAddress(Config.Role.Bob);
+        alice.confidentialSend(new MockMessage(msg), peerAddress, Config.keyPairBob.getPublic(), Config.keyPairAlice)
                 .whenComplete((connection, throwable) -> {
                     if (connection != null) {
                         sentLatch.countDown();
