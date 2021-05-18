@@ -41,7 +41,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 @Slf4j
-public class PeerExchangeTest {
+public class PeerExchangeIntegrationTest {
     private PeerExchangeManager seed, node1, node2, node3, node4;
     private PeerGroup peerGroupSeed, peerGroupNode1, peerGroupNode2, peerGroupNode3, peerGroupNode4;
     private Set<NetworkType> mySupportedNetworks = Sets.newHashSet(NetworkType.CLEAR);

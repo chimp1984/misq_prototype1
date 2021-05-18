@@ -24,10 +24,10 @@ import misq.p2p.Address;
 import misq.p2p.node.Connection;
 import misq.p2p.node.ConnectionListener;
 import misq.p2p.node.Node;
-import net.i2p.util.ConcurrentHashSet;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArraySet;
 
 /**
  * Maintains different collections of peers and connections
@@ -46,11 +46,11 @@ public class PeerGroup implements ConnectionListener {
     }
 
     // @Getter
-    private final Set<Peer> reportedPeers = new ConcurrentHashSet<>();
+    private final Set<Peer> reportedPeers = new CopyOnWriteArraySet<>();
     @Getter
-    private final Set<Peer> persistedPeers = new ConcurrentHashSet<>();
+    private final Set<Peer> persistedPeers = new CopyOnWriteArraySet<>();
     @Getter
-    private final Set<Connection> connections = new ConcurrentHashSet<>();
+    private final Set<Connection> connections = new CopyOnWriteArraySet<>();
 
     public PeerGroup(Node node, PeerConfig peerConfig, int serverPort) {
         this.serverPort = serverPort;

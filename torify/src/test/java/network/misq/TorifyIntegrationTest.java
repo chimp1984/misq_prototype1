@@ -30,8 +30,8 @@ import java.io.IOException;
 
 import static org.junit.Assert.*;
 
-public class TestTorStart {
-    private static final Logger log = LoggerFactory.getLogger(TestTorStart.class);
+public class TorifyIntegrationTest {
+    private static final Logger log = LoggerFactory.getLogger(TorifyIntegrationTest.class);
 
     @Test
     public void testShutdownDuringStartup() {

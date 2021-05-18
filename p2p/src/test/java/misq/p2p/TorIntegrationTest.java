@@ -34,7 +34,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 @Slf4j
-public class TorTest extends BaseTest {
+public class TorIntegrationTest extends BaseTest {
     protected int getTimeout() {
         return 180;
     }

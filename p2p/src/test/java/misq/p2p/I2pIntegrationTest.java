@@ -34,7 +34,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 @Slf4j
-public class I2pTest extends BaseTest {
+public class I2pIntegrationTest extends BaseTest {
     @Override
     protected int getTimeout() {
         return 120;

@@ -6,3 +6,22 @@
 ## What is Misq?
 
 Work in progress for a new version for Bisq
+
+
+## Dev notes:
+
+### Dependencies
+If new dependencies are added, or a dependency version is changed, use `./gradlew --write-verification-metadata sha256 help` to optimistically bootstrap the list of hashes.
+
+For details, see https://docs.gradle.org/current/userguide/dependency_verification.html
+
+For details on bootstrapping the initial hashes, see https://docs.gradle.org/current/userguide/dependency_verification.html#sec:bootstrapping-verification
+
+### Testing
+To ignore tests use the phrase `Integration` in the test class name (e.g `TorIntegrationTest`) and add
+```
+ test {
+        exclude '**/**Integration*'
+    }
+```
+to the module config. This is useful for tests which would require a custom setup (e.g. require I2P installation) and/or take a long time for running (e.g. starting tor/i2p)

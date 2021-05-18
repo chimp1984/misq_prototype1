@@ -28,7 +28,7 @@ import java.util.concurrent.TimeUnit;
 import static org.junit.Assert.*;
 
 @Slf4j
-public class AllNetworksTest {
+public class AllNetworksIntegrationTest {
     private P2pServiceImpl alice, bob;
 
     private List<NetworkConfig> getNetNetworkConfigs(Config.Role role) {

@@ -25,7 +25,7 @@ import java.security.GeneralSecurityException;
 import java.util.Set;
 
 @Slf4j
-public class ClearNetTest extends BaseTest {
+public class ClearNetIntegrationTest extends BaseTest {
     @Override
     protected Set<NetworkType> getNetworkTypes() {
         return Sets.newHashSet(NetworkType.CLEAR);

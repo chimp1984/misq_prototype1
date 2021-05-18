@@ -18,10 +18,6 @@ configure(rootProject) {
     }
 }
 
-/*plugins {
-    id 'org.openjfx.javafxplugin' version '0.0.9'
-}*/
-
 configure(subprojects) {
     apply plugin: 'java'
     apply plugin: 'com.google.osdetector'
@@ -36,7 +32,7 @@ configure(subprojects) {
         guavaVersion = '28.2-jre'
         guiceVersion = '4.2.2'
         jetbrainsAnnotationsVersion = '13.0'
-        javafxVersion = '15'
+        javafxVersion = '16'
         joptVersion = '5.0.4'
         jsonsimpleVersion = '1.1.1'
         junitVersion = '4.12'
@@ -47,7 +43,7 @@ configure(subprojects) {
         protobufVersion = '3.10.0'
         protocVersion = protobufVersion
         slf4jVersion = '1.7.30'
-
+        torBinary = 'b9c6227'
         i2pVersion = '0.9.49'
         netlayerVersion = '32779ac' // Commit ID from https://github.com/bisq-network/netlayer/commits/externaltor
 
@@ -59,7 +55,24 @@ configure(subprojects) {
         maven { url 'https://jitpack.io' }
     }
 
+    // Default dependencies for all modules
     dependencies {
+        implementation("com.google.guava:guava:$guavaVersion") {
+            exclude(module: 'j2objc-annotations')
+        }
+
+        implementation "org.jetbrains:annotations:$jetbrainsAnnotationsVersion"
+        implementation "com.google.code.findbugs:jsr305:$findbugsVersion"
+
+        implementation "org.slf4j:slf4j-api:$slf4jVersion"
+        implementation "ch.qos.logback:logback-core:$logbackVersion"
+        implementation "ch.qos.logback:logback-classic:$logbackVersion"
+
+        compileOnly "org.projectlombok:lombok:$lombokVersion"
+        annotationProcessor "org.projectlombok:lombok:$lombokVersion"
+        testCompileOnly "org.projectlombok:lombok:$lombokVersion"
+        testAnnotationProcessor "org.projectlombok:lombok:$lombokVersion"
+
         testImplementation "junit:junit:$junitVersion"
     }
 
@@ -148,60 +161,41 @@ configure([project(':common'),
 
 configure(project(':common')) {
     dependencies {
-        implementation "com.google.guava:guava:$guavaVersion"
-
         compile "org.bouncycastle:bcpg-jdk15on:$bcVersion"
-
-        implementation "org.jetbrains:annotations:$jetbrainsAnnotationsVersion"
-        implementation "com.google.code.findbugs:jsr305:$findbugsVersion"
-
-        implementation "org.slf4j:slf4j-api:$slf4jVersion"
-        implementation "ch.qos.logback:logback-core:$logbackVersion"
-        implementation "ch.qos.logback:logback-classic:$logbackVersion"
-
-        compileOnly "org.projectlombok:lombok:$lombokVersion"
-        annotationProcessor "org.projectlombok:lombok:$lombokVersion"
-        testCompileOnly "org.projectlombok:lombok:$lombokVersion"
-        testAnnotationProcessor "org.projectlombok:lombok:$lombokVersion"
     }
 }
 
 configure(project(':torify')) {
     dependencies {
         implementation project(':common')
-        implementation "com.google.guava:guava:$guavaVersion"
 
-        compile("com.github.chimp1984:torify:3d568f03")
+        compile("org.apache.commons:commons-compress:1.6")
+        compile("com.github.chimp1984:jsocks:567e1cd6")
+        compile("com.github.chimp1984:jtorctl:9b5ba203")
 
-        implementation "org.jetbrains:annotations:$jetbrainsAnnotationsVersion"
-        implementation "com.google.code.findbugs:jsr305:$findbugsVersion"
-
-        implementation "org.slf4j:slf4j-api:$slf4jVersion"
-        implementation "ch.qos.logback:logback-core:$logbackVersion"
-        implementation "ch.qos.logback:logback-classic:$logbackVersion"
-
-        compileOnly "org.projectlombok:lombok:$lombokVersion"
-        annotationProcessor "org.projectlombok:lombok:$lombokVersion"
-        testCompileOnly "org.projectlombok:lombok:$lombokVersion"
-        testAnnotationProcessor "org.projectlombok:lombok:$lombokVersion"
+        compile("com.github.bisq-network.tor-binary:tor-binary-geoip:$torBinary")
+        compile("com.github.bisq-network.tor-binary:tor-binary-macos:$torBinary")
+        compile("com.github.bisq-network.tor-binary:tor-binary-linux32:$torBinary")
+        compile("com.github.bisq-network.tor-binary:tor-binary-linux64:$torBinary")
+        compile("com.github.bisq-network.tor-binary:tor-binary-windows:$torBinary")
+    }
+    test {
+        exclude '**/**Integration*'
     }
 }
 configure(project(':i2p')) {
     dependencies {
         implementation project(':common')
-        implementation "com.google.guava:guava:$guavaVersion"
 
-        implementation "org.jetbrains:annotations:$jetbrainsAnnotationsVersion"
-        implementation "com.google.code.findbugs:jsr305:$findbugsVersion"
-
-        implementation "org.slf4j:slf4j-api:$slf4jVersion"
-        implementation "ch.qos.logback:logback-core:$logbackVersion"
-        implementation "ch.qos.logback:logback-classic:$logbackVersion"
-
-        compileOnly "org.projectlombok:lombok:$lombokVersion"
-        annotationProcessor "org.projectlombok:lombok:$lombokVersion"
-        testCompileOnly "org.projectlombok:lombok:$lombokVersion"
-        testAnnotationProcessor "org.projectlombok:lombok:$lombokVersion"
+        /*
+         In case we want to use the i2p jars instead of using SAM
+         implementation("net.i2p:router:$i2pVersion")
+         implementation("net.i2p.client:streaming:$i2pVersion")
+         implementation("net.i2p.client:mstreaming:$i2pVersion")
+         implementation("net.i2p:i2p:$i2pVersion")*/
+    }
+    test {
+        exclude '**/**Integration*'
     }
 }
 
@@ -210,27 +204,9 @@ configure(project(':p2p')) {
         implementation project(':common')
         implementation project(':torify')
         implementation project(':i2p')
-
-        implementation "com.google.guava:guava:$guavaVersion"
-
-        implementation("net.i2p:router:$i2pVersion")
-        implementation("net.i2p.client:streaming:$i2pVersion")
-        implementation("net.i2p.client:mstreaming:$i2pVersion")
-        implementation("net.i2p:i2p:$i2pVersion")
-
-        implementation("org.jeasy:easy-states:2.0.0")
-
-        implementation "org.jetbrains:annotations:$jetbrainsAnnotationsVersion"
-        implementation "com.google.code.findbugs:jsr305:$findbugsVersion"
-
-        compileOnly "org.projectlombok:lombok:$lombokVersion"
-        annotationProcessor "org.projectlombok:lombok:$lombokVersion"
-        testCompileOnly "org.projectlombok:lombok:$lombokVersion"
-        testAnnotationProcessor "org.projectlombok:lombok:$lombokVersion"
-
-        implementation "org.slf4j:slf4j-api:$slf4jVersion"
-        implementation "ch.qos.logback:logback-core:$logbackVersion"
-        implementation "ch.qos.logback:logback-classic:$logbackVersion"
+    }
+    test {
+        exclude '**/**Integration*'
     }
 }
 
@@ -238,18 +214,6 @@ configure(project(':listing')) {
     dependencies {
         implementation project(':common')
         implementation project(':p2p')
-
-        implementation "org.jetbrains:annotations:$jetbrainsAnnotationsVersion"
-        implementation "com.google.code.findbugs:jsr305:$findbugsVersion"
-
-        compileOnly "org.projectlombok:lombok:$lombokVersion"
-        annotationProcessor "org.projectlombok:lombok:$lombokVersion"
-        testCompileOnly "org.projectlombok:lombok:$lombokVersion"
-        testAnnotationProcessor "org.projectlombok:lombok:$lombokVersion"
-
-        implementation "org.slf4j:slf4j-api:$slf4jVersion"
-        implementation "ch.qos.logback:logback-core:$logbackVersion"
-        implementation "ch.qos.logback:logback-classic:$logbackVersion"
     }
 }
 
@@ -257,20 +221,6 @@ configure(project(':finance')) {
     dependencies {
         implementation project(':common')
         implementation project(':p2p')
-
-        implementation "com.google.guava:guava:$guavaVersion"
-
-        implementation "org.jetbrains:annotations:$jetbrainsAnnotationsVersion"
-        implementation "com.google.code.findbugs:jsr305:$findbugsVersion"
-
-        compileOnly "org.projectlombok:lombok:$lombokVersion"
-        annotationProcessor "org.projectlombok:lombok:$lombokVersion"
-        testCompileOnly "org.projectlombok:lombok:$lombokVersion"
-        testAnnotationProcessor "org.projectlombok:lombok:$lombokVersion"
-
-        implementation "org.slf4j:slf4j-api:$slf4jVersion"
-        implementation "ch.qos.logback:logback-core:$logbackVersion"
-        implementation "ch.qos.logback:logback-classic:$logbackVersion"
     }
 }
 
@@ -278,7 +228,9 @@ configure(project(':daemon')) {
     mainClassName = 'misq.daemon.DaemonMain'
 
     dependencies {
+        implementation project(':common')
         implementation project(':p2p')
+
         implementation "com.google.protobuf:protobuf-java:$protobufVersion"
         implementation("io.grpc:grpc-protobuf:$grpcVersion") {
             exclude(module: 'guava')
@@ -301,6 +253,7 @@ configure(project(':cli')) {
     dependencies {
         implementation "net.sf.jopt-simple:jopt-simple:$joptVersion"
         implementation "com.google.protobuf:protobuf-java:$protobufVersion"
+
         implementation("io.grpc:grpc-core:$grpcVersion") {
             exclude(module: 'guava')
             exclude(module: 'animal-sniffer-annotations')
@@ -318,7 +271,7 @@ configure(project(':cli')) {
 
 configure(project(':jfx')) {
     apply plugin: 'com.github.johnrengelman.shadow'
-    /*  apply from: 'package/package.gradle'*/
+    //  apply from: 'package/package.gradle'
 
     version = '0.0.1-SNAPSHOT'
 
@@ -342,18 +295,6 @@ configure(project(':jfx')) {
         implementation "org.openjfx:javafx-base:$javafxVersion:$os"
         implementation "org.openjfx:javafx-graphics:$javafxVersion:$os"
         implementation "org.openjfx:javafx-controls:$javafxVersion:$os"
-
-        implementation "org.jetbrains:annotations:$jetbrainsAnnotationsVersion"
-        implementation "com.google.code.findbugs:jsr305:$findbugsVersion"
-
-        compileOnly "org.projectlombok:lombok:$lombokVersion"
-        annotationProcessor "org.projectlombok:lombok:$lombokVersion"
-        testCompileOnly "org.projectlombok:lombok:$lombokVersion"
-        testAnnotationProcessor "org.projectlombok:lombok:$lombokVersion"
-
-        implementation "org.slf4j:slf4j-api:$slf4jVersion"
-        implementation "ch.qos.logback:logback-core:$logbackVersion"
-        implementation "ch.qos.logback:logback-classic:$logbackVersion"
     }
 }
 
@@ -361,6 +302,7 @@ configure(project(':web')) {
     dependencies {
     }
 }
+
 configure(project(':scripts')) {
     dependencies {
     }
