@@ -133,7 +133,6 @@ public class BaseNode implements RawNode.ConnectionListener, MessageListener {
 
     @Override
     public void onMessage(Message message, Connection connection) {
-        log.error("message={}", message);
         messageHandler.onMessage(message, connection);
     }
 
@@ -248,7 +247,7 @@ public class BaseNode implements RawNode.ConnectionListener, MessageListener {
                 mySupportedNetworks,
                 capability -> {
                     if (!isStopped) {
-                        log.info("setupResponseHandler: peerAddress: {}, myAddress={}, rawConnection: {}",
+                        log.debug("setupResponseHandler: peerAddress: {}, myAddress={}, rawConnection: {}",
                                 capability.getAddress(), myAddress, rawConnection);
                         responseHandlerMap.remove(id);
                         Connection connection = new Connection(rawConnection, capability);

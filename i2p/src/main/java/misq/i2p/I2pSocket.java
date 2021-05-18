@@ -15,29 +15,29 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package misq.p2p.node.connection;
+package misq.i2p;
 
-import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
-import misq.p2p.Address;
+import lombok.Setter;
 
+import javax.annotation.Nullable;
 import java.io.IOException;
 import java.net.Socket;
+import java.net.SocketAddress;
 
-@Slf4j
-public class OutboundConnection extends RawConnection {
-    @Getter
-    private final Address address;
+public class I2pSocket extends Socket {
+    @Setter
+    @Nullable
+    private String peerDestination;
 
-    public OutboundConnection(Socket socket, Address address) throws IOException {
-        super(socket);
-
-        this.address = address;
-        log.debug("Create outboundConnection to {}", address);
+    public I2pSocket(String host, int port) throws IOException {
+        super(host, port);
     }
 
     @Override
-    public String toString() {
-        return address.toString().substring(0, 8) + " / " + id;
+    public SocketAddress getRemoteSocketAddress() {
+        if (peerDestination == null) {
+            throw new IllegalStateException("The remote peer address is only available after an inbound connection is established.");
+        }
+        return new I2PSocketAddress(peerDestination);
     }
 }

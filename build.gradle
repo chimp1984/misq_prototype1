@@ -71,6 +71,7 @@ configure(subprojects) {
 
 configure([project(':common'),
            project(':torify'),
+           project(':i2p'),
            project(':p2p'),
            project(':listing'),
            project(':finance'),
@@ -179,6 +180,29 @@ configure(project(':torify')) {
         implementation "org.slf4j:slf4j-api:$slf4jVersion"
         implementation "ch.qos.logback:logback-core:$logbackVersion"
         implementation "ch.qos.logback:logback-classic:$logbackVersion"
+
+        compileOnly "org.projectlombok:lombok:$lombokVersion"
+        annotationProcessor "org.projectlombok:lombok:$lombokVersion"
+        testCompileOnly "org.projectlombok:lombok:$lombokVersion"
+        testAnnotationProcessor "org.projectlombok:lombok:$lombokVersion"
+    }
+}
+configure(project(':i2p')) {
+    dependencies {
+        implementation project(':common')
+        implementation "com.google.guava:guava:$guavaVersion"
+
+        implementation "org.jetbrains:annotations:$jetbrainsAnnotationsVersion"
+        implementation "com.google.code.findbugs:jsr305:$findbugsVersion"
+
+        implementation "org.slf4j:slf4j-api:$slf4jVersion"
+        implementation "ch.qos.logback:logback-core:$logbackVersion"
+        implementation "ch.qos.logback:logback-classic:$logbackVersion"
+
+        compileOnly "org.projectlombok:lombok:$lombokVersion"
+        annotationProcessor "org.projectlombok:lombok:$lombokVersion"
+        testCompileOnly "org.projectlombok:lombok:$lombokVersion"
+        testAnnotationProcessor "org.projectlombok:lombok:$lombokVersion"
     }
 }
 
@@ -186,6 +210,7 @@ configure(project(':p2p')) {
     dependencies {
         implementation project(':common')
         implementation project(':torify')
+        implementation project(':i2p')
 
         implementation "com.google.guava:guava:$guavaVersion"
 

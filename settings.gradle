@@ -1,5 +1,6 @@
 include 'common'
 include 'torify'
+include 'i2p'
 include 'p2p'
 include 'listing'
 include 'finance'

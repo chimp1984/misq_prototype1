@@ -15,29 +15,24 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package misq.p2p.node.connection;
+package misq.i2p;
 
 import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
-import misq.p2p.Address;
 
 import java.io.IOException;
-import java.net.Socket;
 
-@Slf4j
-public class OutboundConnection extends RawConnection {
-    @Getter
-    private final Address address;
+@Getter
+public class SamProtocolError extends IOException {
+    private final String request;
+    private Reply reply;
 
-    public OutboundConnection(Socket socket, Address address) throws IOException {
-        super(socket);
-
-        this.address = address;
-        log.debug("Create outboundConnection to {}", address);
+    public SamProtocolError(String request, String message) {
+        super(message);
+        this.request = request;
     }
 
-    @Override
-    public String toString() {
-        return address.toString().substring(0, 8) + " / " + id;
+    public SamProtocolError(String request, Reply reply) {
+        this.request = request;
+        this.reply = reply;
     }
 }

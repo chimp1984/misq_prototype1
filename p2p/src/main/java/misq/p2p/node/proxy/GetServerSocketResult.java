@@ -38,6 +38,6 @@ public class GetServerSocketResult {
 
     @Override
     public String toString() {
-        return serverId + " @ " + address.toString();
+        return serverId + " @ " + address.toString().substring(0, 8);
     }
 }

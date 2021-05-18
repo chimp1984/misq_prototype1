@@ -17,19 +17,28 @@
 
 package misq.p2p;
 
+import com.google.common.collect.Sets;
 import lombok.extern.slf4j.Slf4j;
 import misq.common.util.OsUtils;
 import misq.p2p.node.RawNode;
 import org.junit.Test;
 
 import java.security.GeneralSecurityException;
+import java.util.HashSet;
 
 @Slf4j
 public class ClearNetTest extends BaseTest {
+    @Override
+    protected HashSet<NetworkType> getNetworkTypes() {
+        return Sets.newHashSet(NetworkType.CLEAR);
+    }
+
+    @Override
     protected int getTimeout() {
         return 10;
     }
 
+    @Override
     protected NetworkConfig getNetworkConfig(Role role) {
         int serverPort;
         switch (role) {
@@ -46,11 +55,15 @@ public class ClearNetTest extends BaseTest {
         }
 
         String baseDirName = OsUtils.getUserDataDir().getAbsolutePath() + "/misq_test_" + role.name();
-        NetworkConfig clearNet = new NetworkConfig(baseDirName,
+        return new NetworkConfig(baseDirName,
                 NetworkType.CLEAR,
                 RawNode.DEFAULT_SERVER_ID,
                 serverPort);
-        return clearNet;
+    }
+
+    @Override
+    protected Address getPeerAddress(Role role) {
+        return Address.localHost(getNetworkConfig(role).getServerPort());
     }
 
     //@Test

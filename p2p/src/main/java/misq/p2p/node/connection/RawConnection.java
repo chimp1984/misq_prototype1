@@ -27,7 +27,6 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
-import java.util.Arrays;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -46,9 +45,6 @@ import static com.google.common.base.Preconditions.checkArgument;
  */
 @Slf4j
 public abstract class RawConnection {
-    // Identifies received network data as Misq message. If not matching we drop the message and close the connection.
-    public static final byte[] MISQ_MSG_ID = new byte[]{0x22, 0x12};
-
     public interface MessageListener {
         void onMessage(Message message);
     }
@@ -56,11 +52,9 @@ public abstract class RawConnection {
     @Getter
     @EqualsAndHashCode
     public static class MisqMessage implements Message {
-        private final byte[] id;
         private final Message payload;
 
-        public MisqMessage(byte[] id, Message payload) {
-            this.id = id;
+        public MisqMessage(Message payload) {
             this.payload = payload;
         }
 
@@ -106,7 +100,6 @@ public abstract class RawConnection {
                     checkArgument(object instanceof MisqMessage,
                             "Received object is not of type MisqMessage: " + object.getClass().getName());
                     MisqMessage misqMessage = (MisqMessage) object;
-                    checkArgument(Arrays.equals(MISQ_MSG_ID, misqMessage.getId()), "Misq message ID does not match");
                     log.debug("Received message: {} at connection: {}", misqMessage, this);
                     messageListeners.forEach(listener -> listener.onMessage(misqMessage.getPayload()));
                 } catch (Exception exception) {
@@ -121,7 +114,7 @@ public abstract class RawConnection {
         CompletableFuture<RawConnection> future = new CompletableFuture<>();
         outputExecutor.execute(() -> {
             try {
-                MisqMessage misqMessage = new MisqMessage(MISQ_MSG_ID, message);
+                MisqMessage misqMessage = new MisqMessage(message);
                 objectOutputStream.writeObject(misqMessage);
                 objectOutputStream.flush();
                 log.debug("Message sent: {} at connection: {}", misqMessage, this);

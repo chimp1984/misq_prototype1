@@ -209,6 +209,8 @@ public class RawNode {
     private Optional<Address> findMyAddress(String serverId) {
         if (serverMap.containsKey(serverId)) {
             return Optional.of(serverMap.get(serverId).getAddress());
+        } else if (!serverMap.isEmpty()) {
+            return serverMap.values().stream().map(Server::getAddress).findAny();
         } else {
             return Optional.empty();
         }

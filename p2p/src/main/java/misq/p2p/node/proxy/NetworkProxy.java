@@ -30,8 +30,8 @@ public interface NetworkProxy {
         switch (networkConfig.getNetworkType()) {
             case TOR:
                 return new TorNetworkProxy(networkConfig);
-           /* case I2P:
-                return  new TorNetworkNode(config);*/
+            case I2P:
+                return new I2pNetworkProxy(networkConfig);
             case CLEAR:
             default:
                 return new ClearNetNetworkProxy(networkConfig);

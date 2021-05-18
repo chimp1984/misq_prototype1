@@ -86,6 +86,7 @@ public class TorNetworkProxy implements NetworkProxy {
         state = State.SHUT_DOWN;
     }
 
+    //todo move to torify lib
     @Override
     public Optional<Address> getServerAddress(String serverId) {
         String fileName = torDirPath + separator + Constants.HS_DIR + separator + serverId + separator + "hostname";
