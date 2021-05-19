@@ -15,14 +15,23 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package misq.common.util;
+package misq.p2p;
 
-public class StringUtils {
-    public static String truncate(String value) {
-        return truncate(value, 32);
-    }
+import lombok.Getter;
 
-    public static String truncate(String value, int maxLength) {
-        return value.substring(0, Math.min(value.length(), maxLength)) + "...";
+import java.util.List;
+
+@Getter
+public class NetworkId {
+    private final String baseDirPath;
+    private final String id;
+    private final int serverPort;
+    private final List<NetworkType> networkTypes;
+
+    public NetworkId(String baseDirPath, String id, int serverPort, List<NetworkType> networkTypes) {
+        this.baseDirPath = baseDirPath;
+        this.id = id;
+        this.serverPort = serverPort;
+        this.networkTypes = networkTypes;
     }
 }

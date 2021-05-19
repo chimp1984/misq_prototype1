@@ -17,13 +17,13 @@
 
 package misq.p2p;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import lombok.extern.slf4j.Slf4j;
 import misq.common.util.OsUtils;
 import misq.common.util.Tuple2;
 import misq.p2p.data.storage.Storage;
 import misq.p2p.node.Node;
-import misq.p2p.node.RawNode;
 import misq.p2p.peers.PeerConfig;
 import misq.p2p.peers.PeerGroup;
 import misq.p2p.peers.exchange.DefaultPeerExchangeStrategy;
@@ -356,9 +356,9 @@ public class PeerExchangeIntegrationTest {
         Node node = new Node(networkConfig, mySupportedNetworks);
 
         PeerConfig peerConfig = networkConfig.getPeerConfig();
-        PeerGroup peerGroup = new PeerGroup(node, peerConfig, networkConfig.getServerPort());
+        PeerGroup peerGroup = new PeerGroup(node, peerConfig, networkConfig.getNetworkId().getServerPort());
         DefaultPeerExchangeStrategy peerExchangeStrategy = new DefaultPeerExchangeStrategy(peerGroup, peerConfig);
-        return node.initializeServer(networkConfig.getServerId(), networkConfig.getServerPort())
+        return node.initializeServer(networkConfig.getNetworkId().getId(), networkConfig.getNetworkId().getServerPort())
                 .thenApply(e -> new Tuple2<>(new PeerExchangeManager(node, peerExchangeStrategy), peerGroup));
     }
 
@@ -401,12 +401,9 @@ public class PeerExchangeIntegrationTest {
                 minNumConnectedPeers,
                 maxNumConnectedPeers,
                 minNumReportedPeers);
-        NetworkConfig clearNet = new NetworkConfig(baseDirName,
-                NetworkType.CLEAR,
-                RawNode.DEFAULT_SERVER_ID,
-                serverPort,
-                peerConfig);
-        return clearNet;
+
+        NetworkId networkId = new NetworkId(baseDirName, "def", serverPort, Lists.newArrayList(NetworkType.CLEAR));
+        return new NetworkConfig(networkId, NetworkType.CLEAR, peerConfig);
     }
 
     protected NetworkConfig getNetworkConfig(int serverPort) {

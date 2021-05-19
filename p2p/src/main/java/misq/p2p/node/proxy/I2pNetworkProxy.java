@@ -21,12 +21,11 @@ import static java.io.File.separator;
 @Slf4j
 public class I2pNetworkProxy implements NetworkProxy {
     private final String i2pDirPath;
-    private volatile State state = State.NOT_STARTED;
     // We only use one SamClient (for tests we would create multiple instances of nodes, but we still want 1 client)
     private static SamClient samClient;
 
     public I2pNetworkProxy(NetworkConfig networkConfig) {
-        i2pDirPath = networkConfig.getBaseDirName() + separator + "i2p";
+        i2pDirPath = networkConfig.getNetworkId().getBaseDirPath() + separator + "i2p";
     }
 
     public CompletableFuture<Boolean> initialize() {
@@ -35,7 +34,6 @@ public class I2pNetworkProxy implements NetworkProxy {
             if (samClient == null) {
                 samClient = new SamClient(i2pDirPath);
             }
-            state = State.INITIALIZED;
             return CompletableFuture.completedFuture(true);
         } catch (Exception exception) {
             log.error(exception.toString(), exception);
@@ -54,7 +52,6 @@ public class I2pNetworkProxy implements NetworkProxy {
                 String destination = samClient.getMyDestination(serverId);
                 Address address = new Address(destination, -1);
                 log.debug("Create new Socket to {}", address);
-                state = State.SERVER_SOCKET_CREATED;
                 log.debug("ServerSocket created for address {}", address);
                 future.complete(new GetServerSocketResult(serverId, serverSocket, address));
             } catch (Exception exception) {
@@ -86,7 +83,6 @@ public class I2pNetworkProxy implements NetworkProxy {
         if (samClient != null) {
             samClient.shutDown();
         }
-        state = State.SHUT_DOWN;
     }
 
     @Override
@@ -98,10 +94,5 @@ public class I2pNetworkProxy implements NetworkProxy {
             log.error(exception.toString(), exception);
             return Optional.empty();
         }
-    }
-
-    @Override
-    public State getState() {
-        return state;
     }
 }

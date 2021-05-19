@@ -27,7 +27,7 @@ import java.util.Set;
 @Slf4j
 public class ClearNetIntegrationTest extends BaseTest {
     @Override
-    protected Set<NetworkType> getNetworkTypes() {
+    protected Set<NetworkType> getMySupportedNetworks() {
         return Sets.newHashSet(NetworkType.CLEAR);
     }
 
@@ -43,20 +43,69 @@ public class ClearNetIntegrationTest extends BaseTest {
 
     @Override
     protected Address getPeerAddress(Config.Role role) {
-        return Address.localHost(getNetworkConfig(role).getServerPort());
+        return Address.localHost(getNetworkConfig(role).getNetworkId().getServerPort());
     }
 
-    //@Test
+    //   @Test
     public void testInitializeServer() throws InterruptedException {
         super.testInitializeServer(2);
         alice.shutdown();
         bob.shutdown();
     }
 
-    @Test
+    //  @Test
     public void testConfidentialSend() throws InterruptedException, GeneralSecurityException {
         super.testConfidentialSend();
         alice.shutdown();
         bob.shutdown();
     }
+
+    // @Test
+    public void testStartOfMultipleIds() throws InterruptedException {
+        NetworkType networkType = NetworkType.CLEAR;
+        Set<NetworkType> mySupportedNetworks = getMySupportedNetworks();
+        startOfMultipleIds(networkType, mySupportedNetworks);
+    }
+
+    @Test
+    public void testSendMsgWithMultipleIds() throws InterruptedException, GeneralSecurityException {
+        NetworkType networkType = NetworkType.CLEAR;
+        Set<NetworkType> mySupportedNetworks = getMySupportedNetworks();
+        sendMsgWithMultipleIds(networkType, mySupportedNetworks);
+    }
+
+    /*
+    @Test
+    public void testStartOfMultipleIds() throws InterruptedException {
+        NetworkType networkType = NetworkType.CLEAR;
+        ArrayList<NetworkType> networkTypes = Lists.newArrayList(networkType);
+
+        String baseDirNameAlice = OsUtils.getUserDataDir().getAbsolutePath() + "/misq_test_Alice";
+        NetworkId networkIdAlice1 = new NetworkId(baseDirNameAlice, "id_alice_1", 1111, networkTypes);
+        alice = new P2pNode(new NetworkConfig(networkIdAlice1, networkType), getMySupportedNetworks(), storage, Config.aliceKeyRepository1);
+
+        NetworkId networkIdAlice2 = new NetworkId(baseDirNameAlice, "id_alice_2", 1112, networkTypes);
+        P2pNode alice2 = new P2pNode(new NetworkConfig(networkIdAlice2, networkType), getMySupportedNetworks(), storage, Config.aliceKeyRepository1);
+
+        String baseDirNameBob = OsUtils.getUserDataDir().getAbsolutePath() + "/misq_test_Bob";
+        NetworkId networkIdBob1 = new NetworkId(baseDirNameBob, "id_bob_1", 2222, networkTypes);
+        bob = new P2pNode(new NetworkConfig(networkIdBob1, networkType), getMySupportedNetworks(), storage, Config.bobKeyRepository1);
+
+        CountDownLatch serversReadyLatch = new CountDownLatch(3);
+        alice.initializeServer().whenComplete((result, throwable) -> {
+            assertNotNull(result);
+            serversReadyLatch.countDown();
+        });
+        alice2.initializeServer().whenComplete((result, throwable) -> {
+            assertNotNull(result);
+            serversReadyLatch.countDown();
+        });
+        bob.initializeServer().whenComplete((result, throwable) -> {
+            assertNotNull(result);
+            serversReadyLatch.countDown();
+        });
+
+        boolean serversReady = serversReadyLatch.await(getTimeout(), TimeUnit.SECONDS);
+        assertTrue(serversReady);
+    }*/
 }

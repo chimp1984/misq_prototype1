@@ -46,8 +46,8 @@ public class AllNetworksIntegrationTest {
     }
 
     public void initializeServer() throws InterruptedException {
-        alice = new P2pServiceImpl(getNetNetworkConfigs(Config.Role.Alice), Config.aliceKeyRepository);
-        bob = new P2pServiceImpl(getNetNetworkConfigs(Config.Role.Bob), Config.bobKeyRepository);
+        alice = new P2pServiceImpl(getNetNetworkConfigs(Config.Role.Alice), Config.aliceKeyRepository1);
+        bob = new P2pServiceImpl(getNetNetworkConfigs(Config.Role.Bob), Config.bobKeyRepository1);
         CountDownLatch serversReadyLatch = new CountDownLatch(2);
         alice.initializeServer((res, error) -> {
             if (res != null)
@@ -82,7 +82,7 @@ public class AllNetworksIntegrationTest {
         CountDownLatch sentLatch = new CountDownLatch(3);
 
         Address peerAddress = bob.getAddress(NetworkType.CLEAR).get();
-        alice.confidentialSend(new MockMessage(msg), peerAddress, Config.keyPairBob.getPublic(), Config.keyPairAlice)
+        alice.confidentialSend(new MockMessage(msg), peerAddress, Config.keyPairBob1.getPublic(), Config.keyPairAlice1)
                 .whenComplete((connection, throwable) -> {
                     if (connection != null) {
                         sentLatch.countDown();
@@ -92,7 +92,7 @@ public class AllNetworksIntegrationTest {
                 });
 
         peerAddress = bob.getAddress(NetworkType.TOR).get();
-        alice.confidentialSend(new MockMessage(msg), peerAddress, Config.keyPairBob.getPublic(), Config.keyPairAlice)
+        alice.confidentialSend(new MockMessage(msg), peerAddress, Config.keyPairBob1.getPublic(), Config.keyPairAlice1)
                 .whenComplete((connection, throwable) -> {
                     if (connection != null) {
                         sentLatch.countDown();
@@ -102,7 +102,7 @@ public class AllNetworksIntegrationTest {
                 });
 
         peerAddress = bob.getAddress(NetworkType.I2P).get();
-        alice.confidentialSend(new MockMessage(msg), peerAddress, Config.keyPairBob.getPublic(), Config.keyPairAlice)
+        alice.confidentialSend(new MockMessage(msg), peerAddress, Config.keyPairBob1.getPublic(), Config.keyPairAlice1)
                 .whenComplete((connection, throwable) -> {
                     if (connection != null) {
                         sentLatch.countDown();

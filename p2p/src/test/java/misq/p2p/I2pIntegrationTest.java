@@ -41,7 +41,7 @@ public class I2pIntegrationTest extends BaseTest {
     }
 
     @Override
-    protected Set<NetworkType> getNetworkTypes() {
+    protected Set<NetworkType> getMySupportedNetworks() {
         return Sets.newHashSet(NetworkType.I2P);
     }
 
@@ -134,7 +134,7 @@ public class I2pIntegrationTest extends BaseTest {
     private void send(CountDownLatch sentLatch, Address peerAddress, AtomicInteger i, Map<Integer, Long> tsMap) throws GeneralSecurityException {
         tsMap.put(i.get(), System.currentTimeMillis());
         log.error("Send msg {}", i.get());
-        alice.confidentialSend(new MockMessage(String.valueOf(i.get())), peerAddress, Config.keyPairBob.getPublic(), Config.keyPairAlice)
+        alice.confidentialSend(new MockMessage(String.valueOf(i.get())), peerAddress, Config.keyPairBob1.getPublic(), Config.keyPairAlice1)
                 .whenComplete((connection, throwable) -> {
                     if (connection != null) {
                         sentLatch.countDown();

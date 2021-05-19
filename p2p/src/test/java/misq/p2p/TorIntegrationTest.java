@@ -40,7 +40,7 @@ public class TorIntegrationTest extends BaseTest {
     }
 
     @Override
-    protected Set<NetworkType> getNetworkTypes() {
+    protected Set<NetworkType> getMySupportedNetworks() {
         return Sets.newHashSet(NetworkType.TOR);
     }
 
@@ -79,10 +79,10 @@ public class TorIntegrationTest extends BaseTest {
         }
     }
 
-    //  @Test
+    // @Test
     public void testInitializeServer() throws InterruptedException {
         try {
-            super.testInitializeServer(1);
+            super.testInitializeServer(2);
         } finally {
             alice.shutdown();
             bob.shutdown();
@@ -99,10 +99,25 @@ public class TorIntegrationTest extends BaseTest {
         }
     }
 
+    //  @Test
+    public void testStartOfMultipleIds() throws InterruptedException {
+        NetworkType networkType = NetworkType.TOR;
+        Set<NetworkType> mySupportedNetworks = getMySupportedNetworks();
+        startOfMultipleIds(networkType, mySupportedNetworks);
+    }
+
+    @Test
+    public void testSendMsgWithMultipleIds() throws InterruptedException, GeneralSecurityException {
+        NetworkType networkType = NetworkType.TOR;
+        Set<NetworkType> mySupportedNetworks = getMySupportedNetworks();
+        sendMsgWithMultipleIds(networkType, mySupportedNetworks);
+    }
+
+
     // First msg: 7905 ms, others 400-600ms
     // First msg: 10030 ms, others 500-700
     // Total: 16693 ms / 24742 ms /  19364 ms /  16836 ms
-    @Test
+    // @Test
     public void repeatedSend() throws InterruptedException, GeneralSecurityException {
         long ts = System.currentTimeMillis();
         testInitializeServer(2);
@@ -137,7 +152,7 @@ public class TorIntegrationTest extends BaseTest {
     private void send(CountDownLatch sentLatch, Address peerAddress, AtomicInteger i, Map<Integer, Long> tsMap) throws GeneralSecurityException {
         tsMap.put(i.get(), System.currentTimeMillis());
         log.error("Send msg {}", i.get());
-        alice.confidentialSend(new MockMessage(String.valueOf(i.get())), peerAddress, Config.keyPairBob.getPublic(), Config.keyPairAlice)
+        alice.confidentialSend(new MockMessage(String.valueOf(i.get())), peerAddress, Config.keyPairBob1.getPublic(), Config.keyPairAlice1)
                 .whenComplete((connection, throwable) -> {
                     if (connection != null) {
                         sentLatch.countDown();

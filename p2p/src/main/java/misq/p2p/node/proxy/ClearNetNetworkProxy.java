@@ -13,7 +13,6 @@ import java.util.concurrent.CompletableFuture;
 
 @Slf4j
 public class ClearNetNetworkProxy implements NetworkProxy {
-    private volatile State state = State.NOT_STARTED;
 
     public ClearNetNetworkProxy(NetworkConfig networkConfig) {
     }
@@ -26,7 +25,6 @@ public class ClearNetNetworkProxy implements NetworkProxy {
                 Thread.sleep(5); // simulate tor delay
             } catch (InterruptedException ignore) {
             }
-            state = State.INITIALIZED;
             future.complete(true);
         }).start();
         return future;
@@ -44,7 +42,6 @@ public class ClearNetNetworkProxy implements NetworkProxy {
         try {
             ServerSocket serverSocket = new ServerSocket(serverPort);
             Address address = Address.localHost(serverPort);
-            state = State.SERVER_SOCKET_CREATED;
             log.debug("ServerSocket created");
             future.complete(new GetServerSocketResult(serverId, serverSocket, address));
         } catch (IOException e) {
@@ -61,16 +58,10 @@ public class ClearNetNetworkProxy implements NetworkProxy {
 
     @Override
     public void shutdown() {
-        state = State.SHUT_DOWN;
     }
 
     @Override
     public Optional<Address> getServerAddress(String serverId) {
         return Optional.empty();
-    }
-
-    @Override
-    public State getState() {
-        return state;
     }
 }

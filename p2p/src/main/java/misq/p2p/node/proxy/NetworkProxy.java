@@ -38,16 +38,6 @@ public interface NetworkProxy {
         }
     }
 
-    enum State {
-        NOT_STARTED,
-        INITIALIZED,
-        SERVER_SOCKET_CREATED,
-        SOCKET_CREATED,
-        HANDSHAKE_DONE,
-        SHUTTING_DOWN,
-        SHUT_DOWN
-    }
-
     /**
      * Initializes the NetworkProxy
      *
@@ -72,9 +62,6 @@ public interface NetworkProxy {
      * @throws IOException
      */
     Socket getSocket(Address address) throws IOException;
-
-
-    State getState();
 
     Optional<Address> getServerAddress(String serverId);
 

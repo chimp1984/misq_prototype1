@@ -2,13 +2,12 @@ package misq.p2p.node.proxy;
 
 import lombok.extern.slf4j.Slf4j;
 import misq.common.util.FileUtils;
-import misq.common.util.NetworkUtils;
 import misq.p2p.Address;
 import misq.p2p.NetworkConfig;
+import misq.p2p.NetworkId;
 import misq.torify.Constants;
-import misq.torify.TorController;
+import misq.torify.Tor;
 import misq.torify.TorServerSocket;
-import misq.torify.Torify;
 
 import java.io.File;
 import java.io.IOException;
@@ -16,7 +15,6 @@ import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.atomic.AtomicReference;
 
 import static java.io.File.separator;
 
@@ -24,25 +22,25 @@ import static java.io.File.separator;
 @Slf4j
 public class TorNetworkProxy implements NetworkProxy {
     public final static int DEFAULT_PORT = 9999;
+
     private final String torDirPath;
-    private final Torify torify;
-    private final AtomicReference<TorController> torController = new AtomicReference<>();
-    private volatile NetworkProxy.State state = State.NOT_STARTED;
+    private final NetworkId networkId;
+    private final Tor tor;
 
     public TorNetworkProxy(NetworkConfig networkConfig) {
-        torDirPath = networkConfig.getBaseDirName() + separator + "tor";
-        torify = new Torify(torDirPath);
+        torDirPath = networkConfig.getNetworkId().getBaseDirPath() + separator + "tor";
+        networkId = networkConfig.getNetworkId();
+
+        // We get a singleton instance per application (torDirPath)
+        tor = Tor.getTor(torDirPath);
     }
 
     @Override
     public CompletableFuture<Boolean> initialize() {
         log.info("Initialize Tor");
         long ts = System.currentTimeMillis();
-
-        return torify.startAsync()
-                .thenApply(torController -> {
-                    state = State.INITIALIZED;
-                    this.torController.set(torController);
+        return tor.startAsync()
+                .thenApply(result -> {
                     log.info("Tor initialized after {} ms", System.currentTimeMillis() - ts);
                     return true;
                 });
@@ -53,12 +51,11 @@ public class TorNetworkProxy implements NetworkProxy {
         log.info("Start hidden service");
         long ts = System.currentTimeMillis();
         try {
-            TorServerSocket torServerSocket = new TorServerSocket(torDirPath, torController.get());
-            return torServerSocket.bindAsync(serverPort, NetworkUtils.findFreeSystemPort())
+            TorServerSocket torServerSocket = tor.getTorServerSocket();
+            return torServerSocket.bindAsync(networkId.getServerPort(), networkId.getId())
                     .thenApply(onionAddress -> {
                         log.info("Tor hidden service Ready. Took {} ms. Onion address={}", System.currentTimeMillis() - ts, onionAddress);
-                        state = State.SERVER_SOCKET_CREATED;
-                        return new GetServerSocketResult(serverId, torServerSocket, new Address(onionAddress.getHost(), onionAddress.getPort()));
+                        return new GetServerSocketResult(networkId.getId(), torServerSocket, new Address(onionAddress.getHost(), onionAddress.getPort()));
                     });
         } catch (IOException e) {
             return CompletableFuture.failedFuture(e);
@@ -68,7 +65,7 @@ public class TorNetworkProxy implements NetworkProxy {
     @Override
     public Socket getSocket(Address address) throws IOException {
         long ts = System.currentTimeMillis();
-        Socket socket = torify.getSocket(null);
+        Socket socket = tor.getSocket(null);
         socket.connect(new InetSocketAddress(address.getHost(), address.getPort()));
         log.info("Tor socket to {} created. Took {} ms", address, System.currentTimeMillis() - ts);
         return socket;
@@ -79,11 +76,9 @@ public class TorNetworkProxy implements NetworkProxy {
 
     @Override
     public void shutdown() {
-        state = State.SHUTTING_DOWN;
-        if (torify != null) {
-            torify.shutdown();
+        if (tor != null) {
+            tor.shutdown();
         }
-        state = State.SHUT_DOWN;
     }
 
     //todo move to torify lib
@@ -101,10 +96,4 @@ public class TorNetworkProxy implements NetworkProxy {
 
         return Optional.empty();
     }
-
-    @Override
-    public State getState() {
-        return state;
-    }
-
 }
