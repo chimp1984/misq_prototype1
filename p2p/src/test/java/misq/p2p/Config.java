@@ -17,7 +17,7 @@
 
 package misq.p2p;
 
-import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import lombok.extern.slf4j.Slf4j;
 import misq.common.security.KeyPairGeneratorUtil;
 import misq.common.util.OsUtils;
@@ -52,28 +52,28 @@ public abstract class Config {
     }
 
 
-    final static Function<PublicKey, PrivateKey> aliceKeyRepository1 = new Function<>() {
+    final static Function<PublicKey, PrivateKey> alicePrivateKeySupplier1 = new Function<>() {
         @Override
         public PrivateKey apply(PublicKey publicKey) {
             checkArgument(publicKey.equals(keyPairAlice1.getPublic()));
             return keyPairAlice1.getPrivate();
         }
     };
-    final static Function<PublicKey, PrivateKey> bobKeyRepository1 = new Function<>() {
+    final static Function<PublicKey, PrivateKey> bobPrivateKeySupplier1 = new Function<>() {
         @Override
         public PrivateKey apply(PublicKey publicKey) {
             checkArgument(publicKey.equals(keyPairBob1.getPublic()));
             return keyPairBob1.getPrivate();
         }
     };
-    final static Function<PublicKey, PrivateKey> aliceKeyRepository2 = new Function<>() {
+    final static Function<PublicKey, PrivateKey> alicePrivateKeySupplier2 = new Function<>() {
         @Override
         public PrivateKey apply(PublicKey publicKey) {
             checkArgument(publicKey.equals(keyPairAlice2.getPublic()));
             return keyPairAlice2.getPrivate();
         }
     };
-    final static Function<PublicKey, PrivateKey> bobKeyRepository2 = new Function<>() {
+    final static Function<PublicKey, PrivateKey> bobPrivateKeySupplier2 = new Function<>() {
         @Override
         public PrivateKey apply(PublicKey publicKey) {
             checkArgument(publicKey.equals(keyPairBob2.getPublic()));
@@ -83,8 +83,8 @@ public abstract class Config {
 
     static NetworkConfig getI2pNetworkConfig(Role role) {
         String baseDirName = OsUtils.getUserDataDir().getAbsolutePath() + "/misq_test_" + role.name();
-        NetworkId networkId = new NetworkId(baseDirName, "i2p" + role.name(), -1, Lists.newArrayList(NetworkType.I2P));
-        return new NetworkConfig(networkId, NetworkType.I2P);
+        NetworkId networkId = new NetworkId("i2p" + role.name(), -1, Sets.newHashSet(NetworkType.I2P));
+        return new NetworkConfig(baseDirName, networkId, NetworkType.I2P);
     }
 
     static NetworkConfig getTorNetworkConfig(Role role) {
@@ -107,8 +107,8 @@ public abstract class Config {
         }
 
         String baseDirName = OsUtils.getUserDataDir().getAbsolutePath() + "/misq_test_" + role.name();
-        NetworkId networkId = new NetworkId(baseDirName, id, serverPort, Lists.newArrayList(NetworkType.TOR));
-        return new NetworkConfig(networkId, NetworkType.TOR);
+        NetworkId networkId = new NetworkId(id, serverPort, Sets.newHashSet(NetworkType.TOR));
+        return new NetworkConfig(baseDirName, networkId, NetworkType.TOR);
     }
 
     static NetworkConfig getClearNetNetworkConfig(Role role) {
@@ -127,7 +127,7 @@ public abstract class Config {
         }
 
         String baseDirName = OsUtils.getUserDataDir().getAbsolutePath() + "/misq_test_" + role.name();
-        NetworkId networkId = new NetworkId(baseDirName, "clear" + role.name(), serverPort, Lists.newArrayList(NetworkType.CLEAR));
-        return new NetworkConfig(networkId, NetworkType.CLEAR);
+        NetworkId networkId = new NetworkId("clear" + role.name(), serverPort, Sets.newHashSet(NetworkType.CLEAR));
+        return new NetworkConfig(baseDirName, networkId, NetworkType.CLEAR);
     }
 }

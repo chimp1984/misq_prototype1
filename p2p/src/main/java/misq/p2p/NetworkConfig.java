@@ -25,19 +25,22 @@ import misq.p2p.peers.exchange.PeerExchangeConfig;
 public class NetworkConfig {
     private final NetworkType networkType;
     private final PeerConfig peerConfig;
+    private final String baseDirPath;
     private final NetworkId networkId;
 
-    public NetworkConfig(NetworkId networkId,
-                         NetworkType networkType) {
-        this(networkId,
+    public NetworkConfig(String baseDirPath, NetworkId networkId, NetworkType networkType) {
+        this(baseDirPath,
+                networkId,
                 networkType,
                 new PeerConfig(new PeerExchangeConfig(), new SeedNodeRepository().getNodes(networkType)));
 
     }
 
-    public NetworkConfig(NetworkId networkId,
+    public NetworkConfig(String baseDirPath,
+                         NetworkId networkId,
                          NetworkType networkType,
                          PeerConfig peerConfig) {
+        this.baseDirPath = baseDirPath;
         this.networkId = networkId;
         this.networkType = networkType;
         this.peerConfig = peerConfig;

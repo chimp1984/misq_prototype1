@@ -25,7 +25,7 @@ public class I2pNetworkProxy implements NetworkProxy {
     private static SamClient samClient;
 
     public I2pNetworkProxy(NetworkConfig networkConfig) {
-        i2pDirPath = networkConfig.getNetworkId().getBaseDirPath() + separator + "i2p";
+        i2pDirPath = networkConfig.getBaseDirPath() + separator + "i2p";
     }
 
     public CompletableFuture<Boolean> initialize() {

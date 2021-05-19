@@ -17,19 +17,17 @@
 
 package misq.p2p;
 
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
-import java.util.Set;
+import java.util.List;
 
 @Getter
-public class NetworkId {
-    private final String id;
-    private final int serverPort;
-    private final Set<NetworkType> networkTypes;
+@EqualsAndHashCode
+public class NetworkPeer {
+    private final List<Address> addresses;
 
-    public NetworkId(String id, int serverPort, Set<NetworkType> networkTypes) {
-        this.id = id;
-        this.serverPort = serverPort;
-        this.networkTypes = networkTypes;
+    public NetworkPeer(List<Address> addresses) {
+        this.addresses = addresses;
     }
 }

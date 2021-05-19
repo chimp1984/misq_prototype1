@@ -34,14 +34,16 @@ import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.security.PrivateKey;
 import java.security.PublicKey;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
 /**
  * High level API for the p2p network.
@@ -53,12 +55,9 @@ public class P2pServiceImpl implements P2pService {
 
     public P2pServiceImpl(List<NetworkConfig> networkConfigs, Function<PublicKey, PrivateKey> keyRepository) {
         Storage storage = new Storage();
-        Set<NetworkType> mySupportedNetworks = networkConfigs.stream()
-                .map(NetworkConfig::getNetworkType)
-                .collect(Collectors.toSet());
         networkConfigs.forEach(networkConfig -> {
             NetworkType networkType = networkConfig.getNetworkType();
-            P2pNode p2pNode = new P2pNode(networkConfig, mySupportedNetworks, storage, keyRepository);
+            P2pNode p2pNode = new P2pNode(networkConfig, storage, keyRepository);
             p2pNodes.put(networkType, p2pNode);
         });
     }

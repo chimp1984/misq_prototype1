@@ -45,12 +45,12 @@ public class ConfidentialMessageService implements MessageListener {
     private final Node node;
     private final PeerGroup peerGroup;
     private final Set<MessageListener> messageListeners = new CopyOnWriteArraySet<>();
-    private final Function<PublicKey, PrivateKey> keyRepository;
+    private final Function<PublicKey, PrivateKey> privateKeySupplier;
 
-    public ConfidentialMessageService(Node node, PeerGroup peerGroup, Function<PublicKey, PrivateKey> keyRepository) {
+    public ConfidentialMessageService(Node node, PeerGroup peerGroup, Function<PublicKey, PrivateKey> privateKeySupplier) {
         this.node = node;
         this.peerGroup = peerGroup;
-        this.keyRepository = keyRepository;
+        this.privateKeySupplier = privateKeySupplier;
 
         node.addMessageListener(this);
     }
@@ -71,7 +71,7 @@ public class ConfidentialMessageService implements MessageListener {
                 try {
                     Seal seal = confidentialMessage.getSeal();
                     PublicKey receiversPublicKey = confidentialMessage.getReceiversPublicKey();
-                    PrivateKey privateKey = keyRepository.apply(receiversPublicKey);
+                    PrivateKey privateKey = privateKeySupplier.apply(receiversPublicKey);
                     byte[] decrypted = HybridEncryption.decrypt(seal, privateKey);
                     Message decryptedMessage = (Message) ObjectSerializer.deserialize(decrypted);
                     messageListeners.forEach(listener -> listener.onMessage(decryptedMessage, connection));

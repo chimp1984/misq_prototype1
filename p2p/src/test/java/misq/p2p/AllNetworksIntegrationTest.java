@@ -46,8 +46,8 @@ public class AllNetworksIntegrationTest {
     }
 
     public void initializeServer() throws InterruptedException {
-        alice = new P2pServiceImpl(getNetNetworkConfigs(Config.Role.Alice), Config.aliceKeyRepository1);
-        bob = new P2pServiceImpl(getNetNetworkConfigs(Config.Role.Bob), Config.bobKeyRepository1);
+        alice = new P2pServiceImpl(getNetNetworkConfigs(Config.Role.Alice), Config.alicePrivateKeySupplier1);
+        bob = new P2pServiceImpl(getNetNetworkConfigs(Config.Role.Bob), Config.bobPrivateKeySupplier1);
         CountDownLatch serversReadyLatch = new CountDownLatch(2);
         alice.initializeServer((res, error) -> {
             if (res != null)

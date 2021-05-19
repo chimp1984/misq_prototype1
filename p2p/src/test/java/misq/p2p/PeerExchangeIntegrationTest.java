@@ -17,7 +17,6 @@
 
 package misq.p2p;
 
-import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import lombok.extern.slf4j.Slf4j;
 import misq.common.util.OsUtils;
@@ -353,7 +352,7 @@ public class PeerExchangeIntegrationTest {
     }
 
     private CompletableFuture<Tuple2<PeerExchangeManager, PeerGroup>> getTuple(NetworkConfig networkConfig) {
-        Node node = new Node(networkConfig, mySupportedNetworks);
+        Node node = new Node(networkConfig);
 
         PeerConfig peerConfig = networkConfig.getPeerConfig();
         PeerGroup peerGroup = new PeerGroup(node, peerConfig, networkConfig.getNetworkId().getServerPort());
@@ -402,8 +401,8 @@ public class PeerExchangeIntegrationTest {
                 maxNumConnectedPeers,
                 minNumReportedPeers);
 
-        NetworkId networkId = new NetworkId(baseDirName, "def", serverPort, Lists.newArrayList(NetworkType.CLEAR));
-        return new NetworkConfig(networkId, NetworkType.CLEAR, peerConfig);
+        NetworkId networkId = new NetworkId("default", serverPort, Sets.newHashSet(NetworkType.CLEAR));
+        return new NetworkConfig(baseDirName, networkId, NetworkType.CLEAR, peerConfig);
     }
 
     protected NetworkConfig getNetworkConfig(int serverPort) {

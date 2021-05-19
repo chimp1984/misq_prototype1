@@ -20,7 +20,6 @@ package misq.p2p.node;
 
 import misq.p2p.Address;
 import misq.p2p.NetworkConfig;
-import misq.p2p.NetworkType;
 import misq.p2p.message.Message;
 import misq.p2p.node.protection.GuardedMessage;
 import misq.p2p.node.protection.NoRestriction;
@@ -55,8 +54,8 @@ public class Node implements MessageListener, ConnectionListener {
     private final Object isStoppedLock = new Object();
     private volatile boolean isStopped;
 
-    public Node(NetworkConfig networkConfig, Set<NetworkType> mySupportedNetworks) {
-        baseNode = new BaseNode(networkConfig, mySupportedNetworks, this);
+    public Node(NetworkConfig networkConfig) {
+        baseNode = new BaseNode(networkConfig, this);
         permissionControl = new NoRestriction();
 
         baseNode.addConnectionListener(this);

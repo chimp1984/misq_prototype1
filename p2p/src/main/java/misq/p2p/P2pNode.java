@@ -42,7 +42,6 @@ import java.security.KeyPair;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.util.Optional;
-import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 
@@ -54,18 +53,18 @@ public class P2pNode {
 
     private final NetworkConfig networkConfig;
     private final Storage storage;
-    private final Function<PublicKey, PrivateKey> keyRepository;
+    private final Function<PublicKey, PrivateKey> privateKeySupplier;
     private final PeerManager peerManager;
     private final Node node;
     private final ConfidentialMessageService confidentialMessageService;
     private final DataService dataService;
 
-    public P2pNode(NetworkConfig networkConfig, Set<NetworkType> mySupportedNetworks, Storage storage, Function<PublicKey, PrivateKey> keyRepository) {
+    public P2pNode(NetworkConfig networkConfig, Storage storage, Function<PublicKey, PrivateKey> privateKeySupplier) {
         this.networkConfig = networkConfig;
         this.storage = storage;
-        this.keyRepository = keyRepository;
+        this.privateKeySupplier = privateKeySupplier;
 
-        node = new Node(networkConfig, mySupportedNetworks);
+        node = new Node(networkConfig);
 
 
         PeerConfig peerConfig = networkConfig.getPeerConfig();
@@ -73,7 +72,7 @@ public class P2pNode {
         DefaultPeerExchangeStrategy peerExchangeStrategy = new DefaultPeerExchangeStrategy(peerGroup, peerConfig);
         peerManager = new PeerManager(node, peerGroup, peerExchangeStrategy, peerConfig);
 
-        confidentialMessageService = new ConfidentialMessageService(node, peerGroup, keyRepository);
+        confidentialMessageService = new ConfidentialMessageService(node, peerGroup, privateKeySupplier);
 
         dataService = new DataService(node, peerGroup, storage);
     }

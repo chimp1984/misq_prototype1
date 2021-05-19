@@ -28,7 +28,7 @@ public class TorNetworkProxy implements NetworkProxy {
     private final Tor tor;
 
     public TorNetworkProxy(NetworkConfig networkConfig) {
-        torDirPath = networkConfig.getNetworkId().getBaseDirPath() + separator + "tor";
+        torDirPath = networkConfig.getBaseDirPath() + separator + "tor";
         networkId = networkConfig.getNetworkId();
 
         // We get a singleton instance per application (torDirPath)

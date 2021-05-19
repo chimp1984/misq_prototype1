@@ -73,8 +73,8 @@ public class BaseNode implements RawNode.ConnectionListener, MessageListener {
     private final Object isStoppedLock = new Object();
     private volatile boolean isStopped;
 
-    BaseNode(NetworkConfig networkConfig, Set<NetworkType> mySupportedNetworks, MessageListener messageHandler) {
-        this.mySupportedNetworks = mySupportedNetworks;
+    BaseNode(NetworkConfig networkConfig, MessageListener messageHandler) {
+        this.mySupportedNetworks = networkConfig.getNetworkId().getNetworkTypes();
         this.messageHandler = messageHandler;
 
         rawNode = new RawNode(networkConfig);
