@@ -20,14 +20,12 @@ package network.misq;
 import com.runjva.sourceforge.jsocks.protocol.SocksSocket;
 import misq.common.util.OsUtils;
 import misq.torify.OnionAddress;
-import misq.torify.TorController;
+import misq.torify.Tor;
 import misq.torify.TorServerSocket;
-import misq.torify.Torify;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.net.SocketFactory;
-import java.io.File;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -35,76 +33,60 @@ import java.net.InetSocketAddress;
 import java.net.Proxy;
 import java.net.Socket;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public class TorifyDemo {
-    private static final Logger log = LoggerFactory.getLogger(TorifyDemo.class);
+public class TorDemo {
+    private static final Logger log = LoggerFactory.getLogger(TorDemo.class);
+    private static Tor tor;
 
-    public static void main(String[] args) {
-        String torDirPath = OsUtils.getUserDataDir() + "/TorifyDemo";
-        //  useBlockingAPI(torDirPath);
+    public static void main(String[] args) throws InterruptedException {
+        String torDirPath = OsUtils.getUserDataDir() + "/TorDemo";
+        //   useBlockingAPI(torDirPath);
         useNonBlockingAPI(torDirPath);
     }
 
     private static void useBlockingAPI(String torDirPath) {
         try {
-            Torify torify = new Torify(torDirPath);
-            TorController torController = torify.start();
-            TorServerSocket torServerSocket = startServer(torDirPath, torController);
+            tor = Tor.getTor(torDirPath);
+            tor.start();
+            TorServerSocket torServerSocket = startServer();
             OnionAddress onionAddress = torServerSocket.getOnionAddress().get();
-            sendViaSocketFactory(torify, onionAddress);
-            sendViaProxy(torify, onionAddress);
-            sendViaSocket(torify, onionAddress);
-            sendViaSocksSocket(torify, onionAddress);
+            sendViaSocketFactory(tor, onionAddress);
+            sendViaProxy(tor, onionAddress);
+            sendViaSocket(tor, onionAddress);
+            sendViaSocksSocket(tor, onionAddress);
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    private static void useNonBlockingAPI(String torDirPath) {
+    private static void useNonBlockingAPI(String torDirPath) throws InterruptedException {
         AtomicBoolean stopped = new AtomicBoolean(false);
+        tor = Tor.getTor(torDirPath);
+        CountDownLatch latch = new CountDownLatch(1);
+        tor.startAsync()
+                .thenCompose(result -> startServerAsync()
+                        .thenAccept(onionAddress -> {
+                            if (onionAddress == null) {
+                                return;
+                            }
 
-        Torify torify = new Torify(torDirPath);
-        torify.startAsync()
-                .exceptionally(throwable -> {
-                    log.error(throwable.toString());
-                    throwable.printStackTrace();
-                    return null;
-                })
-                .thenAccept(torController -> {
-                    if (torController == null) {
-                        return;
-                    }
+                            sendViaSocketFactory(tor, onionAddress);
+                            sendViaProxy(tor, onionAddress);
+                            sendViaSocket(tor, onionAddress);
+                            sendViaSocksSocket(tor, onionAddress);
+                            latch.countDown();
+                        }));
 
-                    startServerAsync(torDirPath, torController)
-                            .exceptionally(throwable -> {
-                                log.error(throwable.toString());
-                                throwable.printStackTrace();
-                                return null;
-                            })
-                            .thenAccept(onionAddress -> {
-                                if (onionAddress == null) {
-                                    return;
-                                }
-
-                                sendViaSocketFactory(torify, onionAddress);
-                                sendViaProxy(torify, onionAddress);
-                                sendViaSocket(torify, onionAddress);
-                                sendViaSocksSocket(torify, onionAddress);
-                                stopped.set(true);
-                            });
-                });
-
-        while (!stopped.get()) {
-        }
+        latch.await(2, TimeUnit.MINUTES);
     }
 
-    private static TorServerSocket startServer(String torDirPath,
-                                               TorController torController) throws IOException, InterruptedException {
+    private static TorServerSocket startServer() throws IOException, InterruptedException {
         try {
-            TorServerSocket torServerSocket = new TorServerSocket(torDirPath, torController);
-            File hsDir = new File(torDirPath, "hiddenservice_2");
-            torServerSocket.bind(4000, 9999, hsDir);
+            TorServerSocket torServerSocket = tor.getTorServerSocket();
+            torServerSocket.bind(4000, 9999, "hiddenservice_2");
             runServer(torServerSocket);
             return torServerSocket;
         } catch (IOException | InterruptedException e) {
@@ -112,14 +94,12 @@ public class TorifyDemo {
         }
     }
 
-    private static CompletableFuture<OnionAddress> startServerAsync(String torDirPath,
-                                                                    TorController torController) {
+    private static CompletableFuture<OnionAddress> startServerAsync() {
         CompletableFuture<OnionAddress> future = new CompletableFuture<>();
         try {
-            TorServerSocket torServerSocket = new TorServerSocket(torDirPath, torController);
-            File hsDir = new File(torDirPath, "hiddenservice_3");
+            TorServerSocket torServerSocket = tor.getTorServerSocket();
             torServerSocket
-                    .bindAsync(3000, 4444, hsDir)
+                    .bindAsync(3000, "hiddenservice_3")
                     .whenComplete((onionAddress, throwable) -> {
                         if (throwable == null) {
                             runServer(torServerSocket);
@@ -184,9 +164,9 @@ public class TorifyDemo {
     }
 
     // Outbound connection
-    private static void sendViaSocket(Torify torify, OnionAddress onionAddress) {
+    private static void sendViaSocket(Tor tor, OnionAddress onionAddress) {
         try {
-            Socket socket = torify.getSocket("test_stream_id");
+            Socket socket = tor.getSocket("test_stream_id");
             socket.connect(new InetSocketAddress(onionAddress.getHost(), onionAddress.getPort()));
             sendOnOutboundConnection(socket, "test via Socket");
         } catch (IOException e) {
@@ -194,18 +174,18 @@ public class TorifyDemo {
         }
     }
 
-    private static void sendViaSocksSocket(Torify torify, OnionAddress onionAddress) {
+    private static void sendViaSocksSocket(Tor tor, OnionAddress onionAddress) {
         try {
-            SocksSocket socket = torify.getSocksSocket(onionAddress.getHost(), onionAddress.getPort(), "test_stream_id");
+            SocksSocket socket = tor.getSocksSocket(onionAddress.getHost(), onionAddress.getPort(), "test_stream_id");
             sendOnOutboundConnection(socket, "test via SocksSocket");
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    private static void sendViaSocketFactory(Torify torify, OnionAddress onionAddress) {
+    private static void sendViaSocketFactory(Tor tor, OnionAddress onionAddress) {
         try {
-            SocketFactory socketFactory = torify.getSocketFactory("test_stream_id");
+            SocketFactory socketFactory = tor.getSocketFactory("test_stream_id");
             Socket socket = socketFactory.createSocket(onionAddress.getHost(), onionAddress.getPort());
             sendOnOutboundConnection(socket, "test via SocketFactory");
         } catch (IOException e) {
@@ -213,9 +193,9 @@ public class TorifyDemo {
         }
     }
 
-    private static void sendViaProxy(Torify torify, OnionAddress onionAddress) {
+    private static void sendViaProxy(Tor tor, OnionAddress onionAddress) {
         try {
-            Proxy proxy = torify.getProxy("test_stream_id");
+            Proxy proxy = tor.getProxy("test_stream_id");
             Socket socket = new Socket(proxy);
             socket.connect(new InetSocketAddress(onionAddress.getHost(), onionAddress.getPort()));
             sendOnOutboundConnection(socket, "test via Proxy");

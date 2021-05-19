@@ -20,43 +20,43 @@ package network.misq;
 import misq.common.util.FileUtils;
 import misq.common.util.OsUtils;
 import misq.torify.Constants;
-import misq.torify.Torify;
+import misq.torify.Tor;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
-import java.io.IOException;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.fail;
 
 public class TorifyIntegrationTest {
     private static final Logger log = LoggerFactory.getLogger(TorifyIntegrationTest.class);
 
     @Test
     public void testShutdownDuringStartup() {
-        String torDirPath = OsUtils.getUserDataDir() + "/Torify_test";
+        String torDirPath = OsUtils.getUserDataDir() + "/TorifyIntegrationTest";
         File versionFile = new File(torDirPath + "/" + Constants.VERSION);
         FileUtils.deleteDirectory(new File(torDirPath));
         assertFalse(versionFile.exists());
-        Torify torify = new Torify(torDirPath);
+        Tor tor = Tor.getTor(torDirPath);
         new Thread(() -> {
             try {
                 Thread.sleep(200);
             } catch (InterruptedException ignore) {
             }
-            torify.shutdown();
+            tor.shutdown();
 
         }).start();
         Thread mainThread = Thread.currentThread();
-        torify.startAsync()
+        tor.startAsync()
                 .exceptionally(throwable -> {
                     assertFalse(versionFile.exists());
                     mainThread.interrupt();
                     return null;
                 })
-                .thenAccept(torController -> {
-                    if (torController == null) {
+                .thenAccept(result -> {
+                    if (result == null) {
                         return;
                     }
                     fail();
@@ -65,22 +65,5 @@ public class TorifyIntegrationTest {
             Thread.sleep(2000);
         } catch (InterruptedException ignore) {
         }
-    }
-
-    @Test
-    public void testRepeatedStartAndShutdown() throws IOException, InterruptedException {
-        String torDirPath = OsUtils.getUserDataDir() + "/Torify_test";
-        File versionFile = new File(torDirPath + "/" + Constants.VERSION);
-        startAndShutdown(torDirPath, versionFile);
-        startAndShutdown(torDirPath, versionFile);
-    }
-
-    private void startAndShutdown(String torDirPath, File versionFile) throws IOException, InterruptedException {
-        FileUtils.deleteDirectory(new File(torDirPath));
-        assertFalse(versionFile.exists());
-        Torify torify = new Torify(torDirPath);
-        torify.start();
-        torify.shutdown();
-        assertTrue(versionFile.exists());
     }
 }

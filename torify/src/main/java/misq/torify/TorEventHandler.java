@@ -29,14 +29,17 @@ import java.util.concurrent.ConcurrentHashMap;
 public class TorEventHandler implements EventHandler {
     private static final Logger log = LoggerFactory.getLogger(TorEventHandler.class);
 
-    private final Map<String, Runnable> hiddenServiceReadyHandler = new ConcurrentHashMap<>();
+    private final Map<String, Runnable> hiddenServiceReadyListeners = new ConcurrentHashMap<>();
 
-    public void putHiddenServiceReadyListener(String serviceId, Runnable listener) {
-        hiddenServiceReadyHandler.put(serviceId, listener);
+    public TorEventHandler() {
+    }
+
+    public void addHiddenServiceReadyListener(String serviceId, Runnable listener) {
+        hiddenServiceReadyListeners.put(serviceId, listener);
     }
 
     public void removeHiddenServiceReadyListener(String serviceId) {
-        hiddenServiceReadyHandler.remove(serviceId);
+        hiddenServiceReadyListeners.remove(serviceId);
     }
 
     @Override
@@ -72,10 +75,10 @@ public class TorEventHandler implements EventHandler {
     @Override
     public void hiddenServiceEvent(String action, String msg) {
         log.debug("hiddenServiceEvent action: {} msg:{}", action, msg);
-        if (!hiddenServiceReadyHandler.isEmpty() && action.equals("UPLOADED")) {
-            Optional<String> optional = hiddenServiceReadyHandler.entrySet().stream()
-                    .filter(e -> msg.contains(e.getKey()))
-                    .peek(e -> e.getValue().run())
+        if (!hiddenServiceReadyListeners.isEmpty() && action.equals("UPLOADED")) {
+            Optional<String> optional = hiddenServiceReadyListeners.entrySet().stream()
+                    .filter(entry -> msg.contains(entry.getKey()))
+                    .peek(entry -> entry.getValue().run())
                     .map(Map.Entry::getKey)
                     .findAny();
             optional.ifPresent(this::removeHiddenServiceReadyListener);

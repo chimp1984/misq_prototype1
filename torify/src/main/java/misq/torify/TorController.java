@@ -41,9 +41,12 @@ public class TorController {
     private TorControlConnection torControlConnection;
     @Nullable
     private Socket controlSocket;
+    private final TorEventHandler torEventHandler = new TorEventHandler();
     private boolean isStarted;
     private volatile boolean isStopped;
     private final Object isStoppedLock = new Object();
+    private volatile boolean isTorEventHandlerSet;
+    private final Object isTorEventHandlerSetLock = new Object();
 
     TorController(File cookieFile) {
         this.cookieFile = cookieFile;
@@ -115,11 +118,6 @@ public class TorController {
         return Integer.parseInt(port);
     }
 
-    void setEventHandler(TorEventHandler eventHandler) {
-        assertState();
-        torControlConnection().setEventHandler(eventHandler);
-    }
-
     TorControlConnection.CreateHiddenServiceResult createHiddenService(int hiddenServicePort,
                                                                        int localPort) throws IOException {
         assertState();
@@ -145,5 +143,22 @@ public class TorController {
 
     private TorControlConnection torControlConnection() {
         return checkNotNull(torControlConnection);
+    }
+
+    public void addHiddenServiceReadyListener(String serviceId, Runnable listener) {
+        // We set it on demand once needed, but ensure its not overwritten in case we use multiple servers for the
+        // same tor instance.
+        synchronized (isTorEventHandlerSetLock) {
+            if (torControlConnection != null && !isTorEventHandlerSet) {
+                isTorEventHandlerSet = true;
+                torControlConnection.setEventHandler(torEventHandler);
+            }
+        }
+
+        torEventHandler.addHiddenServiceReadyListener(serviceId, listener);
+    }
+
+    public void removeHiddenServiceReadyListener(String serviceId) {
+        torEventHandler.removeHiddenServiceReadyListener(serviceId);
     }
 }

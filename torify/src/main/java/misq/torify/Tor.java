@@ -36,10 +36,10 @@ import java.net.Proxy;
 import java.net.Socket;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Executor;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.TimeUnit;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static misq.torify.Constants.LOCALHOST;
@@ -58,21 +58,37 @@ import static misq.torify.Constants.LOCALHOST;
  * <p>
  * Support for Android is not planned as long we do not target Android.
  */
-public class Torify {
-    private static final Logger log = LoggerFactory.getLogger(Torify.class);
-    public static final String TOR_SERVICE_VERSION = "0.1.0";
+public class Tor {
+    private static final Logger log = LoggerFactory.getLogger(Tor.class);
+    public static final String VERSION = "0.1.0";
+
+    // We use one tor binary for one app
+    private final static Map<String, Tor> torByApp = new ConcurrentHashMap<>();
+
+    enum State {
+        NOT_STARTED,
+        STARTING,
+        STARTED,
+        SHUTDOWN_STARTED
+    }
 
     private final TorController torController;
     private final Bootstrap bootstrap;
-
-    private volatile boolean shutdownRequested;
-    private final Object shutdownLock = new Object();
+    private final String torDirPath;
+    private final AtomicReference<State> state = new AtomicReference<>(State.NOT_STARTED);
+    private final Set<CompletableFuture<Boolean>> startupFutures = new CopyOnWriteArraySet<>();
 
     @Nullable
     private ExecutorService startupExecutor;
     private int proxyPort = -1;
 
-    public Torify(String torDirPath) {
+    public static Tor getTor(String torDirPath) {
+        torByApp.putIfAbsent(torDirPath, new Tor(torDirPath));
+        return torByApp.get(torDirPath);
+    }
+
+    private Tor(String torDirPath) {
+        this.torDirPath = torDirPath;
         bootstrap = new Bootstrap(torDirPath);
         torController = new TorController(bootstrap.getCookieFile());
 
@@ -83,13 +99,10 @@ public class Torify {
     }
 
     public void shutdown() {
-        if (shutdownRequested) {
+        if (state.get() == State.SHUTDOWN_STARTED) {
             return;
         }
-
-        synchronized (shutdownLock) {
-            shutdownRequested = true;
-        }
+        state.set(State.SHUTDOWN_STARTED);
 
         bootstrap.shutdown();
         torController.shutdown();
@@ -101,73 +114,92 @@ public class Torify {
         log.info("Shutdown Tor completed");
     }
 
-    public CompletableFuture<TorController> startAsync() {
+    public CompletableFuture<Boolean> startAsync() {
         return startAsync(getStartupExecutor());
     }
 
-    public CompletableFuture<TorController> startAsync(Executor executor) {
-        CompletableFuture<TorController> future = new CompletableFuture<>();
-        checkArgument(!shutdownRequested, "shutdown already requested");
+    public CompletableFuture<Boolean> startAsync(Executor executor) {
+        if (state.get() == State.STARTED) {
+            return CompletableFuture.completedFuture(true);
+        }
+
+        CompletableFuture<Boolean> future = new CompletableFuture<>();
+        startupFutures.add(future);
         executor.execute(() -> {
             try {
-                TorController torController = start();
-                future.complete(torController);
-            } catch (IOException | InterruptedException e) {
+                if (state.get() == State.NOT_STARTED) {
+                    start();
+                    startupFutures.forEach(f -> f.complete(true));
+                }
+            } catch (IOException | InterruptedException exception) {
                 bootstrap.deleteVersionFile();
-                future.completeExceptionally(e);
+                startupFutures.forEach(f -> f.completeExceptionally(exception));
             }
         });
         return future;
     }
 
     // Blocking start
-    public TorController start() throws IOException, InterruptedException {
-        checkArgument(!shutdownRequested, "shutdown already requested");
+    public void start() throws IOException, InterruptedException {
+        if (state.get() == State.STARTED) {
+            return;
+        }
+        checkArgument(state.get() == State.NOT_STARTED,
+                "Invalid state at startAsync. state=" + state.get());
+        state.set(State.STARTING);
         long ts = System.currentTimeMillis();
         int controlPort = bootstrap.start();
         torController.start(controlPort);
         proxyPort = torController.getProxyPort();
+        state.set(State.STARTED);
         log.info(">> Starting Tor took {} ms", System.currentTimeMillis() - ts);
-        return torController;
+    }
+
+    public TorServerSocket getTorServerSocket() throws IOException {
+        checkArgument(state.get() == State.STARTED,
+                "Invalid state at startAsync. state=" + state.get());
+        return new TorServerSocket(torDirPath, torController);
+    }
+
+    public Proxy getProxy(@Nullable String streamId) throws IOException {
+        checkArgument(state.get() == State.STARTED,
+                "Invalid state at startAsync. state=" + state.get());
+        Socks5Proxy socks5Proxy = getSocks5Proxy(streamId);
+        InetSocketAddress socketAddress = new InetSocketAddress(socks5Proxy.getInetAddress(), socks5Proxy.getPort());
+        return new Proxy(Proxy.Type.SOCKS, socketAddress);
+    }
+
+    public Socket getSocket() throws IOException {
+        return getSocket(null);
+    }
+
+    public Socket getSocket(@Nullable String streamId) throws IOException {
+        Proxy proxy = getProxy(streamId);
+        return new Socket(proxy);
+    }
+
+    public SocketFactory getSocketFactory(@Nullable String streamId) throws IOException {
+        Proxy proxy = getProxy(streamId);
+        return new TorSocketFactory(proxy);
     }
 
     public SocksSocket getSocksSocket(String remoteHost, int remotePort, @Nullable String streamId) throws IOException {
-        checkArgument(!shutdownRequested, "shutdown already requested");
         Socks5Proxy socks5Proxy = getSocks5Proxy(streamId);
         SocksSocket socksSocket = new SocksSocket(socks5Proxy, remoteHost, remotePort);
         socksSocket.setTcpNoDelay(true);
         return socksSocket;
     }
 
-    public Socket getSocket() throws IOException {
-        return new Socket(getProxy(null));
-    }
-
-    public Socket getSocket(@Nullable String streamId) throws IOException {
-        checkArgument(!shutdownRequested, "shutdown already requested");
-        return new Socket(getProxy(streamId));
-    }
-
-    public Proxy getProxy(@Nullable String streamId) throws IOException {
-        checkArgument(!shutdownRequested, "shutdown already requested");
-        Socks5Proxy socks5Proxy = getSocks5Proxy(streamId);
-        InetSocketAddress socketAddress = new InetSocketAddress(socks5Proxy.getInetAddress(), socks5Proxy.getPort());
-        return new Proxy(Proxy.Type.SOCKS, socketAddress);
-    }
-
-    public SocketFactory getSocketFactory(@Nullable String streamId) throws IOException {
-        checkArgument(!shutdownRequested, "shutdown already requested");
-        return new TorSocketFactory(getProxy(streamId));
-    }
-
     public Socks5Proxy getSocks5Proxy(@Nullable String streamId) throws IOException {
-        checkArgument(!shutdownRequested, "shutdown already requested");
+        checkArgument(state.get() == State.STARTED,
+                "Invalid state at startAsync. state=" + state.get());
         checkArgument(proxyPort > -1, "proxyPort must be defined");
         Socks5Proxy socks5Proxy = new Socks5Proxy(LOCALHOST, proxyPort);
         socks5Proxy.resolveAddrLocally(false);
         if (streamId == null) {
             return socks5Proxy;
         }
+
         try {
             MessageDigest messageDigest = MessageDigest.getInstance("SHA-256");
             byte[] digest = messageDigest.digest(streamId.getBytes());

@@ -106,7 +106,7 @@ class Bootstrap {
     }
 
     private boolean isUpToDate() throws IOException {
-        return versionFile.exists() && Torify.TOR_SERVICE_VERSION.equals(FileUtils.readFromFile(versionFile));
+        return versionFile.exists() && Tor.VERSION.equals(FileUtils.readFromFile(versionFile));
     }
 
     private void installFiles() throws IOException {
@@ -125,7 +125,7 @@ class Bootstrap {
             log.info("Tor files installed to {}", torDirPath);
             // Only if we have successfully extracted all files we write our version file which is used to
             // check if we need to call installFiles.
-            FileUtils.writeToFile(Torify.TOR_SERVICE_VERSION, versionFile);
+            FileUtils.writeToFile(Tor.VERSION, versionFile);
         } catch (Throwable e) {
             deleteVersionFile();
             throw e;
