@@ -43,7 +43,7 @@ public class ClearNetIntegrationTest extends BaseTest {
 
     @Override
     protected Address getPeerAddress(Config.Role role) {
-        return Address.localHost(getNetworkConfig(role).getNetworkId().getServerPort());
+        return Address.localHost(getNetworkConfig(role).getNodeId().getServerPort());
     }
 
     //   @Test

@@ -103,6 +103,7 @@ public abstract class RawConnection {
                     log.debug("Received message: {} at connection: {}", misqMessage, this);
                     messageListeners.forEach(listener -> listener.onMessage(misqMessage.getPayload()));
                 } catch (Exception exception) {
+                    //todo StreamCorruptedException from i2p at shutdown. prob it send some text data at shut down
                     close();
                     errorHandler.accept(exception);
                 }

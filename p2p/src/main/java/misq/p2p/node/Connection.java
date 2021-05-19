@@ -20,6 +20,7 @@ package misq.p2p.node;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import misq.p2p.Address;
+import misq.p2p.NetworkType;
 import misq.p2p.node.capability.Capability;
 import misq.p2p.node.connection.RawConnection;
 
@@ -27,12 +28,18 @@ import misq.p2p.node.connection.RawConnection;
 public class Connection {
     private final RawConnection rawConnection;
     @Getter
+    private final NetworkType networkType;
+    @Getter
+    private final String nodeId;
+    @Getter
     private final Capability capability;
     @Getter
     private final String id;
 
-    public Connection(RawConnection rawConnection, Capability capability) {
+    public Connection(RawConnection rawConnection, NetworkType networkType, String nodeId, Capability capability) {
         this.rawConnection = rawConnection;
+        this.networkType = networkType;
+        this.nodeId = nodeId;
         this.capability = capability;
 
         id = rawConnection.getId();
@@ -51,6 +58,8 @@ public class Connection {
         return "Connection{" +
                 "\n     id='" + id + '\'' +
                 ",\n     peerAddress=" + getPeerAddress() +
+                ",\n     networkType=" + networkType +
+                ",\n     nodeId=" + nodeId +
                 ",\n     capability=" + capability +
                 "\n}";
     }

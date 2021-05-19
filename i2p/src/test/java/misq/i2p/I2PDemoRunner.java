@@ -47,7 +47,7 @@ public class I2PDemoRunner {
     public I2PDemoRunner() throws IOException {
         String dirPath = OsUtils.getUserDataDir() + "/I2PDemoRunner";
         FileUtils.makeDirs(new File(dirPath));
-        samClient = new SamClient(dirPath);
+        samClient = SamClient.getSamClient(dirPath);
         String sessionIdAlice = "alice";
         String sessionIdBob = "bob";
         String sessionIdCarol = "carol";

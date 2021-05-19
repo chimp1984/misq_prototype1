@@ -37,7 +37,7 @@ import static org.junit.Assert.fail;
 public class I2pIntegrationTest extends BaseTest {
     @Override
     protected int getTimeout() {
-        return 120;
+        return 320;
     }
 
     @Override
@@ -68,7 +68,7 @@ public class I2pIntegrationTest extends BaseTest {
                 p2pNode = this.carol;
                 break;
         }
-        Optional<Address> optionalAddress = p2pNode.getAddress();
+        Optional<Address> optionalAddress = p2pNode.findMyAddress();
         if (optionalAddress.isPresent()) {
             return optionalAddress.get();
         } else {

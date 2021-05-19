@@ -36,6 +36,7 @@ import java.net.Proxy;
 import java.net.Socket;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.*;
@@ -63,7 +64,7 @@ public class Tor {
     public static final String VERSION = "0.1.0";
 
     // We use one tor binary for one app
-    private final static Map<String, Tor> torByApp = new ConcurrentHashMap<>();
+    private final static Map<String, Tor> TOR_BY_APP = new HashMap<>();
 
     enum State {
         NOT_STARTED,
@@ -83,8 +84,16 @@ public class Tor {
     private int proxyPort = -1;
 
     public static Tor getTor(String torDirPath) {
-        torByApp.putIfAbsent(torDirPath, new Tor(torDirPath));
-        return torByApp.get(torDirPath);
+        Tor tor;
+        synchronized (TOR_BY_APP) {
+            if (TOR_BY_APP.containsKey(torDirPath)) {
+                tor = TOR_BY_APP.get(torDirPath);
+            } else {
+                tor = new Tor(torDirPath);
+                TOR_BY_APP.put(torDirPath, tor);
+            }
+        }
+        return tor;
     }
 
     private Tor(String torDirPath) {

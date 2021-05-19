@@ -355,9 +355,9 @@ public class PeerExchangeIntegrationTest {
         Node node = new Node(networkConfig);
 
         PeerConfig peerConfig = networkConfig.getPeerConfig();
-        PeerGroup peerGroup = new PeerGroup(node, peerConfig, networkConfig.getNetworkId().getServerPort());
+        PeerGroup peerGroup = new PeerGroup(node, peerConfig, networkConfig.getNodeId().getServerPort());
         DefaultPeerExchangeStrategy peerExchangeStrategy = new DefaultPeerExchangeStrategy(peerGroup, peerConfig);
-        return node.initializeServer(networkConfig.getNetworkId().getId(), networkConfig.getNetworkId().getServerPort())
+        return node.initializeServer(networkConfig.getNodeId().getId(), networkConfig.getNodeId().getServerPort())
                 .thenApply(e -> new Tuple2<>(new PeerExchangeManager(node, peerExchangeStrategy), peerGroup));
     }
 
@@ -401,8 +401,8 @@ public class PeerExchangeIntegrationTest {
                 maxNumConnectedPeers,
                 minNumReportedPeers);
 
-        NetworkId networkId = new NetworkId("default", serverPort, Sets.newHashSet(NetworkType.CLEAR));
-        return new NetworkConfig(baseDirName, networkId, NetworkType.CLEAR, peerConfig);
+        NodeId nodeId = new NodeId("default", serverPort, Sets.newHashSet(NetworkType.CLEAR));
+        return new NetworkConfig(baseDirName, nodeId, NetworkType.CLEAR, peerConfig);
     }
 
     protected NetworkConfig getNetworkConfig(int serverPort) {

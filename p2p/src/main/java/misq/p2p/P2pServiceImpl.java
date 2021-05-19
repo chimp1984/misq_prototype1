@@ -34,16 +34,14 @@ import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.security.PrivateKey;
 import java.security.PublicKey;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * High level API for the p2p network.
@@ -79,10 +77,8 @@ public class P2pServiceImpl implements P2pService {
                         if (serverInfo != null) {
                             resultHandler.accept(serverInfo, null);
                             int compl = completed.incrementAndGet();
-                            if (compl == numNodes) {
-                                future.complete(true);
-                            } else if (compl + failed.get() == numNodes) {
-                                future.complete(false);
+                            if (compl + failed.get() == numNodes) {
+                                future.complete(compl == numNodes);
                             }
                         } else {
                             log.error(throwable.toString(), throwable);
@@ -118,35 +114,40 @@ public class P2pServiceImpl implements P2pService {
 
 
     @Override
-    public CompletableFuture<Connection> confidentialSend(Message message, Address peerAddress,
-                                                          PublicKey peersPublicKey, KeyPair myKeyPair)
-            throws GeneralSecurityException {
+    public CompletableFuture<Connection> confidentialSend(Message message, Set<Address> peerAddresses,
+                                                          PublicKey peersPublicKey, KeyPair myKeyPair) {
         CompletableFuture<Connection> future = new CompletableFuture<>();
-        NetworkType networkType = peerAddress.getNetworkType();
-        if (p2pNodes.containsKey(networkType)) {
-            p2pNodes.get(networkType)
-                    .confidentialSend(message, peerAddress, peersPublicKey, myKeyPair)
-                    .whenComplete((connection, throwable) -> {
-                        if (connection != null) {
-                            future.complete(connection);
-                        } else {
-                            log.error(throwable.toString(), throwable);
-                            future.completeExceptionally(throwable);
-                        }
+        peerAddresses.forEach(peerAddress -> {
+            try {
+                NetworkType networkType = peerAddress.getNetworkType();
+                if (p2pNodes.containsKey(networkType)) {
+                    p2pNodes.get(networkType)
+                            .confidentialSend(message, peerAddress, peersPublicKey, myKeyPair)
+                            .whenComplete((connection, throwable) -> {
+                                if (connection != null) {
+                                    future.complete(connection);
+                                } else {
+                                    log.error(throwable.toString(), throwable);
+                                    future.completeExceptionally(throwable);
+                                }
+                            });
+                } else {
+                    p2pNodes.values().forEach(p2pNode -> {
+                        p2pNode.relay(message, peerAddress)
+                                .whenComplete((connection, throwable) -> {
+                                    if (connection != null) {
+                                        future.complete(connection);
+                                    } else {
+                                        log.error(throwable.toString(), throwable);
+                                        future.completeExceptionally(throwable);
+                                    }
+                                });
                     });
-        } else {
-            p2pNodes.values().forEach(p2pNode -> {
-                p2pNode.relay(message, peerAddress)
-                        .whenComplete((connection, throwable) -> {
-                            if (connection != null) {
-                                future.complete(connection);
-                            } else {
-                                log.error(throwable.toString(), throwable);
-                                future.completeExceptionally(throwable);
-                            }
-                        });
-            });
-        }
+                }
+            } catch (GeneralSecurityException e) {
+                e.printStackTrace();
+            }
+        });
         return future;
     }
 
@@ -215,7 +216,13 @@ public class P2pServiceImpl implements P2pService {
     }
 
     @Override
-    public Optional<Address> getAddress(NetworkType networkType) {
-        return p2pNodes.get(networkType).getAddress();
+    public Optional<Address> findMyAddress(NetworkType networkType) {
+        return p2pNodes.get(networkType).findMyAddress();
+    }
+
+    public Set<Address> findMyAddresses() {
+        return p2pNodes.values().stream()
+                .flatMap(p2pNode -> p2pNode.findMyAddress().stream())
+                .collect(Collectors.toSet());
     }
 }

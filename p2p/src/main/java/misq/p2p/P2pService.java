@@ -17,6 +17,7 @@
 
 package misq.p2p;
 
+import com.google.common.collect.Sets;
 import misq.p2p.data.filter.DataFilter;
 import misq.p2p.data.inventory.RequestInventoryResult;
 import misq.p2p.message.Message;
@@ -29,6 +30,7 @@ import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.security.PublicKey;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -39,16 +41,16 @@ public interface P2pService {
     CompletableFuture<Boolean> bootstrap();
 
     //todo just temp until api is more stable
-    default CompletableFuture<Connection> confidentialSend(Message message, Address peerAddress) {
+    default CompletableFuture<Connection> confidentialSend(Message message, Address peerAddresses) {
         CompletableFuture<Connection> connectionCompletableFuture = null;
         try {
-            connectionCompletableFuture = confidentialSend(message, peerAddress, null, null);
+            connectionCompletableFuture = confidentialSend(message, Sets.newHashSet(peerAddresses), null, null);
         } catch (GeneralSecurityException ignore) {
         }
         return connectionCompletableFuture;
     }
 
-    CompletableFuture<Connection> confidentialSend(Message message, Address peerAddress,
+    CompletableFuture<Connection> confidentialSend(Message message, Set<Address> peerAddresses,
                                                    PublicKey peersPublicKey, KeyPair myKeyPair) throws GeneralSecurityException;
 
     void requestAddData(Message message,
@@ -66,6 +68,6 @@ public interface P2pService {
 
     void shutdown();
 
-    Optional<Address> getAddress(NetworkType networkType);
+    Optional<Address> findMyAddress(NetworkType networkType);
 
 }

@@ -68,7 +68,7 @@ public class P2pNode {
 
 
         PeerConfig peerConfig = networkConfig.getPeerConfig();
-        PeerGroup peerGroup = new PeerGroup(node, peerConfig, networkConfig.getNetworkId().getServerPort());
+        PeerGroup peerGroup = new PeerGroup(node, peerConfig, networkConfig.getNodeId().getServerPort());
         DefaultPeerExchangeStrategy peerExchangeStrategy = new DefaultPeerExchangeStrategy(peerGroup, peerConfig);
         peerManager = new PeerManager(node, peerGroup, peerExchangeStrategy, peerConfig);
 
@@ -83,11 +83,11 @@ public class P2pNode {
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     public CompletableFuture<GetServerSocketResult> initializeServer() {
-        return node.initializeServer(networkConfig.getNetworkId().getId(), networkConfig.getNetworkId().getServerPort());
+        return node.initializeServer(networkConfig.getNodeId().getId(), networkConfig.getNodeId().getServerPort());
     }
 
     public CompletableFuture<Boolean> bootstrap() {
-        return peerManager.bootstrap(networkConfig.getNetworkId().getId(), networkConfig.getNetworkId().getServerPort());
+        return peerManager.bootstrap(networkConfig.getNodeId().getId(), networkConfig.getNodeId().getServerPort());
     }
 
     public CompletableFuture<Connection> confidentialSend(Message message, Address peerAddress,
@@ -128,7 +128,7 @@ public class P2pNode {
         storage.shutdown();
     }
 
-    public Optional<Address> getAddress() {
+    public Optional<Address> findMyAddress() {
         return node.findMyAddress();
     }
 

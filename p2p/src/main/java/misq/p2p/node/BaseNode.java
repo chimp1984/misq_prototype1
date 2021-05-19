@@ -58,6 +58,8 @@ public class BaseNode implements RawNode.ConnectionListener, MessageListener {
     private final RawNode rawNode;
     private final MessageListener messageHandler;
     private final Set<NetworkType> mySupportedNetworks;
+    private final NetworkType networkType;
+    private final String nodeId;
 
     // ConnectionUid is key in following maps
     private final Map<String, CapabilityResponseHandler> responseHandlerMap = new ConcurrentHashMap<>();
@@ -71,10 +73,13 @@ public class BaseNode implements RawNode.ConnectionListener, MessageListener {
     private final Set<ConnectionListener> connectionListeners = new CopyOnWriteArraySet<>();
 
     private final Object isStoppedLock = new Object();
+
     private volatile boolean isStopped;
 
     BaseNode(NetworkConfig networkConfig, MessageListener messageHandler) {
-        this.mySupportedNetworks = networkConfig.getNetworkId().getNetworkTypes();
+        this.mySupportedNetworks = networkConfig.getNodeId().getNetworkTypes();
+        this.networkType = networkConfig.getNetworkType();
+        this.nodeId = networkConfig.getNodeId().getId();
         this.messageHandler = messageHandler;
 
         rawNode = new RawNode(networkConfig);
@@ -230,7 +235,7 @@ public class BaseNode implements RawNode.ConnectionListener, MessageListener {
                 .thenCompose(capability -> {
                     log.info("onOutboundConnection: peerAddress: {}, myAddress={}, rawConnection: {}", peerAddress, getMyAddress(), rawConnection);
                     requestHandlerMap.remove(rawConnection.getId());
-                    Connection connection = new Connection(rawConnection, capability);
+                    Connection connection = new Connection(rawConnection, networkType, nodeId, capability);
                     onConnection(connection);
                     return CompletableFuture.completedFuture(connection);
                 });
@@ -250,7 +255,7 @@ public class BaseNode implements RawNode.ConnectionListener, MessageListener {
                         log.debug("setupResponseHandler: peerAddress: {}, myAddress={}, rawConnection: {}",
                                 capability.getAddress(), myAddress, rawConnection);
                         responseHandlerMap.remove(id);
-                        Connection connection = new Connection(rawConnection, capability);
+                        Connection connection = new Connection(rawConnection, networkType, nodeId, capability);
                         onConnection(connection);
                     }
                 });

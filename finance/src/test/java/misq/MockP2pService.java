@@ -58,7 +58,7 @@ public class MockP2pService implements P2pService {
     }
 
     @Override
-    public CompletableFuture<Connection> confidentialSend(Message message, Address peerAddress, PublicKey peersPublicKey, KeyPair myKeyPair) {
+    public CompletableFuture<Connection> confidentialSend(Message message, Set<Address> peerAddresses, PublicKey peersPublicKey, KeyPair myKeyPair) {
         CompletableFuture<Connection> future = new CompletableFuture<>();
         new Thread(() -> {
             try {
@@ -106,7 +106,7 @@ public class MockP2pService implements P2pService {
     }
 
     @Override
-    public Optional<Address> getAddress(NetworkType networkType) {
+    public Optional<Address> findMyAddress(NetworkType networkType) {
         return Optional.empty();
     }
 }

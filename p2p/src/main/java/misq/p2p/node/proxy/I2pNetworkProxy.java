@@ -2,6 +2,7 @@ package misq.p2p.node.proxy;
 
 import lombok.extern.slf4j.Slf4j;
 import misq.common.util.SystemUtils;
+import misq.common.util.ThreadingUtils;
 import misq.i2p.SamClient;
 import misq.p2p.Address;
 import misq.p2p.NetworkConfig;
@@ -12,17 +13,18 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
 
 import static java.io.File.separator;
 
 // Start I2P
 // Enable SAM at http://127.0.0.1:7657/configclients
-// Takes about 1 minute until its ready
+// Takes about 1-2 minutes until its ready
 @Slf4j
 public class I2pNetworkProxy implements NetworkProxy {
     private final String i2pDirPath;
-    // We only use one SamClient (for tests we would create multiple instances of nodes, but we still want 1 client)
-    private static SamClient samClient;
+    private SamClient samClient;
+    private final ExecutorService getServerSocketExecutor = ThreadingUtils.getSingleThreadExecutor("I2pNetworkProxy.ServerSocket");
 
     public I2pNetworkProxy(NetworkConfig networkConfig) {
         i2pDirPath = networkConfig.getBaseDirPath() + separator + "i2p";
@@ -31,13 +33,10 @@ public class I2pNetworkProxy implements NetworkProxy {
     public CompletableFuture<Boolean> initialize() {
         log.debug("Initialize");
         try {
-            if (samClient == null) {
-                samClient = new SamClient(i2pDirPath);
-            }
+            samClient = SamClient.getSamClient(i2pDirPath);
             return CompletableFuture.completedFuture(true);
         } catch (Exception exception) {
             log.error(exception.toString(), exception);
-            shutdown();
             return CompletableFuture.failedFuture(exception);
         }
     }
@@ -46,7 +45,7 @@ public class I2pNetworkProxy implements NetworkProxy {
     public CompletableFuture<GetServerSocketResult> getServerSocket(String serverId, int serverPort) {
         CompletableFuture<GetServerSocketResult> future = new CompletableFuture<>();
         log.debug("Create serverSocket");
-        new Thread(() -> {
+        getServerSocketExecutor.execute(() -> {
             try {
                 ServerSocket serverSocket = samClient.getServerSocket(serverId, SystemUtils.findFreeSystemPort());
                 String destination = samClient.getMyDestination(serverId);
@@ -56,10 +55,9 @@ public class I2pNetworkProxy implements NetworkProxy {
                 future.complete(new GetServerSocketResult(serverId, serverSocket, address));
             } catch (Exception exception) {
                 log.error(exception.toString(), exception);
-                shutdown();
                 future.completeExceptionally(exception);
             }
-        }).start();
+        });
         return future;
     }
 
@@ -73,7 +71,6 @@ public class I2pNetworkProxy implements NetworkProxy {
             return socket;
         } catch (IOException exception) {
             log.error(exception.toString(), exception);
-            shutdown();
             throw exception;
         }
     }

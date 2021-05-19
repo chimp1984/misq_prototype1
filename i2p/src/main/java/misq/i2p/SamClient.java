@@ -22,12 +22,17 @@ import misq.common.util.FileUtils;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.ConnectException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
+
+import static com.google.common.base.Preconditions.checkNotNull;
 
 // SAM documentation: https://geti2p.net/en/docs/api/samv3
 @Slf4j
@@ -35,6 +40,7 @@ public class SamClient {
     public final static String DEFAULT_HOST = "127.0.0.1";
     public final static int DEFAULT_PORT = 7656;
     public final static long DEFAULT_SOCKET_TIMEOUT = TimeUnit.MINUTES.toMillis(3);
+    private final static Map<String, SamClient> SAM_CLIENT_BY_APP = new HashMap<>();
 
     private final String host;
     private final int port;
@@ -43,16 +49,31 @@ public class SamClient {
     private final Set<String> activeSessions = new HashSet<>();
     private final Set<SamConnection> openSamConnections = new HashSet<>();
 
-    public SamClient(String dirPath) {
-        this(DEFAULT_HOST, DEFAULT_PORT, DEFAULT_SOCKET_TIMEOUT, dirPath);
+    public static SamClient getSamClient(String dirPath) {
+        return getSamClient(dirPath, DEFAULT_HOST, DEFAULT_PORT, DEFAULT_SOCKET_TIMEOUT);
     }
 
-    public SamClient(String host, int port, long socketTimeout, String dirPath) {
+    // We use one sam client per app
+    public static SamClient getSamClient(String dirPath, String host, int port, long socketTimeout) {
+        SamClient samClient;
+        synchronized (SAM_CLIENT_BY_APP) {
+            if (SAM_CLIENT_BY_APP.containsKey(dirPath)) {
+                samClient = SAM_CLIENT_BY_APP.get(dirPath);
+            } else {
+                samClient = new SamClient(dirPath, host, port, socketTimeout);
+                SAM_CLIENT_BY_APP.put(dirPath, samClient);
+            }
+        }
+        return samClient;
+    }
+
+    private SamClient(String dirPath, String host, int port, long socketTimeout) {
         this.host = host;
         this.port = port;
         this.socketTimeout = socketTimeout;
         this.dirPath = dirPath;
-
+        log.info("Sam client created with dirPath={}; host={}; port={}; socketTimeout={}",
+                dirPath, host, port, socketTimeout);
         Runtime.getRuntime().addShutdownHook(new Thread(this::shutDown));
     }
 
@@ -66,7 +87,7 @@ public class SamClient {
         SamConnection samConnection = null;
         try {
             long ts = System.currentTimeMillis();
-            log.info("Start connect handshake for {}", sessionId);
+            log.debug("Start connect handshake for {}", sessionId);
 
             maybeCreateSession(sessionId);
             samConnection = startSamControlConnection();
@@ -191,7 +212,20 @@ public class SamClient {
         }
         long ts = System.currentTimeMillis();
         log.info("Start creating session for {}", sessionId);
-        SamConnection samConnection = startSamControlConnection();
+        SamConnection samConnection;
+        try {
+            samConnection = startSamControlConnection();
+        } catch (ConnectException connectException) {
+            log.warn("Could not connect to I2P. This might be expected at startup if I2P is not ready yet. " +
+                    "We will try again after a delay. connectException={}", connectException.toString());
+            try {
+                Thread.sleep(10_000);
+            } catch (InterruptedException ignore) {
+            }
+            maybeCreateSession(sessionId);
+            return;
+        }
+        checkNotNull(samConnection);
         String privateKeyBase64 = loadOrRequestPrivateKey(samConnection, sessionId);
 
         String request = String.format("SESSION CREATE STYLE=STREAM ID=%s DESTINATION=%s", sessionId, privateKeyBase64);

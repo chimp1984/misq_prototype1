@@ -132,8 +132,9 @@ public class TorController {
     }
 
     void destroyHiddenService(String serviceId) throws IOException {
-        assertState();
-        torControlConnection().destroyHiddenService(serviceId);
+        if (!isStopped) {
+            torControlConnection().destroyHiddenService(serviceId);
+        }
     }
 
     private void assertState() {

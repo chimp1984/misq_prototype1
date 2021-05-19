@@ -45,6 +45,7 @@ public class ClearNetNetworkProxy implements NetworkProxy {
             log.debug("ServerSocket created");
             future.complete(new GetServerSocketResult(serverId, serverSocket, address));
         } catch (IOException e) {
+            log.error(e.toString(), e);
             future.completeExceptionally(e);
         }
         return future;

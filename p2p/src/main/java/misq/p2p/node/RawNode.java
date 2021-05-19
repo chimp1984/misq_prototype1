@@ -99,16 +99,15 @@ public class RawNode {
      */
     CompletableFuture<GetServerSocketResult> createServerAndListen(String serverId, int serverPort) {
         return networkProxy.getServerSocket(serverId, serverPort)
-                .whenComplete((serverInfo, throwable) -> {
-                    if (serverInfo != null) {
-                        Server server = new Server(serverInfo,
-                                socket -> onClientSocket(socket, serverInfo),
-                                exception -> {
-                                    serverMap.remove(serverId);
-                                    handleException(exception);
-                                });
-                        serverMap.put(serverId, server);
-                    }
+                .thenCompose(result -> {
+                    Server server = new Server(result,
+                            socket -> onClientSocket(socket, result),
+                            exception -> {
+                                serverMap.remove(serverId);
+                                handleException(exception);
+                            });
+                    serverMap.put(serverId, server);
+                    return CompletableFuture.completedFuture(result);
                 });
     }
 
@@ -270,7 +269,7 @@ public class RawNode {
             return;
         }
         if (exception instanceof EOFException) {
-           // log.debug(exception.toString(), exception);
+            // log.debug(exception.toString(), exception);
         } else if (exception instanceof SocketException) {
             // log.debug(exception.toString(), exception);
         } else {

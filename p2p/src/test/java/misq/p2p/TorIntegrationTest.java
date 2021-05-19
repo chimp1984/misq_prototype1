@@ -71,7 +71,7 @@ public class TorIntegrationTest extends BaseTest {
                 serverPort = 3333;
                 break;
         }
-        Optional<Address> optionalAddress = p2pNode.getAddress();
+        Optional<Address> optionalAddress = p2pNode.findMyAddress();
         if (optionalAddress.isPresent()) {
             return optionalAddress.get();
         } else {

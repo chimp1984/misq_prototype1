@@ -26,22 +26,22 @@ public class NetworkConfig {
     private final NetworkType networkType;
     private final PeerConfig peerConfig;
     private final String baseDirPath;
-    private final NetworkId networkId;
+    private final NodeId nodeId;
 
-    public NetworkConfig(String baseDirPath, NetworkId networkId, NetworkType networkType) {
+    public NetworkConfig(String baseDirPath, NodeId nodeId, NetworkType networkType) {
         this(baseDirPath,
-                networkId,
+                nodeId,
                 networkType,
                 new PeerConfig(new PeerExchangeConfig(), new SeedNodeRepository().getNodes(networkType)));
 
     }
 
     public NetworkConfig(String baseDirPath,
-                         NetworkId networkId,
+                         NodeId nodeId,
                          NetworkType networkType,
                          PeerConfig peerConfig) {
         this.baseDirPath = baseDirPath;
-        this.networkId = networkId;
+        this.nodeId = nodeId;
         this.networkType = networkType;
         this.peerConfig = peerConfig;
     }

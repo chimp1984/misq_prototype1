@@ -82,33 +82,23 @@ public abstract class Config {
     };
 
     static NetworkConfig getI2pNetworkConfig(Role role) {
+        return getI2pNetworkConfig(role, "default");
+    }
+
+    static NetworkConfig getI2pNetworkConfig(Role role, String id) {
         String baseDirName = OsUtils.getUserDataDir().getAbsolutePath() + "/misq_test_" + role.name();
-        NetworkId networkId = new NetworkId("i2p" + role.name(), -1, Sets.newHashSet(NetworkType.I2P));
-        return new NetworkConfig(baseDirName, networkId, NetworkType.I2P);
+        NodeId nodeId = new NodeId(id, -1, Sets.newHashSet(NetworkType.I2P));
+        return new NetworkConfig(baseDirName, nodeId, NetworkType.I2P);
     }
 
     static NetworkConfig getTorNetworkConfig(Role role) {
-        return getTorNetworkConfig(role, "default");
+        return getTorNetworkConfig(role, "default", 9999);
     }
 
-    static NetworkConfig getTorNetworkConfig(Role role, String id) {
-        int serverPort;
-        switch (role) {
-            case Alice:
-                serverPort = 1111;
-                break;
-            case Bob:
-                serverPort = 2222;
-                break;
-            case Carol:
-            default:
-                serverPort = 3333;
-                break;
-        }
-
+    static NetworkConfig getTorNetworkConfig(Role role, String id, int serverPort) {
         String baseDirName = OsUtils.getUserDataDir().getAbsolutePath() + "/misq_test_" + role.name();
-        NetworkId networkId = new NetworkId(id, serverPort, Sets.newHashSet(NetworkType.TOR));
-        return new NetworkConfig(baseDirName, networkId, NetworkType.TOR);
+        NodeId nodeId = new NodeId(id, serverPort, Sets.newHashSet(NetworkType.TOR));
+        return new NetworkConfig(baseDirName, nodeId, NetworkType.TOR);
     }
 
     static NetworkConfig getClearNetNetworkConfig(Role role) {
@@ -125,9 +115,12 @@ public abstract class Config {
                 serverPort = 3333;
                 break;
         }
+        return getClearNetNetworkConfig(role, "default", serverPort);
+    }
 
+    static NetworkConfig getClearNetNetworkConfig(Role role, String id, int serverPort) {
         String baseDirName = OsUtils.getUserDataDir().getAbsolutePath() + "/misq_test_" + role.name();
-        NetworkId networkId = new NetworkId("clear" + role.name(), serverPort, Sets.newHashSet(NetworkType.CLEAR));
-        return new NetworkConfig(baseDirName, networkId, NetworkType.CLEAR);
+        NodeId nodeId = new NodeId(id, serverPort, Sets.newHashSet(NetworkType.CLEAR));
+        return new NetworkConfig(baseDirName, nodeId, NetworkType.CLEAR);
     }
 }

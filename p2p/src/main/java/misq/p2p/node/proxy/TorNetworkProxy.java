@@ -4,7 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import misq.common.util.FileUtils;
 import misq.p2p.Address;
 import misq.p2p.NetworkConfig;
-import misq.p2p.NetworkId;
+import misq.p2p.NodeId;
 import misq.torify.Constants;
 import misq.torify.Tor;
 import misq.torify.TorServerSocket;
@@ -24,12 +24,12 @@ public class TorNetworkProxy implements NetworkProxy {
     public final static int DEFAULT_PORT = 9999;
 
     private final String torDirPath;
-    private final NetworkId networkId;
+    private final NodeId nodeId;
     private final Tor tor;
 
     public TorNetworkProxy(NetworkConfig networkConfig) {
         torDirPath = networkConfig.getBaseDirPath() + separator + "tor";
-        networkId = networkConfig.getNetworkId();
+        nodeId = networkConfig.getNodeId();
 
         // We get a singleton instance per application (torDirPath)
         tor = Tor.getTor(torDirPath);
@@ -52,12 +52,13 @@ public class TorNetworkProxy implements NetworkProxy {
         long ts = System.currentTimeMillis();
         try {
             TorServerSocket torServerSocket = tor.getTorServerSocket();
-            return torServerSocket.bindAsync(networkId.getServerPort(), networkId.getId())
+            return torServerSocket.bindAsync(nodeId.getServerPort(), nodeId.getId())
                     .thenApply(onionAddress -> {
                         log.info("Tor hidden service Ready. Took {} ms. Onion address={}", System.currentTimeMillis() - ts, onionAddress);
-                        return new GetServerSocketResult(networkId.getId(), torServerSocket, new Address(onionAddress.getHost(), onionAddress.getPort()));
+                        return new GetServerSocketResult(nodeId.getId(), torServerSocket, new Address(onionAddress.getHost(), onionAddress.getPort()));
                     });
         } catch (IOException e) {
+            log.error(e.toString(), e);
             return CompletableFuture.failedFuture(e);
         }
     }

@@ -22,12 +22,12 @@ import lombok.Getter;
 import java.util.Set;
 
 @Getter
-public class NetworkId {
+public class NodeId {
     private final String id;
     private final int serverPort;
     private final Set<NetworkType> networkTypes;
 
-    public NetworkId(String id, int serverPort, Set<NetworkType> networkTypes) {
+    public NodeId(String id, int serverPort, Set<NetworkType> networkTypes) {
         this.id = id;
         this.serverPort = serverPort;
         this.networkTypes = networkTypes;
