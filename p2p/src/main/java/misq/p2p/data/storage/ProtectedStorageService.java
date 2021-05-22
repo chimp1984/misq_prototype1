@@ -21,6 +21,8 @@ import lombok.extern.slf4j.Slf4j;
 import misq.common.persistence.Persistence;
 import misq.common.security.DigestUtil;
 import misq.p2p.Proto;
+import misq.p2p.data.filter.ProtectedDataFilter;
+import misq.p2p.data.inventory.Inventory;
 
 import java.io.File;
 import java.io.Serializable;
@@ -199,6 +201,15 @@ public class ProtectedStorageService {
         listeners.forEach(listener -> listener.onRefreshed(dataFromMap));
         persist();
         return new RefreshProtectedDataRequest.Result(true);
+    }
+
+    public Inventory getInventory(ProtectedDataFilter dataFilter) {
+        dataFilter.process(map);
+        Set<MapValue> collect = map.entrySet().stream()
+                .filter(e -> dataFilter.matches(e.getKey(), e.getValue()))
+                .map(Map.Entry::getValue)
+                .collect(Collectors.toSet());
+        return new Inventory(collect);
     }
 
     private void persist() {

@@ -24,6 +24,8 @@ import misq.common.security.Sealed;
 import misq.common.security.SignatureUtil;
 import misq.common.util.FileUtils;
 import misq.p2p.NetworkData;
+import misq.p2p.data.filter.ProtectedDataFilter;
+import misq.p2p.data.inventory.Inventory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -159,6 +161,9 @@ public class Storage {
         return new RemoveMailboxDataRequest(fileName, hash, receiverKeyPair.getPublic(), newSequenceNumber, signature);
     }
 
+    public Inventory getInventory(ProtectedDataFilter dataFilter) {
+        return getService(dataFilter.getDataType()).getInventory(dataFilter);
+    }
 
 /*
     public MapValue put(MapKey mapKey, MapValue mapValue) {
@@ -173,12 +178,7 @@ public class Storage {
         return map.get(mapKey);
     }
 
-    public Inventory getInventory(DataFilter dataFilter) {
-        return new Inventory(map.entrySet().stream()
-                .filter(e -> dataFilter.matches(e.getKey()))
-                .map(Map.Entry::getValue)
-                .collect(Collectors.toSet()));
-    }
+
 
     public Collection<MapValue> getAll() {
         return map.values();

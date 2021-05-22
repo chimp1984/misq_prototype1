@@ -162,7 +162,7 @@ public class DataService implements MessageListener, ConnectionListener {
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    private CompletableFuture<RequestInventoryResult> requestInventory(DataFilter dataFilter, Address address) {
+    CompletableFuture<RequestInventoryResult> requestInventory(DataFilter dataFilter, Address address) {
         long ts = System.currentTimeMillis();
         CompletableFuture<RequestInventoryResult> future = new CompletableFuture<>();
         future.orTimeout(BROADCAST_TIMEOUT, TimeUnit.SECONDS);
@@ -184,7 +184,8 @@ public class DataService implements MessageListener, ConnectionListener {
 
 
     private void addResponseHandler(Connection connection) {
-      /*  InventoryResponseHandler responseHandler = new InventoryResponseHandler(connection,
+      /*  InventoryResponseHandler responseHandler = new InventoryResponseHandler(node,
+                connection,
                 storage::getInventory,
                 () -> responseHandlerMap.remove(connection.getId()));
         responseHandlerMap.put(connection.getId(), responseHandler);*/

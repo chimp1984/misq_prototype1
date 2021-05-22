@@ -19,9 +19,10 @@ package misq.p2p.data.filter;
 
 
 import misq.p2p.data.storage.MapKey;
+import misq.p2p.data.storage.MapValue;
 
 public class BloomFilter implements DataFilter {
-    public boolean matches(MapKey mapKey) {
+    public boolean matches(MapKey mapKey, MapValue value) {
         return true;
     }
 

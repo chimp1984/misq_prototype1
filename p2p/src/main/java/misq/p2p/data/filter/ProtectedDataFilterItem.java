@@ -17,20 +17,21 @@
 
 package misq.p2p.data.filter;
 
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
 
-import misq.p2p.data.storage.MapKey;
+import java.io.Serializable;
 
-import java.util.Set;
+@Getter
+@EqualsAndHashCode
+public class ProtectedDataFilterItem implements Serializable {
+    private final byte[] hash;
+    private final int sequenceNumber;
+    private final boolean isRemoved;
 
-public class ItemsByHashFilter implements DataFilter {
-    private final Set<MapKey> mapKeys;
-
-    public ItemsByHashFilter(Set<MapKey> mapKeys) {
-        this.mapKeys = mapKeys;
-    }
-
-    @Override
-    public boolean matches(MapKey mapKey) {
-        return mapKeys.contains(mapKey);
+    public ProtectedDataFilterItem(byte[] hash, int sequenceNumber, boolean isRemoved) {
+        this.hash = hash;
+        this.sequenceNumber = sequenceNumber;
+        this.isRemoved = isRemoved;
     }
 }
