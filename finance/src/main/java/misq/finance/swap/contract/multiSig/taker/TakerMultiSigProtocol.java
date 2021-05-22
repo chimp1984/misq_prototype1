@@ -30,6 +30,7 @@ import misq.p2p.P2pService;
 import misq.p2p.message.Message;
 import misq.p2p.node.Connection;
 
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
 @Slf4j
@@ -47,7 +48,7 @@ public class TakerMultiSigProtocol extends MultiSigProtocol implements MultiSig.
                     .whenComplete((txInput, t) -> setState(State.TX_INPUTS_RECEIVED))
                     .thenCompose(multiSig::broadcastDepositTx)
                     .whenComplete((depositTx, t) -> setState(State.DEPOSIT_TX_BROADCAST))
-                    .thenCompose(depositTx -> p2pService.confidentialSend(new DepositTxBroadcastMessage(depositTx), counterParty.getAddress()))
+                    .thenCompose(depositTx -> p2pService.confidentialSend(new DepositTxBroadcastMessage(depositTx), Set.of(counterParty.getAddress()), null, null))
                     .whenComplete((connection1, t) -> setState(State.DEPOSIT_TX_BROADCAST_MSG_SENT));
         } else if (message instanceof FundsSentMessage) {
             FundsSentMessage fundsSentMessage = (FundsSentMessage) message;
@@ -76,7 +77,7 @@ public class TakerMultiSigProtocol extends MultiSigProtocol implements MultiSig.
         setState(State.FUNDS_RECEIVED);
         multiSig.broadcastPayoutTx()
                 .whenComplete((payoutTx, t) -> setState(State.PAYOUT_TX_BROADCAST))
-                .thenCompose(payoutTx -> p2pService.confidentialSend(new PayoutTxBroadcastMessage(payoutTx), counterParty.getAddress()))
+                .thenCompose(payoutTx -> p2pService.confidentialSend(new PayoutTxBroadcastMessage(payoutTx), Set.of(counterParty.getAddress()), null, null))
                 .whenComplete((isValid, t) -> setState(State.PAYOUT_TX_BROADCAST_MSG_SENT));
     }
 }

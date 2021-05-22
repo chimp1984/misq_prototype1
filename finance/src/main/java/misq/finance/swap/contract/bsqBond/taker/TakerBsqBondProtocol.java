@@ -29,6 +29,7 @@ import misq.p2p.P2pService;
 import misq.p2p.message.Message;
 import misq.p2p.node.Connection;
 
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
 @Slf4j
@@ -44,7 +45,7 @@ public class TakerBsqBondProtocol extends BsqBondProtocol {
             security.verifyBondCommitmentMessage(bondCommitmentMessage)
                     .whenComplete((success, t) -> setState(State.COMMITMENT_RECEIVED))
                     .thenCompose(isValid -> security.getCommitment(contract))
-                    .thenCompose(commitment -> p2pService.confidentialSend(new TakerCommitmentMessage(commitment), counterParty.getAddress()))
+                    .thenCompose(commitment -> p2pService.confidentialSend(new TakerCommitmentMessage(commitment), Set.of(counterParty.getAddress()), null, null))
                     .whenComplete((success, t) -> setState(State.COMMITMENT_SENT));
         }
         if (message instanceof MakerFundsSentMessage) {
@@ -52,7 +53,7 @@ public class TakerBsqBondProtocol extends BsqBondProtocol {
             security.verifyFundsSentMessage(fundsSentMessage)
                     .whenComplete((success, t) -> setState(State.FUNDS_RECEIVED))
                     .thenCompose(isValid -> transport.sendFunds(contract))
-                    .thenCompose(isSent -> p2pService.confidentialSend(new TakerFundsSentMessage(), counterParty.getAddress()))
+                    .thenCompose(isSent -> p2pService.confidentialSend(new TakerFundsSentMessage(), Set.of(counterParty.getAddress()), null, null))
                     .whenComplete((success, t) -> setState(State.FUNDS_SENT));
         }
     }

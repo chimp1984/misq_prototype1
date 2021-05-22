@@ -40,11 +40,12 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
-public class MockP2pService implements P2pService {
+public class MockP2pService extends P2pService {
     private static final Logger log = LoggerFactory.getLogger(MockP2pService.class);
     private Set<MessageListener> messageListeners = ConcurrentHashMap.newKeySet();
 
     public MockP2pService() {
+        super();
     }
 
     @Override

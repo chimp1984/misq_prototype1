@@ -33,7 +33,7 @@ import static org.junit.Assert.assertTrue;
 @Slf4j
 public class DataNodeBase {
     protected final static Function<PublicKey, PrivateKey> mockPrivateKeySupplier = publicKey -> null;
-    protected P2pServiceImpl p2pServiceSeed, p2pService1, p2pService2;
+    protected P2pService p2pServiceSeed, p2pService1, p2pService2;
 
     protected void bootstrap(Set<NetworkConfig> networkConfigsSeed,
                              Set<NetworkConfig> networkConfigsNode1,
@@ -59,8 +59,8 @@ public class DataNodeBase {
     }
 
 
-    protected CompletableFuture<P2pServiceImpl> getP2pServiceFuture(Set<NetworkConfig> networkConfigs) {
-        P2pServiceImpl p2pService = new P2pServiceImpl(networkConfigs, mockPrivateKeySupplier);
+    protected CompletableFuture<P2pService> getP2pServiceFuture(Set<NetworkConfig> networkConfigs) {
+        P2pService p2pService = new P2pService(networkConfigs, mockPrivateKeySupplier);
         return p2pService.bootstrap().thenApply(result -> p2pService);
     }
 }

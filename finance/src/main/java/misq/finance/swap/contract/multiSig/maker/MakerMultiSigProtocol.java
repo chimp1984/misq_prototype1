@@ -29,6 +29,7 @@ import misq.p2p.P2pService;
 import misq.p2p.message.Message;
 import misq.p2p.node.Connection;
 
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
 @Slf4j
@@ -67,7 +68,7 @@ public class MakerMultiSigProtocol extends MultiSigProtocol implements MultiSig.
         multiSig.addListener(this);
         setState(State.START);
         multiSig.getTxInputs()
-                .thenCompose(txInputs -> p2pService.confidentialSend(new TxInputsMessage(txInputs), counterParty.getAddress()))
+                .thenCompose(txInputs -> p2pService.confidentialSend(new TxInputsMessage(txInputs), Set.of(counterParty.getAddress()), null, null))
                 .whenComplete((success, t) -> setState(State.TX_INPUTS_SENT));
         return CompletableFuture.completedFuture(true);
     }
@@ -76,7 +77,7 @@ public class MakerMultiSigProtocol extends MultiSigProtocol implements MultiSig.
         setState(State.FUNDS_SENT);
         return multiSig.createPartialPayoutTx()
                 .thenCompose(multiSig::getPayoutTxSignature)
-                .thenCompose(sig -> p2pService.confidentialSend(new FundsSentMessage(sig), counterParty.getAddress()))
+                .thenCompose(sig -> p2pService.confidentialSend(new FundsSentMessage(sig), Set.of(counterParty.getAddress()), null, null))
                 .whenComplete((isValid, t) -> setState(State.FUNDS_SENT_MSG_SENT));
     }
 }
