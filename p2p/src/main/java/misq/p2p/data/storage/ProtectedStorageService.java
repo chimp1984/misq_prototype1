@@ -41,6 +41,9 @@ public class ProtectedStorageService {
         void onAdded(ProtectedData protectedData);
 
         void onRemoved(ProtectedData protectedData);
+
+        default void onRefreshed(ProtectedData protectedData) {
+        }
     }
 
     private final String storageFilePath;
@@ -88,13 +91,12 @@ public class ProtectedStorageService {
         } catch (NoSuchAlgorithmException e) {
             return new AddProtectedDataRequest.Result(false).cannotCreateHash(e);
         }
-        log.error("Add {}", mapKey);
-        MapValue fromMap = map.get(mapKey);
-        int sequenceNumberFromMap = fromMap != null ? fromMap.getSequenceNumber() : 0;
+        MapValue mapValue = map.get(mapKey);
+        int sequenceNumberFromMap = mapValue != null ? mapValue.getSequenceNumber() : 0;
 
         // We do that check early as it is a very common case for returning, so we return early
         // If we have seen a more recent operation for this data and we have a data locally, ignore it
-        if (fromMap != null && entry.isSequenceNrInvalid(sequenceNumberFromMap)) {
+        if (mapValue != null && entry.isSequenceNrInvalid(sequenceNumberFromMap)) {
             return new AddProtectedDataRequest.Result(false).sequenceNrInvalid();
         }
 
@@ -116,29 +118,28 @@ public class ProtectedStorageService {
 
         map.put(mapKey, entry);
         listeners.forEach(listener -> listener.onAdded(protectedData));
-        Persistence.write(map, storageFilePath);
+        persist();
         return new AddProtectedDataRequest.Result(true);
     }
 
     public RemoveProtectedDataRequest.Result remove(RemoveProtectedDataRequest request) {
         MapKey mapKey = new MapKey(request.getHash());
-        log.error("Remove {}", mapKey);
-        MapValue fromMap = map.get(mapKey);
-        if (fromMap == null) {
+        MapValue mapValue = map.get(mapKey);
+        if (mapValue == null) {
             // We don't have the entry but it might be that we would receive later an add request, so we need to keep
             // track of the sequence number
             map.put(mapKey, new SequenceNumber(request.getSequenceNumber()));
-            Persistence.write(map, storageFilePath);
+            persist();
             return new RemoveProtectedDataRequest.Result(false).noEntry();
         }
 
-        if (fromMap instanceof SequenceNumber) {
+        if (mapValue instanceof SequenceNumber) {
             // We have had the entry already removed.
             return new RemoveProtectedDataRequest.Result(false).alreadyRemoved();
         }
 
         // We have an entry, lets validate if we can remove it
-        ProtectedEntry protectedEntryFromMap = (ProtectedEntry) fromMap;
+        ProtectedEntry protectedEntryFromMap = (ProtectedEntry) mapValue;
         ProtectedData dataFromMap = protectedEntryFromMap.getProtectedData();
         if (request.isSequenceNrInvalid(protectedEntryFromMap.getSequenceNumber())) {
             // Sequence number has not increased
@@ -156,8 +157,52 @@ public class ProtectedStorageService {
 
         map.put(mapKey, new SequenceNumber(request.getSequenceNumber()));
         listeners.forEach(listener -> listener.onRemoved(dataFromMap));
-        Persistence.write(map, storageFilePath);
+        persist();
         return new RemoveProtectedDataRequest.Result(true);
+    }
+
+    public RefreshProtectedDataRequest.Result refresh(RefreshProtectedDataRequest request) {
+        MapKey mapKey = new MapKey(request.getHash());
+        MapValue mapValue = map.get(mapKey);
+        if (mapValue == null) {
+            // We don't have the entry but it might be that we would receive later an add request, so we need to keep
+            // track of the sequence number
+            map.put(mapKey, new SequenceNumber(request.getSequenceNumber()));
+            persist();
+            return new RefreshProtectedDataRequest.Result(false).noEntry();
+        }
+
+        if (mapValue instanceof SequenceNumber) {
+            // We have had the entry already removed.
+            return new RefreshProtectedDataRequest.Result(false).alreadyRemoved();
+        }
+
+        // We have an entry, lets validate if we can remove it
+        ProtectedEntry protectedEntryFromMap = (ProtectedEntry) mapValue;
+        if (request.isSequenceNrInvalid(protectedEntryFromMap.getSequenceNumber())) {
+            // Sequence number has not increased
+            return new RefreshProtectedDataRequest.Result(false).sequenceNrInvalid();
+        }
+
+        ProtectedData dataFromMap = protectedEntryFromMap.getProtectedData();
+        if (request.isPublicKeyInvalid(dataFromMap)) {
+            // Hash of publicKey of data does not match provided one
+            return new RefreshProtectedDataRequest.Result(false).publicKeyInvalid();
+        }
+
+        if (request.isSignatureInvalid()) {
+            return new RefreshProtectedDataRequest.Result(false).signatureInvalid();
+        }
+
+        ProtectedEntry updated = new ProtectedEntry(dataFromMap, request.getSequenceNumber(), System.currentTimeMillis());
+        map.put(mapKey, updated);
+        listeners.forEach(listener -> listener.onRefreshed(dataFromMap));
+        persist();
+        return new RefreshProtectedDataRequest.Result(true);
+    }
+
+    private void persist() {
+        Persistence.write(map, storageFilePath);
     }
 
     MapKey getMapKey(Proto data) throws NoSuchAlgorithmException {

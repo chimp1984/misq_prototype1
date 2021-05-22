@@ -27,6 +27,7 @@ public class ProtectedEntry implements MapValue {
     private final int sequenceNumber;
     private final long created;
 
+
     public ProtectedEntry(ProtectedData protectedData,
                           int sequenceNumber,
                           long created) {
@@ -42,6 +43,7 @@ public class ProtectedEntry implements MapValue {
     public boolean isSequenceNrInvalid(long seqNumberFromMap) {
         return sequenceNumber <= seqNumberFromMap;
     }
+
 
     @Override
     public String toString() {

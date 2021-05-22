@@ -69,6 +69,10 @@ public class Storage {
         return getService(request.getStorageFileName()).remove(request);
     }
 
+    public RefreshProtectedDataRequest.Result refreshProtectedStorageEntry(RefreshProtectedDataRequest request) {
+        return getService(request.getStorageFileName()).refresh(request);
+    }
+
     public ProtectedStorageService getService(String fileName) {
         if (!storageServices.containsKey(fileName)) {
             storageServices.put(fileName, new ProtectedStorageService(storageDirPath + separator + fileName));
@@ -98,6 +102,17 @@ public class Storage {
         byte[] signature = SignatureUtil.sign(hash, keyPair.getPrivate());
         int newSequenceNumber = service.getSequenceNumber(networkData) + 1;
         return new RemoveProtectedDataRequest(fileName, hash, keyPair.getPublic(), newSequenceNumber, signature);
+    }
+
+    public RefreshProtectedDataRequest getRefreshProtectedDataRequest(NetworkData networkData, KeyPair keyPair)
+            throws GeneralSecurityException {
+        String fileName = networkData.getFileName();
+        ProtectedStorageService service = getService(fileName);
+        byte[] serialized = networkData.serialize();
+        byte[] hash = DigestUtil.sha256(serialized);
+        byte[] signature = SignatureUtil.sign(hash, keyPair.getPrivate());
+        int newSequenceNumber = service.getSequenceNumber(networkData) + 1;
+        return new RefreshProtectedDataRequest(fileName, hash, keyPair.getPublic(), newSequenceNumber, signature);
     }
 
     public boolean canAddMailboxMessage(SealedData sealedData) throws NoSuchAlgorithmException {

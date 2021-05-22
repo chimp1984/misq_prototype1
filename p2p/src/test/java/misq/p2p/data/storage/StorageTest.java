@@ -34,7 +34,7 @@ import static org.junit.Assert.*;
 public class StorageTest {
     private String appDirPath = OsUtils.getUserDataDir() + File.separator + "misq_StorageTest";
 
-   // @Test
+    @Test
     public void testAddAndRemove() throws GeneralSecurityException {
         Storage storage = new Storage(appDirPath);
         MockNetworkData mockNetworkData = new MockNetworkData("test");
@@ -55,6 +55,14 @@ public class StorageTest {
         ProtectedEntry protectedEntry = (ProtectedEntry) mapValue;
         assertEquals(protectedEntry.getProtectedData(), protectedData);
 
+        // refresh
+        RefreshProtectedDataRequest refreshRequest = storage.getRefreshProtectedDataRequest(mockNetworkData, keyPair);
+        RefreshProtectedDataRequest.Result refreshResult = storage.refreshProtectedStorageEntry(refreshRequest);
+        assertTrue(refreshResult.isSuccess());
+        mapValue1 = service.map.get(service.getMapKey(mockNetworkData));
+        assertEquals(seqNrBefore + 2, mapValue1.getSequenceNumber());
+
+        //remove
         RemoveProtectedDataRequest removeProtectedDataRequest = storage.getRemoveProtectedDataRequest(mockNetworkData, keyPair);
 
         RemoveProtectedDataRequest.Result removeDataResult = storage.removeProtectedStorageEntry(removeProtectedDataRequest);
@@ -64,7 +72,13 @@ public class StorageTest {
         mapValue = service.map.get(mapKey);
         assertTrue(mapValue instanceof SequenceNumber);
         SequenceNumber sequenceNumber = (SequenceNumber) mapValue;
-        assertEquals(seqNrBefore + 2, sequenceNumber.getSequenceNumber());
+        assertEquals(seqNrBefore + 3, sequenceNumber.getSequenceNumber());
+
+        // refresh on removed fails
+        RefreshProtectedDataRequest refreshRequest2 = storage.getRefreshProtectedDataRequest(mockNetworkData, keyPair);
+        RefreshProtectedDataRequest.Result refreshResult2 = storage.refreshProtectedStorageEntry(refreshRequest);
+        assertFalse(refreshResult2.isSuccess());
+
     }
 
     @Test
@@ -91,6 +105,14 @@ public class StorageTest {
         NetworkData sealedDataPayload2 = protectedPayloadEntry.getProtectedData().getNetworkData();
         assertEquals(sealedDataPayload2, sealedData);
 
+        // refresh
+        RefreshProtectedDataRequest refreshRequest = storage.getRefreshProtectedDataRequest(sealedData, senderKeyPair);
+        RefreshProtectedDataRequest.Result refreshResult = storage.refreshProtectedStorageEntry(refreshRequest);
+        assertTrue(refreshResult.isSuccess());
+        mapValue1 = service.map.get(service.getMapKey(sealedData));
+        assertEquals(seqNrBefore + 2, mapValue1.getSequenceNumber());
+
+        // remove
         String fileName = mockMailboxMessage.getClass().getSimpleName();
         RemoveMailboxDataRequest removeMailboxDataRequest = storage.getRemoveMailboxDataRequest(fileName, sealedData, receiverKeyPair);
 
@@ -118,5 +140,10 @@ public class StorageTest {
         AddProtectedDataRequest.Result result2 = storage.addProtectedStorageEntry(request);
         assertFalse(result2.isSuccess());
         assertTrue(result2.isSequenceNrInvalid());
+
+        // refresh on removed fails
+        RefreshProtectedDataRequest refreshRequest2 = storage.getRefreshProtectedDataRequest(sealedData, senderKeyPair);
+        RefreshProtectedDataRequest.Result refreshResult2 = storage.refreshProtectedStorageEntry(refreshRequest);
+        assertFalse(refreshResult2.isSuccess());
     }
 }
