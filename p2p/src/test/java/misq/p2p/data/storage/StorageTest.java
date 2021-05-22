@@ -34,7 +34,7 @@ import static org.junit.Assert.*;
 public class StorageTest {
     private String appDirPath = OsUtils.getUserDataDir() + File.separator + "misq_StorageTest";
 
-    //  @Test
+   // @Test
     public void testAddAndRemove() throws GeneralSecurityException {
         Storage storage = new Storage(appDirPath);
         MockNetworkData mockNetworkData = new MockNetworkData("test");
@@ -107,7 +107,7 @@ public class StorageTest {
         // of creating new ones, as otherwise it would appear like a new mailbox msg.
         assertFalse(storage.canAddMailboxMessage(sealedData));
         try {
-            // calling getAddMailboxDataRequest without the pior canAddMailboxMessage check will throw
+            // calling getAddMailboxDataRequest without the previous canAddMailboxMessage check will throw
             storage.getAddMailboxDataRequest(sealedData, senderKeyPair, receiverKeyPair.getPublic());
             fail();
         } catch (Exception e) {
@@ -118,6 +118,5 @@ public class StorageTest {
         AddProtectedDataRequest.Result result2 = storage.addProtectedStorageEntry(request);
         assertFalse(result2.isSuccess());
         assertTrue(result2.isSequenceNrInvalid());
-        log.error(map.toString());
     }
 }

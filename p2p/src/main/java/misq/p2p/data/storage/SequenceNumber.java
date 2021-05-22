@@ -24,15 +24,18 @@ import lombok.Getter;
 @EqualsAndHashCode
 public class SequenceNumber implements MapValue {
     private final int sequenceNumber;
+    private final long created;
 
     public SequenceNumber(int sequenceNumber) {
         this.sequenceNumber = sequenceNumber;
+        created = System.currentTimeMillis();
     }
 
     @Override
     public String toString() {
         return "SequenceNumber{" +
                 "\n     sequenceNumber=" + sequenceNumber +
+                "\n     created=" + created +
                 "\n}";
     }
 }

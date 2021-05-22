@@ -25,18 +25,18 @@ import lombok.Getter;
 public class ProtectedEntry implements MapValue {
     private final ProtectedData protectedData;
     private final int sequenceNumber;
-    private final long creationTimeStamp;
+    private final long created;
 
     public ProtectedEntry(ProtectedData protectedData,
                           int sequenceNumber,
-                          long creationTimeStamp) {
+                          long created) {
         this.protectedData = protectedData;
         this.sequenceNumber = sequenceNumber;
-        this.creationTimeStamp = creationTimeStamp;
+        this.created = created;
     }
 
     public boolean isExpired() {
-        return (System.currentTimeMillis() - creationTimeStamp) > protectedData.getNetworkData().getTTL();
+        return (System.currentTimeMillis() - created) > protectedData.getNetworkData().getTTL();
     }
 
     public boolean isSequenceNrInvalid(long seqNumberFromMap) {
@@ -48,7 +48,7 @@ public class ProtectedEntry implements MapValue {
         return "ProtectedEntry{" +
                 "\n     protectedData=" + protectedData +
                 ",\n     sequenceNumber=" + sequenceNumber +
-                ",\n     creationTimeStamp=" + creationTimeStamp +
+                ",\n     creationTimeStamp=" + created +
                 "\n}";
     }
 }

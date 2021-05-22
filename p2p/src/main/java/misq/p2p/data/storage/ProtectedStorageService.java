@@ -25,12 +25,18 @@ import misq.p2p.Proto;
 import java.io.File;
 import java.io.Serializable;
 import java.security.NoSuchAlgorithmException;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 @Slf4j
 public class ProtectedStorageService {
+    private static final long MAX_AGE_SEQ_NUM = TimeUnit.DAYS.toMillis(10);
+    private static final int MAX_MAP_SIZE = 10000;
+
     public interface Listener {
         void onAdded(ProtectedData protectedData);
 
@@ -48,7 +54,26 @@ public class ProtectedStorageService {
             Serializable serializable = Persistence.read(storageFilePath);
             if (serializable instanceof ConcurrentHashMap) {
                 ConcurrentHashMap<MapKey, MapValue> persisted = (ConcurrentHashMap<MapKey, MapValue>) serializable;
-                map.putAll(persisted);
+                long now = System.currentTimeMillis();
+                // Remove SequenceNumber entries older than MAX_AGE_SEQ_NUM
+                // Remove expired ProtectedEntry
+                // Sort by created date
+                // Limit to MAX_MAP_SIZE
+                Map<MapKey, MapValue> pruned = persisted.entrySet().stream()
+                        .filter(entry -> {
+                            if (entry.getValue() instanceof SequenceNumber) {
+                                SequenceNumber sequenceNumber = (SequenceNumber) entry.getValue();
+                                return now - sequenceNumber.getCreated() <= MAX_AGE_SEQ_NUM;
+                            } else if (entry.getValue() instanceof ProtectedEntry) {
+                                ProtectedEntry protectedEntry = (ProtectedEntry) entry.getValue();
+                                return !protectedEntry.isExpired();
+                            }
+                            return true;
+                        })
+                        .sorted((o1, o2) -> Long.compare(o2.getValue().getCreated(), o1.getValue().getCreated()))
+                        .limit(MAX_MAP_SIZE)
+                        .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+                map.putAll(pruned);
             }
         }
     }

@@ -27,4 +27,6 @@ public interface MapValue extends Serializable {
     }
 
     int getSequenceNumber();
+
+    long getCreated();
 }
