@@ -51,8 +51,8 @@ public class P2pServiceImpl implements P2pService {
 
     private final Map<NetworkType, P2pNode> p2pNodes = new ConcurrentHashMap<>();
 
-    public P2pServiceImpl(List<NetworkConfig> networkConfigs, Function<PublicKey, PrivateKey> keyRepository) {
-        Storage storage = new Storage();
+    public P2pServiceImpl(Set<NetworkConfig> networkConfigs, Function<PublicKey, PrivateKey> keyRepository) {
+        Storage storage = new Storage("");//todo
         networkConfigs.forEach(networkConfig -> {
             NetworkType networkType = networkConfig.getNetworkType();
             P2pNode p2pNode = new P2pNode(networkConfig, storage, keyRepository);

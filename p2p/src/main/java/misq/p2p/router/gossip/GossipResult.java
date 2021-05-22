@@ -30,4 +30,13 @@ public class GossipResult {
         this.numFaults = numFaults;
         this.duration = duration;
     }
+
+    @Override
+    public String toString() {
+        return "GossipResult{" +
+                "\n     numSuccess=" + numSuccess +
+                ",\n     numFaults=" + numFaults +
+                ",\n     duration=" + duration +
+                "\n}";
+    }
 }

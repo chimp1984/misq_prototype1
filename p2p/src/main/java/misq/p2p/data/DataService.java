@@ -23,7 +23,7 @@ import misq.p2p.data.filter.DataFilter;
 import misq.p2p.data.inventory.InventoryRequestHandler;
 import misq.p2p.data.inventory.InventoryResponseHandler;
 import misq.p2p.data.inventory.RequestInventoryResult;
-import misq.p2p.data.storage.MapKey;
+import misq.p2p.data.storage.MapValue;
 import misq.p2p.data.storage.Storage;
 import misq.p2p.message.Message;
 import misq.p2p.node.Connection;
@@ -82,18 +82,18 @@ public class DataService implements MessageListener, ConnectionListener {
         if (message instanceof AddDataRequest) {
             AddDataRequest addDataRequest = (AddDataRequest) message;
             if (canAdd(addDataRequest)) {
-                Message previousItem = storage.add(addDataRequest.getMessage());
+              /*  Message previousItem = storage.add(addDataRequest.getMapValue());
                 if (previousItem == null) {
                     dataListeners.forEach(listener -> listener.onDataAdded(message));
-                }
+                }*/
             }
         } else if (message instanceof RemoveDataRequest) {
             RemoveDataRequest removeDataRequest = (RemoveDataRequest) message;
             if (canRemove(removeDataRequest)) {
-                Message removedItem = storage.remove(removeDataRequest.getMapKey());
-                if (removedItem != null) {
+                // Message removedItem = storage.remove(removeDataRequest.getMapKey());
+              /*  if (removedItem != null) {
                     dataListeners.forEach(listener -> listener.onDataRemoved(message));
-                }
+                }*/
             }
         }
     }
@@ -120,30 +120,31 @@ public class DataService implements MessageListener, ConnectionListener {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public CompletableFuture<GossipResult> requestAddData(Message message) {
-        AddDataRequest addDataRequest = new AddDataRequest(message);
-        storage.add(addDataRequest);
+    public CompletableFuture<GossipResult> requestAddData(MapValue mapValue) {
+        AddDataRequest addDataRequest = new AddDataRequest(mapValue);
+        // storage.add(mapValue);
         return router.broadcast(addDataRequest);
     }
 
     public CompletableFuture<GossipResult> requestRemoveData(Message message) {
-        RemoveDataRequest removeDataRequest = new RemoveDataRequest(new MapKey(message));
-        storage.remove(removeDataRequest.getMapKey());
-        return router.broadcast(removeDataRequest);
+        //   RemoveDataRequest removeDataRequest = new RemoveDataRequest(new MapKey(message));
+        //  storage.remove(removeDataRequest.getMapKey());
+        // return router.broadcast(removeDataRequest);
+        return null;
     }
 
     public CompletableFuture<RequestInventoryResult> requestInventory(DataFilter dataFilter) {
         return requestInventory(dataFilter, router.getPeerAddressesForInventoryRequest())
                 .whenComplete((requestInventoryResult, throwable) -> {
                     if (requestInventoryResult != null) {
-                        storage.add(requestInventoryResult.getInventory())
+                      /*  storage.add(requestInventoryResult.getInventory())
                                 .handle((inventory, error) -> {
                                     if (inventory != null) {
                                         return requestInventoryResult;
                                     } else {
                                         return CompletableFuture.failedFuture(error);
                                     }
-                                });
+                                });*/
                     }
                 });
     }

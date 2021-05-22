@@ -24,22 +24,22 @@ import java.io.Serializable;
 
 @EqualsAndHashCode
 @Getter
-public class Seal implements Serializable {
-    private final byte[] encryptedHmacSessionKey;
-    private final byte[] encryptedSessionKey;
-    private final byte[] hmac;
-    private final byte[] iv;
+public class Sealed implements Serializable {
+    private final byte[] encryptedHmacSessionKey; // 256 bytes
+    private final byte[] encryptedSessionKey;// 256 bytes
+    private final byte[] hmac;// 32 bytes
+    private final byte[] iv;// 16 bytes
     private final byte[] encryptedMessage;
-    private final byte[] signature;
-    private final byte[] senderPublicKey;
+    private final byte[] signature;// 256 bytes
+    private final byte[] senderPublicKey;// 294 bytes
 
-    public Seal(byte[] encryptedHmacSessionKey,
-                byte[] encryptedSessionKey,
-                byte[] hmac,
-                byte[] iv,
-                byte[] encryptedMessage,
-                byte[] signature,
-                byte[] senderPublicKey) {
+    public Sealed(byte[] encryptedHmacSessionKey,
+                  byte[] encryptedSessionKey,
+                  byte[] hmac,
+                  byte[] iv,
+                  byte[] encryptedMessage,
+                  byte[] signature,
+                  byte[] senderPublicKey) {
         this.encryptedHmacSessionKey = encryptedHmacSessionKey;
         this.encryptedSessionKey = encryptedSessionKey;
         this.hmac = hmac;
@@ -47,6 +47,5 @@ public class Seal implements Serializable {
         this.encryptedMessage = encryptedMessage;
         this.signature = signature;
         this.senderPublicKey = senderPublicKey;
-
     }
 }

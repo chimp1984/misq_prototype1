@@ -162,6 +162,7 @@ configure([project(':common'),
 configure(project(':common')) {
     dependencies {
         compile "org.bouncycastle:bcpg-jdk15on:$bcVersion"
+        implementation "com.google.protobuf:protobuf-java:$protobufVersion"
     }
 }
 
@@ -186,7 +187,6 @@ configure(project(':torify')) {
 configure(project(':i2p')) {
     dependencies {
         implementation project(':common')
-
         /*
          In case we want to use the i2p jars instead of using SAM
          implementation("net.i2p:router:$i2pVersion")

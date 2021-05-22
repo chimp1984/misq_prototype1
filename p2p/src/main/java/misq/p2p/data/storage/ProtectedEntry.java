@@ -18,14 +18,28 @@
 package misq.p2p.data.storage;
 
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
 
-import java.io.Serializable;
-
+@Getter
 @EqualsAndHashCode
-public class MapKey implements Serializable {
-    private final byte[] bytes;
+public class ProtectedEntry implements MapValue {
+    private final ProtectedData protectedData;
+    private final int sequenceNumber;
+    private final long creationTimeStamp;
 
-    public MapKey(byte[] bytes) {
-        this.bytes = bytes;
+    public ProtectedEntry(ProtectedData protectedData,
+                          int sequenceNumber,
+                          long creationTimeStamp) {
+        this.protectedData = protectedData;
+        this.sequenceNumber = sequenceNumber;
+        this.creationTimeStamp = creationTimeStamp;
+    }
+
+    public boolean isExpired() {
+        return (System.currentTimeMillis() - creationTimeStamp) > protectedData.getNetworkData().getTTL();
+    }
+
+    public boolean isSequenceNrInvalid(long seqNumberFromMap) {
+        return sequenceNumber <= seqNumberFromMap;
     }
 }

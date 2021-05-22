@@ -101,7 +101,8 @@ public class P2pNode {
     }
 
     public CompletableFuture<GossipResult> requestAddData(Message message) {
-        return dataService.requestAddData(message);
+        //  return dataService.requestAddData(message);
+        return null;
     }
 
     public CompletableFuture<GossipResult> requestRemoveData(Message message) {

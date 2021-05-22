@@ -18,25 +18,41 @@
 package misq.p2p.data.storage;
 
 
-import misq.p2p.data.filter.DataFilter;
-import misq.p2p.data.inventory.Inventory;
-import misq.p2p.message.Message;
+import misq.common.security.DigestUtil;
+import misq.common.security.HybridEncryption;
+import misq.common.security.Sealed;
+import misq.common.security.SignatureUtil;
+import misq.common.util.FileUtils;
+import misq.p2p.NetworkData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Collection;
+import java.io.File;
+import java.io.IOException;
+import java.security.GeneralSecurityException;
+import java.security.KeyPair;
+import java.security.PublicKey;
 import java.util.Map;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
+
+import static java.io.File.separator;
 
 
 public class Storage {
     private static final Logger log = LoggerFactory.getLogger(Storage.class);
 
-    private final Map<MapKey, Message> map = new ConcurrentHashMap<>();
+    // Class name is key
+    final Map<String, ProtectedStorageService> storageServices = new ConcurrentHashMap<>();
+    private final String storageDirPath;
+    //  private final Set<StorageService> map = new ConcurrentHashMap<>();
 
-    public Storage() {
+    public Storage(String appDirPath) {
+        storageDirPath = appDirPath + separator + "db" + separator + "network";
+        try {
+            FileUtils.makeDirs(new File(storageDirPath));
+        } catch (IOException exception) {
+            exception.printStackTrace();
+        }
     }
 
 
@@ -44,15 +60,88 @@ public class Storage {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public Message add(Message message) {
-        return map.put(new MapKey(message), message);
+    public AddProtectedDataRequest.Result addProtectedStorageEntry(AddProtectedDataRequest request) {
+        return getService(request.getFileName()).add(request);
     }
 
-    public Message remove(MapKey mapKey) {
+    public RemoveProtectedDataRequest.Result removeProtectedStorageEntry(RemoveProtectedDataRequest request) {
+        return getService(request.getStorageFileName()).remove(request);
+    }
+
+    private ProtectedStorageService getService(String fileName) {
+        if (!storageServices.containsKey(fileName)) {
+            storageServices.put(fileName, new ProtectedStorageService(storageDirPath + separator + fileName));
+        }
+        return storageServices.get(fileName);
+    }
+
+    public AddProtectedDataRequest getAddProtectedDataRequest(NetworkData networkData, KeyPair keyPair)
+            throws GeneralSecurityException {
+        String fileName = networkData.getFileName();
+        ProtectedStorageService service = getService(fileName);
+        byte[] hashOfPublicKey = DigestUtil.sha256(keyPair.getPublic().getEncoded());
+        ProtectedData protectedData = new ProtectedData(networkData, hashOfPublicKey);
+        int newSequenceNumber = service.getSequenceNumber(networkData) + 1;
+        ProtectedEntry entry = new ProtectedEntry(protectedData, newSequenceNumber, System.currentTimeMillis());
+        byte[] serialized = entry.serialize();
+        byte[] signature = SignatureUtil.sign(serialized, keyPair.getPrivate());
+        return new AddProtectedDataRequest(entry, signature, keyPair.getPublic());
+    }
+
+    public RemoveProtectedDataRequest getRemoveProtectedDataRequest(NetworkData networkData, KeyPair keyPair)
+            throws GeneralSecurityException {
+        String fileName = networkData.getFileName();
+        ProtectedStorageService service = getService(fileName);
+        byte[] serialized = networkData.serialize();
+        byte[] hash = DigestUtil.sha256(serialized);
+        byte[] signature = SignatureUtil.sign(hash, keyPair.getPrivate());
+        int newSequenceNumber = service.getSequenceNumber(networkData) + 1;
+        return new RemoveProtectedDataRequest(fileName, hash, keyPair.getPublic(), newSequenceNumber, signature);
+    }
+
+
+    public AddMailboxDataRequest getAddMailboxDataRequest(MailboxMessage mailboxMessage,
+                                                          KeyPair senderKeyPair,
+                                                          PublicKey receiverPublicKey)
+            throws GeneralSecurityException {
+        String fileName = mailboxMessage.getFileName();
+        ProtectedStorageService service = getService(fileName);
+
+        Sealed sealed = HybridEncryption.encrypt(mailboxMessage.serialize(), receiverPublicKey, senderKeyPair);
+        SealedData sealedData = new SealedData(sealed, fileName, mailboxMessage.getTTL());
+        PublicKey senderPublicKey = senderKeyPair.getPublic();
+        byte[] hashOfSendersPublicKey = DigestUtil.sha256(senderPublicKey.getEncoded());
+        byte[] hashOfReceiversPublicKey = DigestUtil.sha256(receiverPublicKey.getEncoded());
+        MailboxData mailboxData = new MailboxData(sealedData, hashOfSendersPublicKey, hashOfReceiversPublicKey);
+        int newSequenceNumber = service.getSequenceNumber(mailboxMessage) + 1;
+        MailboxEntry entry = new MailboxEntry(mailboxData, newSequenceNumber, receiverPublicKey);
+        byte[] serialized = entry.serialize();
+        byte[] signature = SignatureUtil.sign(serialized, senderKeyPair.getPrivate());
+        return new AddMailboxDataRequest(entry, signature, senderPublicKey);
+    }
+
+    public RemoveMailboxDataRequest getRemoveMailboxDataRequest(String fileName,
+                                                                SealedData sealedData,
+                                                                KeyPair receiverKeyPair)
+            throws GeneralSecurityException {
+        ProtectedStorageService service = getService(fileName);
+        byte[] hash = DigestUtil.sha256(sealedData.serialize());
+        byte[] signature = SignatureUtil.sign(hash, receiverKeyPair.getPrivate());
+        int newSequenceNumber = service.getSequenceNumber(sealedData) + 1;
+        return new RemoveMailboxDataRequest(fileName, hash, receiverKeyPair.getPublic(), newSequenceNumber, signature);
+    }
+
+
+/*
+    public MapValue put(MapKey mapKey, MapValue mapValue) {
+        return map.put(mapKey, mapValue);
+    }
+
+    public MapValue remove(MapKey mapKey) {
         return map.remove(mapKey);
     }
 
-    public Message getInventory(MapKey mapKey) {
+    public MapValue getInventory(MapKey mapKey) {
         return map.get(mapKey);
     }
 
@@ -63,17 +152,17 @@ public class Storage {
                 .collect(Collectors.toSet()));
     }
 
-    public Collection<Message> getAll() {
+    public Collection<MapValue> getAll() {
         return map.values();
     }
 
 
     public CompletableFuture<Inventory> add(Inventory inventory) {
         return CompletableFuture.supplyAsync(() -> {
-            inventory.getCollection().forEach(this::add);
+            //inventory.getCollection().forEach(this::add);
             return inventory;
         });
-    }
+    }*/
 
     public void shutdown() {
 

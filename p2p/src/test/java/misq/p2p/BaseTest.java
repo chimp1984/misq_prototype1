@@ -31,7 +31,7 @@ import static org.junit.Assert.*;
 @Slf4j
 public abstract class BaseTest {
 
-    protected final Storage storage = new Storage();
+    protected final Storage storage = new Storage("");
     protected P2pNode alice, bob, carol;
 
     protected abstract int getTimeout();

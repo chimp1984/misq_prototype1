@@ -15,19 +15,23 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package misq.p2p.data;
+package misq.p2p.data.storage;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import misq.p2p.data.storage.MapValue;
-import misq.p2p.message.Message;
+import lombok.extern.slf4j.Slf4j;
 
-@EqualsAndHashCode
 @Getter
-public class AddDataRequest implements Message {
-    private final MapValue mapValue;
+@EqualsAndHashCode(callSuper = true)
+@Slf4j
+public final class MailboxData extends ProtectedData {
+    private final byte[] hashOfReceiversPublicKey;
 
-    public AddDataRequest(MapValue mapValue) {
-        this.mapValue = mapValue;
+    public MailboxData(SealedData sealedData,
+                       byte[] hashOfSendersPublicKey,
+                       byte[] hashOfReceiversPublicKey) {
+        super(sealedData, hashOfSendersPublicKey);
+
+        this.hashOfReceiversPublicKey = hashOfReceiversPublicKey;
     }
 }

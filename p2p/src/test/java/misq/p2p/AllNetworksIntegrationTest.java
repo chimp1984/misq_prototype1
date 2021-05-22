@@ -21,7 +21,6 @@ import lombok.extern.slf4j.Slf4j;
 import misq.p2p.data.storage.Storage;
 import org.junit.Test;
 
-import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -31,10 +30,10 @@ import static org.junit.Assert.*;
 @Slf4j
 public class AllNetworksIntegrationTest {
     private P2pServiceImpl alice1, alice2, bob1, bob2;
-    protected final Storage storage = new Storage();
+    protected final Storage storage = new Storage("");
 
-    private List<NetworkConfig> getNetNetworkConfigs(Config.Role role, String id, int serverPort) {
-        return List.of(Config.getClearNetNetworkConfig(role, id, serverPort),
+    private Set<NetworkConfig> getNetNetworkConfigs(Config.Role role, String id, int serverPort) {
+        return Set.of(Config.getClearNetNetworkConfig(role, id, serverPort),
                 Config.getTorNetworkConfig(role, id, serverPort),
                 Config.getI2pNetworkConfig(role, id));
     }
@@ -52,10 +51,10 @@ public class AllNetworksIntegrationTest {
     }
 
     public void initializeServer() throws InterruptedException {
-        List<NetworkConfig> netNetworkConfigsAlice1 = getNetNetworkConfigs(Config.Role.Alice, "alice1", 1111);
-        List<NetworkConfig> netNetworkConfigsAlice2 = getNetNetworkConfigs(Config.Role.Alice, "alice2", 1112);
-        List<NetworkConfig> netNetworkConfigsBob1 = getNetNetworkConfigs(Config.Role.Bob, "bob1", 2222);
-        List<NetworkConfig> netNetworkConfigsBob2 = getNetNetworkConfigs(Config.Role.Bob, "bob2", 2223);
+        Set<NetworkConfig> netNetworkConfigsAlice1 = getNetNetworkConfigs(Config.Role.Alice, "alice1", 1111);
+        Set<NetworkConfig> netNetworkConfigsAlice2 = getNetNetworkConfigs(Config.Role.Alice, "alice2", 1112);
+        Set<NetworkConfig> netNetworkConfigsBob1 = getNetNetworkConfigs(Config.Role.Bob, "bob1", 2222);
+        Set<NetworkConfig> netNetworkConfigsBob2 = getNetNetworkConfigs(Config.Role.Bob, "bob2", 2223);
 
         alice1 = new P2pServiceImpl(netNetworkConfigsAlice1, Config.alicePrivateKeySupplier1);
         alice2 = new P2pServiceImpl(netNetworkConfigsAlice2, Config.alicePrivateKeySupplier2);

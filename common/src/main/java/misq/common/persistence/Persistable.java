@@ -15,19 +15,16 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package misq.p2p.data;
+package misq.common.persistence;
 
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import misq.p2p.data.storage.MapValue;
-import misq.p2p.message.Message;
+import java.io.Serializable;
 
-@EqualsAndHashCode
-@Getter
-public class AddDataRequest implements Message {
-    private final MapValue mapValue;
+/**
+ * Interface for the outside envelope object persisted to disk.
+ */
+public interface Persistable extends Serializable {
 
-    public AddDataRequest(MapValue mapValue) {
-        this.mapValue = mapValue;
+    default String getDefaultStorageFileName() {
+        return this.getClass().getSimpleName();
     }
 }

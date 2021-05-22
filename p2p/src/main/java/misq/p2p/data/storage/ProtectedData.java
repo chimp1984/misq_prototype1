@@ -15,19 +15,26 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package misq.p2p.data;
+package misq.p2p.data.storage;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import misq.p2p.data.storage.MapValue;
-import misq.p2p.message.Message;
+import misq.p2p.NetworkData;
 
-@EqualsAndHashCode
+import java.io.Serializable;
+
 @Getter
-public class AddDataRequest implements Message {
-    private final MapValue mapValue;
+@EqualsAndHashCode
+public class ProtectedData implements Serializable {
+    private final NetworkData networkData;
+    protected final byte[] hashOfPublicKey;
 
-    public AddDataRequest(MapValue mapValue) {
-        this.mapValue = mapValue;
+    public ProtectedData(NetworkData networkData, byte[] hashOfPublicKey) {
+        this.networkData = networkData;
+        this.hashOfPublicKey = hashOfPublicKey;
+    }
+
+    public byte[] getHashOfPublicKey() {
+        return hashOfPublicKey;
     }
 }

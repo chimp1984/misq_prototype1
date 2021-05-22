@@ -28,7 +28,7 @@ import java.security.PublicKey;
 import static com.google.common.base.Preconditions.checkArgument;
 
 public class HybridEncryption {
-    public static Seal encrypt(byte[] message, PublicKey receiverPublicKey, KeyPair senderKeyPair) throws GeneralSecurityException {
+    public static Sealed encrypt(byte[] message, PublicKey receiverPublicKey, KeyPair senderKeyPair) throws GeneralSecurityException {
         // Symmetric key setup
         SecretKey sessionKey = SymEncryptionUtil.generateAESKey();
 
@@ -51,18 +51,18 @@ public class HybridEncryption {
         // Create signature over bitstream
         byte[] signature = SignatureUtil.sign(bitStream, senderKeyPair.getPrivate());
 
-        return new Seal(encryptedHmacSessionKey, encryptedSessionKey, hmac, iv, encryptedMessage, signature,
+        return new Sealed(encryptedHmacSessionKey, encryptedSessionKey, hmac, iv, encryptedMessage, signature,
                 senderKeyPair.getPublic().getEncoded());
     }
 
-    public static byte[] decrypt(Seal seal, PrivateKey privateKey) throws GeneralSecurityException {
-        byte[] encryptedHmacSessionKey = seal.getEncryptedHmacSessionKey();
-        byte[] encryptedSessionKey = seal.getEncryptedSessionKey();
-        byte[] hmac = seal.getHmac();
-        byte[] iv = seal.getIv();
-        byte[] encryptedMessage = seal.getEncryptedMessage();
-        byte[] signature = seal.getSignature();
-        PublicKey senderPublicKey = KeyPairGeneratorUtil.generatePublic(seal.getSenderPublicKey());
+    public static byte[] decrypt(Sealed sealed, PrivateKey privateKey) throws GeneralSecurityException {
+        byte[] encryptedHmacSessionKey = sealed.getEncryptedHmacSessionKey();
+        byte[] encryptedSessionKey = sealed.getEncryptedSessionKey();
+        byte[] hmac = sealed.getHmac();
+        byte[] iv = sealed.getIv();
+        byte[] encryptedMessage = sealed.getEncryptedMessage();
+        byte[] signature = sealed.getSignature();
+        PublicKey senderPublicKey = KeyPairGeneratorUtil.generatePublic(sealed.getSenderPublicKey());
 
         // Create bitstream
         byte[] bitStream = getBitStream(encryptedHmacSessionKey, encryptedSessionKey, hmac, iv, encryptedMessage);

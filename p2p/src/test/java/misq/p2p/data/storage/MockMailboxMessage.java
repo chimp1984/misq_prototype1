@@ -15,19 +15,22 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package misq.p2p.data;
+package misq.p2p.data.storage;
 
 import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import misq.p2p.data.storage.MapValue;
-import misq.p2p.message.Message;
+
+import java.util.concurrent.TimeUnit;
 
 @EqualsAndHashCode
-@Getter
-public class AddDataRequest implements Message {
-    private final MapValue mapValue;
+public class MockMailboxMessage implements MailboxMessage {
+    private final String text;
 
-    public AddDataRequest(MapValue mapValue) {
-        this.mapValue = mapValue;
+    public MockMailboxMessage(String text) {
+        this.text = text;
+    }
+
+    @Override
+    public long getTTL() {
+        return TimeUnit.SECONDS.toMillis(10);
     }
 }

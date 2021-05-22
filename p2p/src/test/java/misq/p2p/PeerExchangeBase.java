@@ -20,7 +20,7 @@ package misq.p2p;
 import com.google.common.collect.Sets;
 import lombok.extern.slf4j.Slf4j;
 import misq.common.util.OsUtils;
-import misq.common.util.Tuple2;
+import misq.common.util.Tuple3;
 import misq.p2p.data.storage.Storage;
 import misq.p2p.node.Node;
 import misq.p2p.peers.PeerConfig;
@@ -28,7 +28,6 @@ import misq.p2p.peers.PeerGroup;
 import misq.p2p.peers.exchange.DefaultPeerExchangeStrategy;
 import misq.p2p.peers.exchange.PeerExchangeConfig;
 import misq.p2p.peers.exchange.PeerExchangeManager;
-import org.junit.Test;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
@@ -40,65 +39,32 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 @Slf4j
-public class PeerExchangeIntegrationTest {
-    private PeerExchangeManager seed, node1, node2, node3, node4;
-    private PeerGroup peerGroupSeed, peerGroupNode1, peerGroupNode2, peerGroupNode3, peerGroupNode4;
-    private Set<NetworkType> mySupportedNetworks = Sets.newHashSet(NetworkType.CLEAR);
-    private Storage storage = new Storage();
-    private List<P2pNode> nodes;
-    private int numSeeNodesAtBoostrap = 1;
-    private int numPersistedPeersAtBoostrap = 8;
-    private int numReportedPeersAtBoostrap = 20;
-    private int minNumReportedPeers = 20;
-    private int minNumConnectedPeers = 30;
-    private int maxNumConnectedPeers = 40;
-    private int repeatPeerExchangeDelay = 200;
-    private Map<Integer, Tuple2<PeerExchangeManager, PeerGroup>> tuples;
+public class PeerExchangeBase {
+    protected Node nodeSeed, node1, node2, node3;
+    protected PeerExchangeManager peerExchangeManagerSeed, peerExchangeManager1, peerExchangeManager2, peerExchangeManager3;
+    protected PeerGroup peerGroupSeed, peerGroupNode1, peerGroupNode2, peerGroupNode3;
+    protected Storage storage = new Storage("");
+    protected List<P2pNode> nodes;
+    protected int numSeeNodesAtBoostrap = 1;
+    protected int numPersistedPeersAtBoostrap = 8;
+    protected int numReportedPeersAtBoostrap = 20;
+    protected int minNumReportedPeers = 20;
+    protected int minNumConnectedPeers = 30;
+    protected int maxNumConnectedPeers = 40;
+    protected int repeatPeerExchangeDelay = 200;
+    protected Map<Integer, Tuple3<PeerExchangeManager, PeerGroup, Node>> tuples;
 
-
-    @Test
-    public void testPeerExchange() throws InterruptedException {
-      /*  bootstrapSeedNode();
-        shutDownSeed();*/
-
-      /*  bootstrapSeedNode();
-        bootstrapNode1();
-        shutDownSeed();
-        shutDownNode1();*/
-
-      /*  bootstrapSeedNode();
-        bootstrapNode1();
-        bootstrapNode2();
-        shutDownSeed();
-        shutDownNode1();
-        shutDownNode2();*/
-
-        bootstrapSeedNode();
-        bootstrapNode1();
-        bootstrapNode2();
-        bootstrapNode3();
-        shutDownSeed();
-        shutDownNode1();
-        shutDownNode2();
-        shutDownNode3();
-
-     /*   bootstrapSeedNode();
-        bootstrapNodes(5);*/
-       /* shutDownSeed();
-        shutDownNode1();*/
-
-    }
 
     // Seed node only, so num connection and num reported will be 0
     protected void bootstrapSeedNode() throws InterruptedException {
         NetworkConfig networkConfig = getNetworkConfig(1000);
         CountDownLatch latch = new CountDownLatch(1);
         getTuple(networkConfig).whenComplete((tuple, e) -> {
-            seed = tuple.first;
+            peerExchangeManagerSeed = tuple.first;
             peerGroupSeed = tuple.second;
-
+            nodeSeed = tuple.third;
             log.info("bootstrap seed");
-            seed.bootstrap()
+            peerExchangeManagerSeed.bootstrap()
                     .whenComplete((success, t) -> {
                         if (success && t == null) {
                             log.info("seed bootstrapped");
@@ -118,11 +84,12 @@ public class PeerExchangeIntegrationTest {
     protected void bootstrapNode1() throws InterruptedException {
         CountDownLatch latch = new CountDownLatch(1);
         getTuple(getNetworkConfig(2001)).whenComplete((tuple, e) -> {
-            node1 = tuple.first;
+            peerExchangeManager1 = tuple.first;
             peerGroupNode1 = tuple.second;
+            node1 = tuple.third;
             log.info("bootstrap node1");
             // n1->s
-            node1.bootstrap()
+            peerExchangeManager1.bootstrap()
                     .whenComplete((success, t) -> {
                         if (success && t == null) {
                             log.info("node1 bootstrapped");
@@ -150,11 +117,12 @@ public class PeerExchangeIntegrationTest {
         CountDownLatch latch = new CountDownLatch(1);
         getTuple(getNetworkConfig(2002))
                 .whenComplete((tuple, e) -> {
-                    node2 = tuple.first;
+                    peerExchangeManager2 = tuple.first;
                     peerGroupNode2 = tuple.second;
+                    node2 = tuple.third;
                     log.info("bootstrap node2");
                     // n2->s
-                    node2.bootstrap()
+                    peerExchangeManager2.bootstrap()
                             .whenComplete((success, t) -> {
                                 if (success && t == null) {
                                     log.info("node2 bootstrapped");
@@ -178,7 +146,7 @@ public class PeerExchangeIntegrationTest {
         assertTrue(reportedPeerPorts.contains(2001));
 
         // n2->n1
-        node2.bootstrap()
+        peerExchangeManager2.bootstrap()
                 .whenComplete((success, t) -> {
                     if (success && t == null) {
                         log.info("node2 bootstrapped again");
@@ -207,11 +175,12 @@ public class PeerExchangeIntegrationTest {
     protected void bootstrapNode3() throws InterruptedException {
         CountDownLatch latch = new CountDownLatch(1);
         getTuple(getNetworkConfig(2003)).whenComplete((tuple, e) -> {
-            node3 = tuple.first;
+            peerExchangeManager3 = tuple.first;
             peerGroupNode3 = tuple.second;
+            node3 = tuple.third;
             log.info("bootstrap node3");
             // n3 -> s
-            node3.bootstrap()
+            peerExchangeManager3.bootstrap()
                     .whenComplete((success, t) -> {
                         if (success && t == null) {
                             log.info("node3 bootstrapped");
@@ -239,7 +208,7 @@ public class PeerExchangeIntegrationTest {
         assertTrue(reportedPeerPorts.contains(2002));
 
         // n3-> n1, n3-> n2
-        node3.bootstrap()
+        peerExchangeManager3.bootstrap()
                 .whenComplete((success, t) -> {
                     if (success && t == null) {
                         log.info("node2 bootstrapped again");
@@ -303,7 +272,7 @@ public class PeerExchangeIntegrationTest {
         assertTrue(bootstrapped);
 
         CountDownLatch seedRepeat = new CountDownLatch(1);
-        seed.bootstrap().whenComplete((s, e) -> {
+        peerExchangeManagerSeed.bootstrap().whenComplete((s, e) -> {
             seedRepeat.countDown();
         });
         boolean seedRepeatRepeatedBootstrapped = seedRepeat.await(5, TimeUnit.SECONDS);
@@ -351,34 +320,30 @@ public class PeerExchangeIntegrationTest {
 
     }
 
-    private CompletableFuture<Tuple2<PeerExchangeManager, PeerGroup>> getTuple(NetworkConfig networkConfig) {
+    protected CompletableFuture<Tuple3<PeerExchangeManager, PeerGroup, Node>> getTuple(NetworkConfig networkConfig) {
         Node node = new Node(networkConfig);
 
         PeerConfig peerConfig = networkConfig.getPeerConfig();
         PeerGroup peerGroup = new PeerGroup(node, peerConfig, networkConfig.getNodeId().getServerPort());
         DefaultPeerExchangeStrategy peerExchangeStrategy = new DefaultPeerExchangeStrategy(peerGroup, peerConfig);
         return node.initializeServer(networkConfig.getNodeId().getId(), networkConfig.getNodeId().getServerPort())
-                .thenApply(e -> new Tuple2<>(new PeerExchangeManager(node, peerExchangeStrategy), peerGroup));
+                .thenApply(e -> new Tuple3<>(new PeerExchangeManager(node, peerExchangeStrategy), peerGroup, node));
     }
 
     protected void shutDownSeed() {
-        seed.shutdown();
+        peerExchangeManagerSeed.shutdown();
     }
 
     protected void shutDownNode1() {
-        node1.shutdown();
+        peerExchangeManager1.shutdown();
     }
 
     protected void shutDownNode2() {
-        node2.shutdown();
+        peerExchangeManager2.shutdown();
     }
 
     protected void shutDownNode3() {
-        node3.shutdown();
-    }
-
-    protected void shutDownNode4() {
-        node4.shutdown();
+        peerExchangeManager3.shutdown();
     }
 
     protected void shutDownNodes() {

@@ -15,31 +15,41 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package misq.p2p.confidential;
+package misq.p2p.data.storage;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import misq.common.security.Sealed;
-import misq.p2p.message.Message;
+import misq.p2p.NetworkData;
 
-import java.security.PublicKey;
-
+// We want to have fine grained control over mailbox messages.
+// As the data is encrypted we could not use it's TTL and we would merge all mailbox message into one storage file.
+// By wrapping the sealed data into that NetworkData we can add the fileName and ttl from the unencrypted NetworkData.
 @EqualsAndHashCode
 @Getter
-public class ConfidentialMessage implements Message {
+public class SealedData implements NetworkData {
     private final Sealed sealed;
-    // We support multiple key pairs, so receiver need to know which key is associated to message
-    private final PublicKey receiversPublicKey;
+    private final String fileName;
+    private final long ttl;
 
-    public ConfidentialMessage(Sealed sealed, PublicKey receiversPublicKey) {
+    public SealedData(Sealed sealed, String fileName, long ttl) {
         this.sealed = sealed;
-        this.receiversPublicKey = receiversPublicKey;
+        this.fileName = fileName;
+        this.ttl = ttl;
     }
 
     @Override
-    public String toString() {
-        return "ConfidentialMessage{" +
-                "\n     sealedMessage=" + sealed +
-                "\n}";
+    public String getFileName() {
+        return fileName;
+    }
+
+    @Override
+    public long getTTL() {
+        return ttl;
+    }
+
+    @Override
+    public boolean isDataInvalid() {
+        return false;
     }
 }
