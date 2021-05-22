@@ -17,15 +17,7 @@
 
 package misq.p2p.data.storage;
 
-import misq.common.util.ObjectSerializer;
-
-import java.io.Serializable;
-
-public interface MapValue extends Serializable {
-    default byte[] serialize() {
-        return ObjectSerializer.serialize(this);
-    }
-
+public interface DataTransaction {
     int getSequenceNumber();
 
     long getCreated();

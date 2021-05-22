@@ -19,10 +19,13 @@ package misq.p2p.data.storage;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import misq.common.util.ObjectSerializer;
+
+import java.io.Serializable;
 
 @Getter
 @EqualsAndHashCode
-public class ProtectedEntry implements MapValue {
+public class ProtectedEntry implements Serializable {
     private final ProtectedData protectedData;
     private final int sequenceNumber;
     private final long created;
@@ -37,7 +40,7 @@ public class ProtectedEntry implements MapValue {
     }
 
     public boolean isExpired() {
-        return (System.currentTimeMillis() - created) > protectedData.getNetworkData().getTTL();
+        return (System.currentTimeMillis() - created) > protectedData.getNetworkData().getMetaData().getTTL();
     }
 
     public boolean isSequenceNrInvalid(long seqNumberFromMap) {
@@ -52,5 +55,9 @@ public class ProtectedEntry implements MapValue {
                 ",\n     sequenceNumber=" + sequenceNumber +
                 ",\n     creationTimeStamp=" + created +
                 "\n}";
+    }
+
+    public byte[] serialize() {
+        return ObjectSerializer.serialize(this);
     }
 }

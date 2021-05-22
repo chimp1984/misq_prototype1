@@ -19,7 +19,7 @@ package misq.p2p.data.inventory;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import misq.p2p.data.storage.MapValue;
+import misq.p2p.data.storage.DataTransaction;
 import misq.p2p.message.Message;
 
 import java.util.Set;
@@ -27,9 +27,12 @@ import java.util.Set;
 @EqualsAndHashCode
 @Getter
 public class Inventory implements Message {
-    private final Set<MapValue> collection;
+    public Inventory(Set<DataTransaction> filter) {
+
+    }
+  /*  private final Set<MapValue> collection;
 
     public Inventory(Set<MapValue> collection) {
         this.collection = collection;
-    }
+    }*/
 }

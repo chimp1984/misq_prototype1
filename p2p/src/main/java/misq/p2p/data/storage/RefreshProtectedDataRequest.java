@@ -31,19 +31,19 @@ import java.util.Arrays;
 @EqualsAndHashCode
 @Slf4j
 public class RefreshProtectedDataRequest implements Serializable {
-    protected final String storageFileName;
+    protected final MetaData metaData;
     protected final byte[] hash;
     protected final byte[] ownerPublicKeyBytes; // 442 bytes
     transient protected final PublicKey ownerPublicKey;
     protected final int sequenceNumber;
     protected final byte[] signature;         // 47 bytes
 
-    public RefreshProtectedDataRequest(String storageFileName,
+    public RefreshProtectedDataRequest(MetaData metaData,
                                        byte[] hash,
                                        PublicKey ownerPublicKey,
                                        int sequenceNumber,
                                        byte[] signature) {
-        this(storageFileName,
+        this(metaData,
                 hash,
                 ownerPublicKey.getEncoded(),
                 ownerPublicKey,
@@ -51,13 +51,13 @@ public class RefreshProtectedDataRequest implements Serializable {
                 signature);
     }
 
-    protected RefreshProtectedDataRequest(String storageFileName,
+    protected RefreshProtectedDataRequest(MetaData metaData,
                                           byte[] hash,
                                           byte[] ownerPublicKeyBytes,
                                           PublicKey ownerPublicKey,
                                           int sequenceNumber,
                                           byte[] signature) {
-        this.storageFileName = storageFileName;
+        this.metaData = metaData;
         this.hash = hash;
         this.ownerPublicKeyBytes = ownerPublicKeyBytes;
         this.ownerPublicKey = ownerPublicKey;
@@ -84,53 +84,5 @@ public class RefreshProtectedDataRequest implements Serializable {
 
     public boolean isSequenceNrInvalid(long seqNumberFromMap) {
         return sequenceNumber <= seqNumberFromMap;
-    }
-
-    @Getter
-    public static class Result {
-        private final boolean success;
-        private boolean publicKeyInvalid, sequenceNrInvalid, noEntry, alreadyRemoved, signatureInvalid;
-
-        public Result(boolean success) {
-            this.success = success;
-        }
-
-        public Result publicKeyInvalid() {
-            publicKeyInvalid = true;
-            return this;
-        }
-
-        public Result sequenceNrInvalid() {
-            sequenceNrInvalid = true;
-            return this;
-        }
-
-
-        public Result noEntry() {
-            noEntry = true;
-            return this;
-        }
-
-        public Result signatureInvalid() {
-            signatureInvalid = true;
-            return this;
-        }
-
-        public Result alreadyRemoved() {
-            alreadyRemoved = true;
-            return this;
-        }
-
-        @Override
-        public String toString() {
-            return "RemoveDataResult{" +
-                    "\n     success=" + success +
-                    ",\n     publicKeyInvalid=" + publicKeyInvalid +
-                    ",\n     sequenceNrInvalid=" + sequenceNrInvalid +
-                    ",\n     noEntry=" + noEntry +
-                    ",\n     alreadyRemoved=" + alreadyRemoved +
-                    ",\n     signatureInvalid=" + signatureInvalid +
-                    "\n}";
-        }
     }
 }

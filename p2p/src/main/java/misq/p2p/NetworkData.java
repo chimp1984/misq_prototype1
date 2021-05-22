@@ -17,12 +17,10 @@
 
 package misq.p2p;
 
-public interface NetworkData extends Proto {
-    default String getFileName() {
-        return this.getClass().getSimpleName();
-    }
+import misq.p2p.data.storage.MetaData;
 
-    long getTTL();
+public interface NetworkData extends Proto {
+    MetaData getMetaData();
 
     boolean isDataInvalid();
 }

@@ -31,7 +31,7 @@ import java.util.Arrays;
 @Getter
 @EqualsAndHashCode
 @Slf4j
-public class AddProtectedDataRequest implements Serializable {
+public class AddProtectedDataRequest implements DataTransaction, Serializable {
     protected final ProtectedEntry entry;
     protected final byte[] signature;         // 47 bytes
     protected final byte[] ownerPublicKeyBytes; // 442 bytes
@@ -74,9 +74,26 @@ public class AddProtectedDataRequest implements Serializable {
     }
 
     public String getFileName() {
-        return entry.getProtectedData().getNetworkData().getFileName();
+        return entry.getProtectedData().getNetworkData().getMetaData().getFileName();
     }
 
+    @Override
+    public int getSequenceNumber() {
+        return entry.getSequenceNumber();
+    }
+
+    @Override
+    public long getCreated() {
+        return entry.getCreated();
+    }
+
+    public int getMaxSizeInBytes() {
+        return entry.getProtectedData().getNetworkData().getMetaData().getMaxSizeInBytes();
+    }
+
+    public MetaData getMetaData() {
+        return entry.getProtectedData().getNetworkData().getMetaData();
+    }
 
     @Getter
     public static class Result {

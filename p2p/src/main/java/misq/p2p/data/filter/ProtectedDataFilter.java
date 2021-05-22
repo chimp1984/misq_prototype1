@@ -20,10 +20,8 @@ package misq.p2p.data.filter;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import misq.common.util.Tuple2;
+import misq.p2p.data.storage.DataTransaction;
 import misq.p2p.data.storage.MapKey;
-import misq.p2p.data.storage.MapValue;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.Map;
 import java.util.Set;
@@ -33,42 +31,22 @@ import java.util.stream.Collectors;
 @Getter
 public class ProtectedDataFilter implements DataFilter {
     private final String dataType;
-    private final Set<ProtectedDataFilterItem> protectedDataFilterItems;
-    private transient Map<MapKey, Tuple2<Integer, Boolean>> map;
+    private final Set<ProtectedDataFilterItem> filterItems;
+    transient private final Map<MapKey, Integer> filterMap;
 
-    public ProtectedDataFilter(String dataType, Set<ProtectedDataFilterItem> protectedDataFilterItems) {
+    public ProtectedDataFilter(String dataType, Set<ProtectedDataFilterItem> filterItems) {
         this.dataType = dataType;
-        this.protectedDataFilterItems = protectedDataFilterItems;
+        this.filterItems = filterItems;
+        filterMap = filterItems.stream()
+                .collect(Collectors.toMap(e -> new MapKey(e.getHash()), ProtectedDataFilterItem::getSequenceNumber));
     }
 
-    public void process(Map<MapKey, MapValue> map) {
-        Map<MapKey, Tuple2<Integer, Boolean>> filterMap = getMap();
-        map.entrySet().stream()
+    public Set<DataTransaction> filter(Map<MapKey, DataTransaction> storageMap) {
+        return storageMap.entrySet().stream()
                 .filter(entry -> filterMap.containsKey(entry.getKey()))
-                .forEach(entry -> {
-                    Tuple2<Integer, Boolean> tuple = filterMap.get(entry.getKey());
-                    int filterSequenceNumber = tuple.first;
-                    boolean wasRemoved = tuple.second;
-
-                    int mySequenceNumber = entry.getValue().getSequenceNumber();
-                    if (mySequenceNumber > filterSequenceNumber) {
-                        //add
-                    }
-                });
+                .filter(entry -> entry.getValue().getSequenceNumber() > filterMap.get(entry.getKey()))
+                .map(Map.Entry::getValue)
+                .collect(Collectors.toSet());
     }
 
-    @Override
-    public boolean matches(MapKey mapKey, MapValue mapValue) {
-
-        return true;
-    }
-
-    @NotNull
-    private Map<MapKey, Tuple2<Integer, Boolean>> getMap() {
-        if (map == null) {
-            map = protectedDataFilterItems.stream()
-                    .collect(Collectors.toMap(e -> new MapKey(e.getHash()), e -> new Tuple2<>(e.getSequenceNumber(), e.isRemoved())));
-        }
-        return map;
-    }
 }

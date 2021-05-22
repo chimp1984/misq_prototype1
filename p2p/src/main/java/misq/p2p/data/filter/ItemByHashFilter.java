@@ -19,7 +19,6 @@ package misq.p2p.data.filter;
 
 
 import misq.p2p.data.storage.MapKey;
-import misq.p2p.data.storage.MapValue;
 
 public class ItemByHashFilter implements DataFilter {
     private final MapKey mapKey;
@@ -32,8 +31,8 @@ public class ItemByHashFilter implements DataFilter {
         return mapKey;
     }
 
-    @Override
+/*    @Override
     public boolean matches(MapKey mapKey, MapValue value) {
         return mapKey.equals(this.mapKey);
-    }
+    }*/
 }

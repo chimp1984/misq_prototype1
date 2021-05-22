@@ -18,24 +18,27 @@
 package misq.p2p.data.storage;
 
 import lombok.EqualsAndHashCode;
-import lombok.Getter;
+import misq.p2p.Proto;
 
-@Getter
 @EqualsAndHashCode
-public class SequenceNumber implements MapValue {
-    private final int sequenceNumber;
-    private final long created;
+public class MetaData implements Proto {
+    private final long ttl;
+    private final int maxSizeInBytes;
 
-    public SequenceNumber(int sequenceNumber) {
-        this.sequenceNumber = sequenceNumber;
-        created = System.currentTimeMillis();
+    public MetaData(long ttl, int maxSizeInBytes) {
+        this.ttl = ttl;
+        this.maxSizeInBytes = maxSizeInBytes;
     }
 
-    @Override
-    public String toString() {
-        return "SequenceNumber{" +
-                "\n     sequenceNumber=" + sequenceNumber +
-                "\n     created=" + created +
-                "\n}";
+    public String getFileName() {
+        return this.getClass().getSimpleName();
+    }
+
+    public int getMaxSizeInBytes() {
+        return maxSizeInBytes;
+    }
+
+    public long getTTL() {
+        return ttl;
     }
 }

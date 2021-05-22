@@ -23,7 +23,6 @@ import misq.p2p.data.filter.DataFilter;
 import misq.p2p.data.inventory.InventoryRequestHandler;
 import misq.p2p.data.inventory.InventoryResponseHandler;
 import misq.p2p.data.inventory.RequestInventoryResult;
-import misq.p2p.data.storage.MapValue;
 import misq.p2p.data.storage.Storage;
 import misq.p2p.message.Message;
 import misq.p2p.node.Connection;
@@ -120,9 +119,8 @@ public class DataService implements MessageListener, ConnectionListener {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public CompletableFuture<GossipResult> requestAddData(MapValue mapValue) {
-        AddDataRequest addDataRequest = new AddDataRequest(mapValue);
-        // storage.add(mapValue);
+    public CompletableFuture<GossipResult> requestAddData() {
+        AddDataRequest addDataRequest = new AddDataRequest();
         return router.broadcast(addDataRequest);
     }
 

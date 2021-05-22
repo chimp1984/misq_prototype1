@@ -24,8 +24,6 @@ import misq.common.security.Sealed;
 import misq.common.security.SignatureUtil;
 import misq.common.util.FileUtils;
 import misq.p2p.NetworkData;
-import misq.p2p.data.filter.ProtectedDataFilter;
-import misq.p2p.data.inventory.Inventory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -64,28 +62,28 @@ public class Storage {
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     public AddProtectedDataRequest.Result addProtectedStorageEntry(AddProtectedDataRequest request) {
-        return getService(request.getFileName()).add(request);
+        return getService(request.getMetaData()).add(request);
     }
 
-    public RemoveProtectedDataRequest.Result removeProtectedStorageEntry(RemoveProtectedDataRequest request) {
-        return getService(request.getStorageFileName()).remove(request);
+    public DataRequestResult removeProtectedStorageEntry(RemoveProtectedDataRequest request) {
+        return getService(request.getMetaData()).remove(request);
     }
 
-    public RefreshProtectedDataRequest.Result refreshProtectedStorageEntry(RefreshProtectedDataRequest request) {
-        return getService(request.getStorageFileName()).refresh(request);
+    public DataRequestResult refreshProtectedStorageEntry(RefreshProtectedDataRequest request) {
+        return getService(request.getMetaData()).refresh(request);
     }
 
-    public ProtectedStorageService getService(String fileName) {
-        if (!storageServices.containsKey(fileName)) {
-            storageServices.put(fileName, new ProtectedStorageService(storageDirPath + separator + fileName));
+    public ProtectedStorageService getService(MetaData metaData) {
+        String key = metaData.getFileName();
+        if (!storageServices.containsKey(key)) {
+            storageServices.put(key, new ProtectedStorageService(storageDirPath + separator, metaData));
         }
-        return storageServices.get(fileName);
+        return storageServices.get(key);
     }
 
     public AddProtectedDataRequest getAddProtectedDataRequest(NetworkData networkData, KeyPair keyPair)
             throws GeneralSecurityException {
-        String fileName = networkData.getFileName();
-        ProtectedStorageService service = getService(fileName);
+        ProtectedStorageService service = getService(networkData.getMetaData());
         byte[] hashOfPublicKey = DigestUtil.sha256(keyPair.getPublic().getEncoded());
         ProtectedData protectedData = new ProtectedData(networkData, hashOfPublicKey);
         int newSequenceNumber = service.getSequenceNumber(networkData) + 1;
@@ -97,28 +95,26 @@ public class Storage {
 
     public RemoveProtectedDataRequest getRemoveProtectedDataRequest(NetworkData networkData, KeyPair keyPair)
             throws GeneralSecurityException {
-        String fileName = networkData.getFileName();
-        ProtectedStorageService service = getService(fileName);
+        ProtectedStorageService service = getService(networkData.getMetaData());
         byte[] serialized = networkData.serialize();
         byte[] hash = DigestUtil.sha256(serialized);
         byte[] signature = SignatureUtil.sign(hash, keyPair.getPrivate());
         int newSequenceNumber = service.getSequenceNumber(networkData) + 1;
-        return new RemoveProtectedDataRequest(fileName, hash, keyPair.getPublic(), newSequenceNumber, signature);
+        return new RemoveProtectedDataRequest(networkData.getMetaData(), hash, keyPair.getPublic(), newSequenceNumber, signature);
     }
 
     public RefreshProtectedDataRequest getRefreshProtectedDataRequest(NetworkData networkData, KeyPair keyPair)
             throws GeneralSecurityException {
-        String fileName = networkData.getFileName();
-        ProtectedStorageService service = getService(fileName);
+        ProtectedStorageService service = getService(networkData.getMetaData());
         byte[] serialized = networkData.serialize();
         byte[] hash = DigestUtil.sha256(serialized);
         byte[] signature = SignatureUtil.sign(hash, keyPair.getPrivate());
         int newSequenceNumber = service.getSequenceNumber(networkData) + 1;
-        return new RefreshProtectedDataRequest(fileName, hash, keyPair.getPublic(), newSequenceNumber, signature);
+        return new RefreshProtectedDataRequest(networkData.getMetaData(), hash, keyPair.getPublic(), newSequenceNumber, signature);
     }
 
     public boolean canAddMailboxMessage(SealedData sealedData) throws NoSuchAlgorithmException {
-        ProtectedStorageService service = getService(sealedData.getFileName());
+        ProtectedStorageService service = getService(sealedData.getMetaData());
         return service.getSequenceNumber(sealedData) < Integer.MAX_VALUE;
     }
 
@@ -126,16 +122,15 @@ public class Storage {
                                     KeyPair senderKeyPair,
                                     PublicKey receiverPublicKey)
             throws GeneralSecurityException {
-        String fileName = mailboxMessage.getFileName();
         Sealed sealed = HybridEncryption.encrypt(mailboxMessage.serialize(), receiverPublicKey, senderKeyPair);
-        return new SealedData(sealed, fileName, mailboxMessage.getTTL());
+        return new SealedData(sealed, mailboxMessage.getMetaData());
     }
 
     public AddMailboxDataRequest getAddMailboxDataRequest(SealedData sealedData,
                                                           KeyPair senderKeyPair,
                                                           PublicKey receiverPublicKey)
             throws GeneralSecurityException {
-        ProtectedStorageService service = getService(sealedData.getFileName());
+        ProtectedStorageService service = getService(sealedData.getMetaData());
         PublicKey senderPublicKey = senderKeyPair.getPublic();
         byte[] hashOfSendersPublicKey = DigestUtil.sha256(senderPublicKey.getEncoded());
         byte[] hashOfReceiversPublicKey = DigestUtil.sha256(receiverPublicKey.getEncoded());
@@ -151,19 +146,18 @@ public class Storage {
         return new AddMailboxDataRequest(entry, signature, senderPublicKey);
     }
 
-    public RemoveMailboxDataRequest getRemoveMailboxDataRequest(String fileName,
-                                                                SealedData sealedData,
+    public RemoveMailboxDataRequest getRemoveMailboxDataRequest(SealedData sealedData,
                                                                 KeyPair receiverKeyPair)
             throws GeneralSecurityException {
         byte[] hash = DigestUtil.sha256(sealedData.serialize());
         byte[] signature = SignatureUtil.sign(hash, receiverKeyPair.getPrivate());
         int newSequenceNumber = Integer.MAX_VALUE; // Use max value for sequence number so that no other addData call is permitted.
-        return new RemoveMailboxDataRequest(fileName, hash, receiverKeyPair.getPublic(), newSequenceNumber, signature);
+        return new RemoveMailboxDataRequest(sealedData.getMetaData(), hash, receiverKeyPair.getPublic(), newSequenceNumber, signature);
     }
 
-    public Inventory getInventory(ProtectedDataFilter dataFilter) {
+   /* public Inventory getInventory(ProtectedDataFilter dataFilter) {
         return getService(dataFilter.getDataType()).getInventory(dataFilter);
-    }
+    }*/
 
 /*
     public MapValue put(MapKey mapKey, MapValue mapValue) {

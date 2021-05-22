@@ -26,26 +26,21 @@ import misq.p2p.NetworkData;
 // As the data is encrypted we could not use it's TTL and we would merge all mailbox message into one storage file.
 // By wrapping the sealed data into that NetworkData we can add the fileName and ttl from the unencrypted NetworkData.
 @EqualsAndHashCode
-@Getter
+
 public class SealedData implements NetworkData {
+    @Getter
     private final Sealed sealed;
-    private final String fileName;
-    private final long ttl;
+    private final MetaData metaData;
 
-    public SealedData(Sealed sealed, String fileName, long ttl) {
+    public SealedData(Sealed sealed, MetaData metaData) {
         this.sealed = sealed;
-        this.fileName = fileName;
-        this.ttl = ttl;
+        this.metaData = metaData;
     }
 
-    @Override
-    public String getFileName() {
-        return fileName;
-    }
 
     @Override
-    public long getTTL() {
-        return ttl;
+    public MetaData getMetaData() {
+        return metaData;
     }
 
     @Override
@@ -57,8 +52,7 @@ public class SealedData implements NetworkData {
     public String toString() {
         return "SealedData{" +
                 "\n     sealed=" + sealed +
-                ",\n     fileName='" + fileName + '\'' +
-                ",\n     ttl=" + ttl +
+                ",\n     metaData='" + metaData + '\'' +
                 "\n}";
     }
 }

@@ -27,11 +27,9 @@ import java.io.Serializable;
 public class ProtectedDataFilterItem implements Serializable {
     private final byte[] hash;
     private final int sequenceNumber;
-    private final boolean isRemoved;
 
-    public ProtectedDataFilterItem(byte[] hash, int sequenceNumber, boolean isRemoved) {
+    public ProtectedDataFilterItem(byte[] hash, int sequenceNumber) {
         this.hash = hash;
         this.sequenceNumber = sequenceNumber;
-        this.isRemoved = isRemoved;
     }
 }

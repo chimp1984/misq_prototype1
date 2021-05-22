@@ -30,12 +30,12 @@ import java.util.Arrays;
 @Getter
 public class RemoveMailboxDataRequest extends RemoveProtectedDataRequest {
     // Receiver is owner for remove request
-    public RemoveMailboxDataRequest(String storageFileName,
+    public RemoveMailboxDataRequest(MetaData metaData,
                                     byte[] dataHash,
                                     PublicKey receiverPublicKey,
                                     int sequenceNumber,
                                     byte[] signature) {
-        super(storageFileName,
+        super(metaData,
                 dataHash,
                 receiverPublicKey.getEncoded(),
                 receiverPublicKey,

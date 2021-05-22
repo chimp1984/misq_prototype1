@@ -20,9 +20,5 @@ package misq.p2p.data.storage;
 import misq.p2p.Proto;
 
 public interface MailboxMessage extends Proto {
-    default String getFileName() {
-        return this.getClass().getSimpleName();
-    }
-
-    long getTTL();
+    MetaData getMetaData();
 }

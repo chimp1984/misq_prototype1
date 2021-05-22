@@ -24,13 +24,15 @@ import java.util.concurrent.TimeUnit;
 @EqualsAndHashCode
 public class MockMailboxMessage implements MailboxMessage {
     private final String text;
+    private final MetaData metaData;
 
     public MockMailboxMessage(String text) {
         this.text = text;
+        metaData = new MetaData(TimeUnit.DAYS.toMillis(10), 100000);
     }
 
     @Override
-    public long getTTL() {
-        return TimeUnit.SECONDS.toMillis(10);
+    public MetaData getMetaData() {
+        return metaData;
     }
 }

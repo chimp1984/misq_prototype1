@@ -18,11 +18,8 @@
 package misq.p2p.data.filter;
 
 
-import misq.p2p.data.storage.MapKey;
-import misq.p2p.data.storage.MapValue;
-
 import java.io.Serializable;
 
 public interface DataFilter extends Serializable {
-    boolean matches(MapKey mapKey, MapValue value);
+   // boolean matches(MapKey mapKey, MapValue value);
 }

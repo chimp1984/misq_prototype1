@@ -19,15 +19,12 @@ package misq.p2p.data;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import misq.p2p.data.storage.MapValue;
 import misq.p2p.message.Message;
 
 @EqualsAndHashCode
 @Getter
 public class AddDataRequest implements Message {
-    private final MapValue mapValue;
 
-    public AddDataRequest(MapValue mapValue) {
-        this.mapValue = mapValue;
+    public AddDataRequest() {
     }
 }
