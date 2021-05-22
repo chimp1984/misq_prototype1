@@ -34,4 +34,9 @@ public class AddMailboxDataRequest extends AddProtectedDataRequest {
                 signature,
                 senderPublicKey);
     }
+
+    @Override
+    public String toString() {
+        return "AddMailboxDataRequest{} " + super.toString();
+    }
 }

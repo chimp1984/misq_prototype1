@@ -31,6 +31,7 @@ import java.io.File;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
+import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -68,7 +69,7 @@ public class Storage {
         return getService(request.getStorageFileName()).remove(request);
     }
 
-    private ProtectedStorageService getService(String fileName) {
+    public ProtectedStorageService getService(String fileName) {
         if (!storageServices.containsKey(fileName)) {
             storageServices.put(fileName, new ProtectedStorageService(storageDirPath + separator + fileName));
         }
@@ -99,21 +100,34 @@ public class Storage {
         return new RemoveProtectedDataRequest(fileName, hash, keyPair.getPublic(), newSequenceNumber, signature);
     }
 
+    public boolean canAddMailboxMessage(SealedData sealedData) throws NoSuchAlgorithmException {
+        ProtectedStorageService service = getService(sealedData.getFileName());
+        return service.getSequenceNumber(sealedData) < Integer.MAX_VALUE;
+    }
 
-    public AddMailboxDataRequest getAddMailboxDataRequest(MailboxMessage mailboxMessage,
+    public SealedData getSealedData(MailboxMessage mailboxMessage,
+                                    KeyPair senderKeyPair,
+                                    PublicKey receiverPublicKey)
+            throws GeneralSecurityException {
+        String fileName = mailboxMessage.getFileName();
+        Sealed sealed = HybridEncryption.encrypt(mailboxMessage.serialize(), receiverPublicKey, senderKeyPair);
+        return new SealedData(sealed, fileName, mailboxMessage.getTTL());
+    }
+
+    public AddMailboxDataRequest getAddMailboxDataRequest(SealedData sealedData,
                                                           KeyPair senderKeyPair,
                                                           PublicKey receiverPublicKey)
             throws GeneralSecurityException {
-        String fileName = mailboxMessage.getFileName();
-        ProtectedStorageService service = getService(fileName);
-
-        Sealed sealed = HybridEncryption.encrypt(mailboxMessage.serialize(), receiverPublicKey, senderKeyPair);
-        SealedData sealedData = new SealedData(sealed, fileName, mailboxMessage.getTTL());
+        ProtectedStorageService service = getService(sealedData.getFileName());
         PublicKey senderPublicKey = senderKeyPair.getPublic();
         byte[] hashOfSendersPublicKey = DigestUtil.sha256(senderPublicKey.getEncoded());
         byte[] hashOfReceiversPublicKey = DigestUtil.sha256(receiverPublicKey.getEncoded());
         MailboxData mailboxData = new MailboxData(sealedData, hashOfSendersPublicKey, hashOfReceiversPublicKey);
-        int newSequenceNumber = service.getSequenceNumber(mailboxMessage) + 1;
+        int sequenceNumberFromMap = service.getSequenceNumber(sealedData);
+        if (sequenceNumberFromMap == Integer.MAX_VALUE) {
+            throw new IllegalStateException("Existing sequenceNumber must be smaller than Integer.MAX_VALUE.");
+        }
+        int newSequenceNumber = sequenceNumberFromMap + 1;
         MailboxEntry entry = new MailboxEntry(mailboxData, newSequenceNumber, receiverPublicKey);
         byte[] serialized = entry.serialize();
         byte[] signature = SignatureUtil.sign(serialized, senderKeyPair.getPrivate());
@@ -124,10 +138,9 @@ public class Storage {
                                                                 SealedData sealedData,
                                                                 KeyPair receiverKeyPair)
             throws GeneralSecurityException {
-        ProtectedStorageService service = getService(fileName);
         byte[] hash = DigestUtil.sha256(sealedData.serialize());
         byte[] signature = SignatureUtil.sign(hash, receiverKeyPair.getPrivate());
-        int newSequenceNumber = service.getSequenceNumber(sealedData) + 1;
+        int newSequenceNumber = Integer.MAX_VALUE; // Use max value for sequence number so that no other addData call is permitted.
         return new RemoveMailboxDataRequest(fileName, hash, receiverKeyPair.getPublic(), newSequenceNumber, signature);
     }
 

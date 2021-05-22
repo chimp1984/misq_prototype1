@@ -19,6 +19,7 @@ package misq.common.security;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import misq.common.util.Hex;
 
 import java.io.Serializable;
 
@@ -47,5 +48,18 @@ public class Sealed implements Serializable {
         this.encryptedMessage = encryptedMessage;
         this.signature = signature;
         this.senderPublicKey = senderPublicKey;
+    }
+
+    @Override
+    public String toString() {
+        return "Sealed{" +
+                "\n     encryptedHmacSessionKey=" + Hex.encode(encryptedHmacSessionKey) +
+                ",\n     encryptedSessionKey=" + Hex.encode(encryptedSessionKey) +
+                ",\n     hmac=" + Hex.encode(hmac) +
+                ",\n     iv=" + Hex.encode(iv) +
+                ",\n     encryptedMessage=" + Hex.encode(encryptedMessage) +
+                ",\n     signature=" + Hex.encode(signature) +
+                ",\n     senderPublicKey=" + Hex.encode(senderPublicKey) +
+                "\n}";
     }
 }

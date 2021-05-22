@@ -52,4 +52,9 @@ public class RemoveMailboxDataRequest extends RemoveProtectedDataRequest {
             return true;
         }
     }
+
+    @Override
+    public String toString() {
+        return "RemoveMailboxDataRequest{} " + super.toString();
+    }
 }

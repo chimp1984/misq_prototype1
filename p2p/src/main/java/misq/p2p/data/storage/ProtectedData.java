@@ -19,6 +19,7 @@ package misq.p2p.data.storage;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import misq.common.util.Hex;
 import misq.p2p.NetworkData;
 
 import java.io.Serializable;
@@ -36,5 +37,14 @@ public class ProtectedData implements Serializable {
 
     public byte[] getHashOfPublicKey() {
         return hashOfPublicKey;
+    }
+
+
+    @Override
+    public String toString() {
+        return "ProtectedData{" +
+                "\n     networkData=" + networkData +
+                ",\n     hashOfPublicKey=" + Hex.encode(hashOfPublicKey) +
+                "\n}";
     }
 }

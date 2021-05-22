@@ -22,6 +22,7 @@ import misq.common.persistence.Persistence;
 import misq.common.security.DigestUtil;
 import misq.p2p.Proto;
 
+import java.io.File;
 import java.io.Serializable;
 import java.security.NoSuchAlgorithmException;
 import java.util.Set;
@@ -43,10 +44,12 @@ public class ProtectedStorageService {
     public ProtectedStorageService(String storageFilePath) {
         this.storageFilePath = storageFilePath;
 
-        Serializable serializable = Persistence.read(storageFilePath);
-        if (serializable instanceof ConcurrentHashMap) {
-            ConcurrentHashMap<MapKey, MapValue> persisted = (ConcurrentHashMap<MapKey, MapValue>) serializable;
-            map.putAll(persisted);
+        if (new File(storageFilePath).exists()) {
+            Serializable serializable = Persistence.read(storageFilePath);
+            if (serializable instanceof ConcurrentHashMap) {
+                ConcurrentHashMap<MapKey, MapValue> persisted = (ConcurrentHashMap<MapKey, MapValue>) serializable;
+                map.putAll(persisted);
+            }
         }
     }
 
@@ -60,7 +63,7 @@ public class ProtectedStorageService {
         } catch (NoSuchAlgorithmException e) {
             return new AddProtectedDataRequest.Result(false).cannotCreateHash(e);
         }
-
+        log.error("Add {}", mapKey);
         MapValue fromMap = map.get(mapKey);
         int sequenceNumberFromMap = fromMap != null ? fromMap.getSequenceNumber() : 0;
 
@@ -94,12 +97,13 @@ public class ProtectedStorageService {
 
     public RemoveProtectedDataRequest.Result remove(RemoveProtectedDataRequest request) {
         MapKey mapKey = new MapKey(request.getHash());
+        log.error("Remove {}", mapKey);
         MapValue fromMap = map.get(mapKey);
         if (fromMap == null) {
             // We don't have the entry but it might be that we would receive later an add request, so we need to keep
             // track of the sequence number
             map.put(mapKey, new SequenceNumber(request.getSequenceNumber()));
-            //  Persistence.write(map, storageFilePath);
+            Persistence.write(map, storageFilePath);
             return new RemoveProtectedDataRequest.Result(false).noEntry();
         }
 
@@ -127,7 +131,7 @@ public class ProtectedStorageService {
 
         map.put(mapKey, new SequenceNumber(request.getSequenceNumber()));
         listeners.forEach(listener -> listener.onRemoved(dataFromMap));
-        //  Persistence.write(map, storageFilePath);
+        Persistence.write(map, storageFilePath);
         return new RemoveProtectedDataRequest.Result(true);
     }
 

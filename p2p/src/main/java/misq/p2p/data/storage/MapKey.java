@@ -18,14 +18,22 @@
 package misq.p2p.data.storage;
 
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import misq.common.util.Hex;
 
 import java.io.Serializable;
 
 @EqualsAndHashCode
+@Getter
 public class MapKey implements Serializable {
     private final byte[] bytes;
 
     public MapKey(byte[] bytes) {
         this.bytes = bytes;
+    }
+
+    @Override
+    public String toString() {
+        return Hex.encode(bytes);
     }
 }

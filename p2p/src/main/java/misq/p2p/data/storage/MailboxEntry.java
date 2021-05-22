@@ -19,6 +19,7 @@ package misq.p2p.data.storage;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import misq.common.util.Hex;
 
 import java.security.PublicKey;
 
@@ -34,5 +35,13 @@ public class MailboxEntry extends ProtectedEntry {
         super(data, sequenceNumber, System.currentTimeMillis());
         this.receiversPubKey = receiversPubKey;
         receiversPubKeyBytes = receiversPubKey.getEncoded();
+    }
+
+    @Override
+    public String toString() {
+        return "MailboxEntry{" +
+                "\n     receiversPubKeyBytes=" + Hex.encode(receiversPubKeyBytes) +
+                ",\n     receiversPubKey=" + receiversPubKey +
+                "\n} " + super.toString();
     }
 }

@@ -28,4 +28,11 @@ public class SequenceNumber implements MapValue {
     public SequenceNumber(int sequenceNumber) {
         this.sequenceNumber = sequenceNumber;
     }
+
+    @Override
+    public String toString() {
+        return "SequenceNumber{" +
+                "\n     sequenceNumber=" + sequenceNumber +
+                "\n}";
+    }
 }

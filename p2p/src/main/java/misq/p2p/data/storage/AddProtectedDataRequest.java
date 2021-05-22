@@ -22,6 +22,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import misq.common.security.DigestUtil;
 import misq.common.security.SignatureUtil;
+import misq.common.util.Hex;
 
 import java.io.Serializable;
 import java.security.PublicKey;
@@ -75,6 +76,7 @@ public class AddProtectedDataRequest implements Serializable {
     public String getFileName() {
         return entry.getProtectedData().getNetworkData().getFileName();
     }
+
 
     @Getter
     public static class Result {
@@ -132,5 +134,15 @@ public class AddProtectedDataRequest implements Serializable {
                     ",\n     exception=" + exception +
                     "\n}";
         }
+    }
+
+    @Override
+    public String toString() {
+        return "AddProtectedDataRequest{" +
+                "\n     entry=" + entry +
+                ",\n     signature=" + Hex.encode(signature) +
+                ",\n     ownerPublicKeyBytes=" + Hex.encode(ownerPublicKeyBytes) +
+                ",\n     ownerPublicKey=" + ownerPublicKey +
+                "\n}";
     }
 }

@@ -17,8 +17,11 @@
 
 package misq.common.persistence;
 
+import lombok.extern.slf4j.Slf4j;
+
 import java.io.*;
 
+@Slf4j
 public class Persistence {
     public static void write(Persistable persistable) {
         write(persistable, persistable.getDefaultStorageFileName());
@@ -32,7 +35,7 @@ public class Persistence {
             fileOutputStream.flush();
             fileOutputStream.getFD().sync();
         } catch (IOException exception) {
-            exception.printStackTrace();
+            log.error(exception.toString(), exception);
         }
     }
 
@@ -41,7 +44,7 @@ public class Persistence {
              ObjectInputStream objectInputStream = new ObjectInputStream(fileInputStream)) {
             return (Serializable) objectInputStream.readObject();
         } catch (IOException | ClassNotFoundException exception) {
-            exception.printStackTrace();
+            log.error(exception.toString(), exception);
             return null;
         }
     }

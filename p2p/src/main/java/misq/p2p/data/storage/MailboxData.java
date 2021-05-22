@@ -20,6 +20,7 @@ package misq.p2p.data.storage;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import misq.common.util.Hex;
 
 @Getter
 @EqualsAndHashCode(callSuper = true)
@@ -33,5 +34,12 @@ public final class MailboxData extends ProtectedData {
         super(sealedData, hashOfSendersPublicKey);
 
         this.hashOfReceiversPublicKey = hashOfReceiversPublicKey;
+    }
+
+    @Override
+    public String toString() {
+        return "MailboxData{" +
+                "\n     hashOfReceiversPublicKey=" + Hex.encode(hashOfReceiversPublicKey) +
+                "\n} " + super.toString();
     }
 }

@@ -52,4 +52,13 @@ public class SealedData implements NetworkData {
     public boolean isDataInvalid() {
         return false;
     }
+
+    @Override
+    public String toString() {
+        return "SealedData{" +
+                "\n     sealed=" + sealed +
+                ",\n     fileName='" + fileName + '\'' +
+                ",\n     ttl=" + ttl +
+                "\n}";
+    }
 }

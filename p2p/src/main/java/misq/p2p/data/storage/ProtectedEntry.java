@@ -42,4 +42,13 @@ public class ProtectedEntry implements MapValue {
     public boolean isSequenceNrInvalid(long seqNumberFromMap) {
         return sequenceNumber <= seqNumberFromMap;
     }
+
+    @Override
+    public String toString() {
+        return "ProtectedEntry{" +
+                "\n     protectedData=" + protectedData +
+                ",\n     sequenceNumber=" + sequenceNumber +
+                ",\n     creationTimeStamp=" + creationTimeStamp +
+                "\n}";
+    }
 }

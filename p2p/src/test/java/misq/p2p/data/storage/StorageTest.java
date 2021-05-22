@@ -26,15 +26,15 @@ import org.junit.Test;
 import java.io.File;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
+import java.util.concurrent.ConcurrentHashMap;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 @Slf4j
 public class StorageTest {
     private String appDirPath = OsUtils.getUserDataDir() + File.separator + "misq_StorageTest";
 
-    @Test
+    //  @Test
     public void testAddAndRemove() throws GeneralSecurityException {
         Storage storage = new Storage(appDirPath);
         MockNetworkData mockNetworkData = new MockNetworkData("test");
@@ -69,26 +69,23 @@ public class StorageTest {
 
     @Test
     public void testAddAndRemoveMailboxMsg() throws GeneralSecurityException {
-        //todo with new keypair we get new entries each run...
         Storage storage = new Storage(appDirPath);
         KeyPair senderKeyPair = KeyPairGeneratorUtil.generateKeyPair();
         KeyPair receiverKeyPair = KeyPairGeneratorUtil.generateKeyPair();
 
         MockMailboxMessage mockMailboxMessage = new MockMailboxMessage("test");
-        AddMailboxDataRequest request = storage.getAddMailboxDataRequest(mockMailboxMessage, senderKeyPair, receiverKeyPair.getPublic());
-        ProtectedStorageService service = storage.storageServices.get(request.getFileName());
-        int seqNrBefore = service.getSequenceNumber(mockMailboxMessage);
+        SealedData sealedData = storage.getSealedData(mockMailboxMessage, senderKeyPair, receiverKeyPair.getPublic());
+        ProtectedStorageService service = storage.getService(sealedData.getFileName());
+        ConcurrentHashMap<MapKey, MapValue> map = service.map;
+        int seqNrBefore = service.getSequenceNumber(sealedData);
+        AddMailboxDataRequest request = storage.getAddMailboxDataRequest(sealedData, senderKeyPair, receiverKeyPair.getPublic());
         AddProtectedDataRequest.Result result = storage.addProtectedStorageEntry(request);
-        log.error(result.toString());
         assertTrue(result.isSuccess());
+        MapValue mapValue1 = map.get(service.getMapKey(sealedData));
+        assertEquals(seqNrBefore + 1, mapValue1.getSequenceNumber());
 
-
-        MapValue mapValue1 = service.map.get(service.getMapKey(mockMailboxMessage));
-        //   assertEquals(seqNrBefore + 1, mapValue1.getSequenceNumber());
-
-        SealedData sealedData = (SealedData) request.getEntry().getProtectedData().getNetworkData();
         MapKey mapKey = service.getMapKey(sealedData);
-        MapValue mapValue = service.map.get(mapKey);
+        MapValue mapValue = map.get(mapKey);
         assertTrue(mapValue instanceof MailboxEntry);
         MailboxEntry protectedPayloadEntry = (MailboxEntry) mapValue;
         NetworkData sealedDataPayload2 = protectedPayloadEntry.getProtectedData().getNetworkData();
@@ -100,9 +97,27 @@ public class StorageTest {
         RemoveProtectedDataRequest.Result removeDataResult = storage.removeProtectedStorageEntry(removeMailboxDataRequest);
         log.error(removeDataResult.toString());
         assertTrue(removeDataResult.isSuccess());
-        mapValue = service.map.get(mapKey);
+        mapValue = map.get(mapKey);
         assertTrue(mapValue instanceof SequenceNumber);
         SequenceNumber sequenceNumber = (SequenceNumber) mapValue;
-        // assertEquals(seqNrBefore+2, sequenceNumber.getSequenceNumber());
+        assertEquals(Integer.MAX_VALUE, sequenceNumber.getSequenceNumber());
+
+        // we must not create a new sealed data as it would have a diff. secret key and so a diff hash...
+        // If users re-publish mailbox messages they need to keep the original sealed data and re-use that instead
+        // of creating new ones, as otherwise it would appear like a new mailbox msg.
+        assertFalse(storage.canAddMailboxMessage(sealedData));
+        try {
+            // calling getAddMailboxDataRequest without the pior canAddMailboxMessage check will throw
+            storage.getAddMailboxDataRequest(sealedData, senderKeyPair, receiverKeyPair.getPublic());
+            fail();
+        } catch (Exception e) {
+            assertTrue(e instanceof IllegalStateException);
+        }
+
+        // using the old request again would fail as seq number is not allowing it
+        AddProtectedDataRequest.Result result2 = storage.addProtectedStorageEntry(request);
+        assertFalse(result2.isSuccess());
+        assertTrue(result2.isSequenceNrInvalid());
+        log.error(map.toString());
     }
 }
