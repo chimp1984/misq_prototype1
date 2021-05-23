@@ -37,7 +37,6 @@ public class SealedData implements NetworkData {
         this.metaData = metaData;
     }
 
-
     @Override
     public MetaData getMetaData() {
         return metaData;

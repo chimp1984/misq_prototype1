@@ -19,20 +19,27 @@ package misq.p2p.data.storage;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
+import misq.common.security.DigestUtil;
 import misq.common.util.Hex;
 import misq.p2p.NetworkData;
 
 import java.io.Serializable;
+import java.security.NoSuchAlgorithmException;
 
 @Getter
 @EqualsAndHashCode
+@Slf4j
 public class ProtectedData implements Serializable {
     private final NetworkData networkData;
-    protected final byte[] hashOfPublicKey;
+    protected final byte[] hashOfPublicKey; // 32
+    transient protected final byte[] hashOfNetworkData;
 
-    public ProtectedData(NetworkData networkData, byte[] hashOfPublicKey) {
+    public ProtectedData(NetworkData networkData, byte[] hashOfPublicKey) throws NoSuchAlgorithmException {
         this.networkData = networkData;
         this.hashOfPublicKey = hashOfPublicKey;
+
+        hashOfNetworkData = DigestUtil.sha256(networkData.serialize());
     }
 
     public byte[] getHashOfPublicKey() {
@@ -45,6 +52,7 @@ public class ProtectedData implements Serializable {
         return "ProtectedData{" +
                 "\n     networkData=" + networkData +
                 ",\n     hashOfPublicKey=" + Hex.encode(hashOfPublicKey) +
+                ",\n     hashOfNetworkData=" + Hex.encode(hashOfNetworkData) +
                 "\n}";
     }
 }

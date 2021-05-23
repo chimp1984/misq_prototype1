@@ -19,15 +19,12 @@ package misq.p2p.data.storage;
 
 import lombok.extern.slf4j.Slf4j;
 import misq.common.persistence.Persistence;
-import misq.common.security.DigestUtil;
 import misq.p2p.NetworkData;
-import misq.p2p.Proto;
 import misq.p2p.data.filter.ProtectedDataFilter;
 import misq.p2p.data.inventory.Inventory;
 
 import java.io.File;
 import java.io.Serializable;
-import java.security.NoSuchAlgorithmException;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -66,8 +63,8 @@ public class ProtectedStorageService {
         this.storageFilePath = storageDirPath + separator + metaData.getFileName();
         this.metaData = metaData;
 
-        if (new File(storageDirPath).exists()) {
-            Serializable serializable = Persistence.read(storageDirPath);
+        if (new File(storageFilePath).exists()) {
+            Serializable serializable = Persistence.read(storageFilePath);
             if (serializable instanceof ConcurrentHashMap) {
                 ConcurrentHashMap<MapKey, DataTransaction> persisted = (ConcurrentHashMap<MapKey, DataTransaction>) serializable;
                 maybePruneMap(persisted);
@@ -79,13 +76,7 @@ public class ProtectedStorageService {
         ProtectedEntry entry = request.getEntry();
         ProtectedData protectedData = entry.getProtectedData();
         NetworkData networkData = protectedData.getNetworkData();
-
-        MapKey mapKey;
-        try {
-            mapKey = getMapKey(networkData);
-        } catch (NoSuchAlgorithmException e) {
-            return new AddProtectedDataRequest.Result(false).cannotCreateHash(e);
-        }
+        MapKey mapKey = new MapKey(protectedData.getHashOfNetworkData());
         DataTransaction dataTransaction = map.get(mapKey);
         int sequenceNumberFromMap = dataTransaction != null ? dataTransaction.getSequenceNumber() : 0;
 
@@ -208,12 +199,18 @@ public class ProtectedStorageService {
     }
 
     public Inventory getInventory(ProtectedDataFilter dataFilter) {
-        return new Inventory(getInventoryMap(map, dataFilter.getFilterMap()));
+        Set<DataTransaction> inventoryMap = getInventoryMap(map, dataFilter.getFilterMap());
+        Set<DataTransaction> result = inventoryMap.stream().limit(getMaxItems()).collect(Collectors.toSet());
+        int truncated = inventoryMap.size() - result.size();
+        return new Inventory(result, truncated);
+    }
+
+    int getMaxItems() {
+        return MAX_INVENTORY_MAP_SIZE / metaData.getMaxSizeInBytes();
     }
 
     Set<DataTransaction> getInventoryMap(ConcurrentHashMap<MapKey, DataTransaction> map,
                                          Map<MapKey, Integer> requesterMap) {
-        //MAX_INVENTORY_MAP_SIZE
         return map.entrySet().stream()
                 .filter(entry -> {
                     // Any entry we have but is not included in filter gets added
@@ -231,12 +228,8 @@ public class ProtectedStorageService {
         Persistence.write(map, storageFilePath);
     }
 
-    MapKey getMapKey(Proto data) throws NoSuchAlgorithmException {
-        return new MapKey(DigestUtil.sha256(data.serialize()));
-    }
-
-    int getSequenceNumber(Proto data) throws NoSuchAlgorithmException {
-        MapKey mapKey = getMapKey(data);
+    int getSequenceNumber(byte[] hash) {
+        MapKey mapKey = new MapKey(hash);
         if (map.containsKey(mapKey)) {
             return map.get(mapKey).getSequenceNumber();
         }
@@ -265,8 +258,6 @@ public class ProtectedStorageService {
                 .sorted((o1, o2) -> Long.compare(o2.getValue().getCreated(), o1.getValue().getCreated()))
                 .limit(MAX_MAP_SIZE)
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-        if (pruned.size() != current.size()) {
-            map.putAll(pruned);
-        }
+        map.putAll(pruned);
     }
 }

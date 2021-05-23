@@ -33,8 +33,8 @@ import java.util.Arrays;
 @Slf4j
 public class AddProtectedDataRequest implements DataTransaction, Serializable {
     protected final ProtectedEntry entry;
-    protected final byte[] signature;         // 47 bytes
-    protected final byte[] ownerPublicKeyBytes; // 442 bytes
+    protected final byte[] signature;         // 256 bytes
+    protected final byte[] ownerPublicKeyBytes; // 294 bytes
     transient protected final PublicKey ownerPublicKey;
 
     public AddProtectedDataRequest(ProtectedEntry entry,
@@ -99,7 +99,7 @@ public class AddProtectedDataRequest implements DataTransaction, Serializable {
     public static class Result {
         private final boolean success;
         private boolean publicKeyInvalid, sequenceNrInvalid, signatureInvalid,
-                cannotCreateHash, dataInvalid, expired;
+                dataInvalid, expired;
         private Exception exception;
 
         public Result(boolean success) {
@@ -122,12 +122,6 @@ public class AddProtectedDataRequest implements DataTransaction, Serializable {
             return this;
         }
 
-        public Result cannotCreateHash(Exception exception) {
-            this.exception = exception;
-            cannotCreateHash = true;
-            return this;
-        }
-
         public Result expired() {
             expired = true;
             return this;
@@ -145,7 +139,6 @@ public class AddProtectedDataRequest implements DataTransaction, Serializable {
                     ",\n     publicKeyInvalid=" + publicKeyInvalid +
                     ",\n     sequenceNrInvalid=" + sequenceNrInvalid +
                     ",\n     signatureInvalid=" + signatureInvalid +
-                    ",\n     cannotCreateHash=" + cannotCreateHash +
                     ",\n     dataInvalid=" + dataInvalid +
                     ",\n     expired=" + expired +
                     ",\n     exception=" + exception +
@@ -159,7 +152,6 @@ public class AddProtectedDataRequest implements DataTransaction, Serializable {
                 "\n     entry=" + entry +
                 ",\n     signature=" + Hex.encode(signature) +
                 ",\n     ownerPublicKeyBytes=" + Hex.encode(ownerPublicKeyBytes) +
-                ",\n     ownerPublicKey=" + ownerPublicKey +
                 "\n}";
     }
 }

@@ -28,7 +28,7 @@ public class MockMailboxMessage implements MailboxMessage {
 
     public MockMailboxMessage(String text) {
         this.text = text;
-        metaData = new MetaData(TimeUnit.DAYS.toMillis(10), 100000);
+        metaData = new MetaData(TimeUnit.DAYS.toMillis(10), 100000, getClass().getSimpleName());
     }
 
     @Override

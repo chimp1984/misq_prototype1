@@ -26,14 +26,14 @@ import java.io.Serializable;
 @EqualsAndHashCode
 @Getter
 public class MapKey implements Serializable {
-    private final byte[] bytes;
+    private final byte[] hash;
 
-    public MapKey(byte[] bytes) {
-        this.bytes = bytes;
+    public MapKey(byte[] hash) {
+        this.hash = hash;
     }
 
     @Override
     public String toString() {
-        return Hex.encode(bytes);
+        return Hex.encode(hash);
     }
 }

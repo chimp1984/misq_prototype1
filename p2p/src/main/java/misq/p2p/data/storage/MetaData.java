@@ -18,27 +18,19 @@
 package misq.p2p.data.storage;
 
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import misq.p2p.Proto;
 
 @EqualsAndHashCode
+@Getter
 public class MetaData implements Proto {
     private final long ttl;
     private final int maxSizeInBytes;
+    private final String fileName;
 
-    public MetaData(long ttl, int maxSizeInBytes) {
+    public MetaData(long ttl, int maxSizeInBytes, String fileName) {
         this.ttl = ttl;
         this.maxSizeInBytes = maxSizeInBytes;
-    }
-
-    public String getFileName() {
-        return this.getClass().getSimpleName();
-    }
-
-    public int getMaxSizeInBytes() {
-        return maxSizeInBytes;
-    }
-
-    public long getTTL() {
-        return ttl;
+        this.fileName = fileName;
     }
 }

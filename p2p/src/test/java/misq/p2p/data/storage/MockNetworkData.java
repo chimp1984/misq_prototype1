@@ -25,11 +25,13 @@ import java.util.concurrent.TimeUnit;
 @EqualsAndHashCode
 public class MockNetworkData implements NetworkData {
     private final String text;
-    private final MetaData metaData;
+    MetaData metaData;
 
     public MockNetworkData(String text) {
         this.text = text;
-        metaData = new MetaData(TimeUnit.DAYS.toMillis(10), 100000);
+        // 463 is overhead of sig/pubkeys,...
+        // 582 is pubkey+sig+hash
+        metaData = new MetaData(TimeUnit.DAYS.toMillis(10), 251 + 463, getClass().getSimpleName());
     }
 
 

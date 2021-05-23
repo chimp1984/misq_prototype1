@@ -40,7 +40,7 @@ public class ProtectedEntry implements Serializable {
     }
 
     public boolean isExpired() {
-        return (System.currentTimeMillis() - created) > protectedData.getNetworkData().getMetaData().getTTL();
+        return (System.currentTimeMillis() - created) > protectedData.getNetworkData().getMetaData().getTtl();
     }
 
     public boolean isSequenceNrInvalid(long seqNumberFromMap) {

@@ -22,6 +22,8 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import misq.common.util.Hex;
 
+import java.security.NoSuchAlgorithmException;
+
 @Getter
 @EqualsAndHashCode(callSuper = true)
 @Slf4j
@@ -30,7 +32,7 @@ public final class MailboxData extends ProtectedData {
 
     public MailboxData(SealedData sealedData,
                        byte[] hashOfSendersPublicKey,
-                       byte[] hashOfReceiversPublicKey) {
+                       byte[] hashOfReceiversPublicKey) throws NoSuchAlgorithmException {
         super(sealedData, hashOfSendersPublicKey);
 
         this.hashOfReceiversPublicKey = hashOfReceiversPublicKey;

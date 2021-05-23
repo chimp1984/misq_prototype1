@@ -27,12 +27,19 @@ import java.util.Set;
 @EqualsAndHashCode
 @Getter
 public class Inventory implements Message {
-    public Inventory(Set<DataTransaction> filter) {
+    private final Set<DataTransaction> result;
+    private final int truncated;
 
+    public Inventory(Set<DataTransaction> result, int truncated) {
+        this.result = result;
+        this.truncated = truncated;
     }
-  /*  private final Set<MapValue> collection;
 
-    public Inventory(Set<MapValue> collection) {
-        this.collection = collection;
-    }*/
+    @Override
+    public String toString() {
+        return "Inventory{" +
+                "\n     result=" + result +
+                ",\n     truncated=" + truncated +
+                "\n}";
+    }
 }

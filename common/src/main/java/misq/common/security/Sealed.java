@@ -50,6 +50,10 @@ public class Sealed implements Serializable {
         this.senderPublicKey = senderPublicKey;
     }
 
+  /*  public byte[] serialize() {
+        return ObjectSerializer.serialize(this);
+    }*/
+
     @Override
     public String toString() {
         return "Sealed{" +

@@ -22,6 +22,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import misq.common.security.DigestUtil;
 import misq.common.security.SignatureUtil;
+import misq.common.util.Hex;
 
 import java.io.Serializable;
 import java.security.PublicKey;
@@ -84,5 +85,16 @@ public class RefreshProtectedDataRequest implements Serializable {
 
     public boolean isSequenceNrInvalid(long seqNumberFromMap) {
         return sequenceNumber <= seqNumberFromMap;
+    }
+
+    @Override
+    public String toString() {
+        return "RefreshProtectedDataRequest{" +
+                "\n     metaData=" + metaData +
+                ",\n     hash=" + Hex.encode(hash) +
+                ",\n     ownerPublicKeyBytes=" + Hex.encode(ownerPublicKeyBytes) +
+                ",\n     sequenceNumber=" + sequenceNumber +
+                ",\n     signature=" + Hex.encode(signature) +
+                "\n}";
     }
 }
