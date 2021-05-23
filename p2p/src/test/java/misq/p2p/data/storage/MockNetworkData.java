@@ -18,7 +18,7 @@
 package misq.p2p.data.storage;
 
 import lombok.EqualsAndHashCode;
-import misq.p2p.NetworkData;
+import misq.p2p.data.NetworkData;
 
 import java.util.concurrent.TimeUnit;
 

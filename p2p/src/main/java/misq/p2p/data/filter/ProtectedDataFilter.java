@@ -20,7 +20,6 @@ package misq.p2p.data.filter;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import misq.p2p.data.storage.DataTransaction;
 import misq.p2p.data.storage.MapKey;
 
 import java.util.Map;
@@ -31,22 +30,27 @@ import java.util.stream.Collectors;
 @Getter
 public class ProtectedDataFilter implements DataFilter {
     private final String dataType;
-    private final Set<ProtectedDataFilterItem> filterItems;
+    private final Set<FilterItem> filterItems;
     transient private final Map<MapKey, Integer> filterMap;
+    private final int range;
+    private final int offset;
 
-    public ProtectedDataFilter(String dataType, Set<ProtectedDataFilterItem> filterItems) {
+    public ProtectedDataFilter(String dataType, Set<FilterItem> filterItems) {
+        this(dataType, filterItems, 100, 0);
+    }
+
+    /**
+     * @param dataType    Class name
+     * @param filterItems
+     * @param range       0-100. percentage of the data space we want to get. e.g. 25 means 25% of all data.
+     * @param offset      offset for the range. e.g. 25 means start at 25% of data range. data is sorted deterministically.
+     */
+    public ProtectedDataFilter(String dataType, Set<FilterItem> filterItems, int range, int offset) {
         this.dataType = dataType;
         this.filterItems = filterItems;
         filterMap = filterItems.stream()
-                .collect(Collectors.toMap(e -> new MapKey(e.getHash()), ProtectedDataFilterItem::getSequenceNumber));
+                .collect(Collectors.toMap(e -> new MapKey(e.getHash()), FilterItem::getSequenceNumber));
+        this.range = range;
+        this.offset = offset;
     }
-
-    public Set<DataTransaction> filter(Map<MapKey, DataTransaction> storageMap) {
-        return storageMap.entrySet().stream()
-                .filter(entry -> filterMap.containsKey(entry.getKey()))
-                .filter(entry -> entry.getValue().getSequenceNumber() > filterMap.get(entry.getKey()))
-                .map(Map.Entry::getValue)
-                .collect(Collectors.toSet());
-    }
-
 }

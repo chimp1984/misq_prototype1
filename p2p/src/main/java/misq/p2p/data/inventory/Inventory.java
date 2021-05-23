@@ -22,24 +22,24 @@ import lombok.Getter;
 import misq.p2p.data.storage.DataTransaction;
 import misq.p2p.message.Message;
 
-import java.util.Set;
+import java.util.List;
 
 @EqualsAndHashCode
 @Getter
 public class Inventory implements Message {
-    private final Set<DataTransaction> result;
-    private final int truncated;
+    private final List<DataTransaction> result;
+    private final int numDropped;
 
-    public Inventory(Set<DataTransaction> result, int truncated) {
+    public Inventory(List<DataTransaction> result, int numDropped) {
         this.result = result;
-        this.truncated = truncated;
+        this.numDropped = numDropped;
     }
 
     @Override
     public String toString() {
         return "Inventory{" +
                 "\n     result=" + result +
-                ",\n     truncated=" + truncated +
+                ",\n     numDropped=" + numDropped +
                 "\n}";
     }
 }

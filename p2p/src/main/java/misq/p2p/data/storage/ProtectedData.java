@@ -22,7 +22,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import misq.common.security.DigestUtil;
 import misq.common.util.Hex;
-import misq.p2p.NetworkData;
+import misq.p2p.data.NetworkData;
 
 import java.io.Serializable;
 import java.security.NoSuchAlgorithmException;

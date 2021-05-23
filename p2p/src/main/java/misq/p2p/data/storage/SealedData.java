@@ -20,7 +20,7 @@ package misq.p2p.data.storage;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import misq.common.security.Sealed;
-import misq.p2p.NetworkData;
+import misq.p2p.data.NetworkData;
 
 // We want to have fine grained control over mailbox messages.
 // As the data is encrypted we could not use it's TTL and we would merge all mailbox message into one storage file.

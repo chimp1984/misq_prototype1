@@ -17,14 +17,17 @@
 
 package misq.p2p.data.storage;
 
+import com.google.common.annotations.VisibleForTesting;
 import lombok.extern.slf4j.Slf4j;
 import misq.common.persistence.Persistence;
-import misq.p2p.NetworkData;
+import misq.p2p.data.NetworkData;
 import misq.p2p.data.filter.ProtectedDataFilter;
 import misq.p2p.data.inventory.Inventory;
 
 import java.io.File;
 import java.io.Serializable;
+import java.util.Comparator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -32,10 +35,11 @@ import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static java.io.File.separator;
 
 @Slf4j
-public class ProtectedStorageService {
+public class ProtectedStore {
     private static final long MAX_AGE = TimeUnit.DAYS.toMillis(10);
     private static final int MAX_MAP_SIZE = 10000;
 
@@ -59,7 +63,7 @@ public class ProtectedStorageService {
     final ConcurrentHashMap<MapKey, DataTransaction> map = new ConcurrentHashMap<>();
     private final Set<Listener> listeners = new CopyOnWriteArraySet<>();
 
-    public ProtectedStorageService(String storageDirPath, MetaData metaData) {
+    public ProtectedStore(String storageDirPath, MetaData metaData) {
         this.storageFilePath = storageDirPath + separator + metaData.getFileName();
         this.metaData = metaData;
 
@@ -199,18 +203,42 @@ public class ProtectedStorageService {
     }
 
     public Inventory getInventory(ProtectedDataFilter dataFilter) {
-        Set<DataTransaction> inventoryMap = getInventoryMap(map, dataFilter.getFilterMap());
-        Set<DataTransaction> result = inventoryMap.stream().limit(getMaxItems()).collect(Collectors.toSet());
-        int truncated = inventoryMap.size() - result.size();
-        return new Inventory(result, truncated);
+        List<DataTransaction> inventoryMap = getInventoryMap(map, dataFilter.getFilterMap());
+        int maxItems = getMaxItems();
+        int size = inventoryMap.size();
+        if (size <= maxItems) {
+            return new Inventory(inventoryMap, 0);
+        }
+
+        List<DataTransaction> result = getSubSet(inventoryMap, dataFilter.getOffset(), dataFilter.getRange(), maxItems);
+        int numDropped = size - result.size();
+        return new Inventory(result, numDropped);
+    }
+
+    @VisibleForTesting
+    static List<DataTransaction> getSubSet(List<DataTransaction> map, int filterOffset, int filterRange, int maxItems) {
+        int size = map.size();
+        checkArgument(filterOffset >= 0);
+        checkArgument(filterOffset <= 100);
+        checkArgument(filterRange >= 0);
+        checkArgument(filterRange <= 100);
+        checkArgument(filterOffset + filterRange <= 100);
+        int offset = size * filterOffset / 100;
+        int range = size * filterRange / 100;
+        return map.stream()
+                .sorted(Comparator.comparingLong(DataTransaction::getCreated))
+                .skip(offset)
+                .limit(range)
+                .limit(maxItems)
+                .collect(Collectors.toList());
     }
 
     int getMaxItems() {
         return MAX_INVENTORY_MAP_SIZE / metaData.getMaxSizeInBytes();
     }
 
-    Set<DataTransaction> getInventoryMap(ConcurrentHashMap<MapKey, DataTransaction> map,
-                                         Map<MapKey, Integer> requesterMap) {
+    List<DataTransaction> getInventoryMap(ConcurrentHashMap<MapKey, DataTransaction> map,
+                                          Map<MapKey, Integer> requesterMap) {
         return map.entrySet().stream()
                 .filter(entry -> {
                     // Any entry we have but is not included in filter gets added
@@ -221,7 +249,7 @@ public class ProtectedStorageService {
                     return entry.getValue().getSequenceNumber() > requesterMap.get(entry.getKey());
                 })
                 .map(Map.Entry::getValue)
-                .collect(Collectors.toSet());
+                .collect(Collectors.toList());
     }
 
     private void persist() {

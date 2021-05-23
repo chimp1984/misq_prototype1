@@ -15,8 +15,9 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package misq.p2p;
+package misq.p2p.data;
 
+import misq.p2p.Proto;
 import misq.p2p.data.storage.MetaData;
 
 public interface NetworkData extends Proto {

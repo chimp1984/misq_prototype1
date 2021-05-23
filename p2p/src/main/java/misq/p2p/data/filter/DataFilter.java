@@ -21,5 +21,4 @@ package misq.p2p.data.filter;
 import java.io.Serializable;
 
 public interface DataFilter extends Serializable {
-   // boolean matches(MapKey mapKey, MapValue value);
 }
