@@ -22,7 +22,6 @@ import misq.common.util.FileUtils;
 import misq.common.util.OsUtils;
 import misq.common.util.SystemUtils;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
@@ -46,7 +45,7 @@ public class I2PDemoRunner {
 
     public I2PDemoRunner() throws IOException {
         String dirPath = OsUtils.getUserDataDir() + "/I2PDemoRunner";
-        FileUtils.makeDirs(new File(dirPath));
+        FileUtils.makeDirs(dirPath);
         samClient = SamClient.getSamClient(dirPath);
         String sessionIdAlice = "alice";
         String sessionIdBob = "bob";

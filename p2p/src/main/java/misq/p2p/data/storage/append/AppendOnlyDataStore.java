@@ -23,22 +23,22 @@ import misq.common.persistence.Persistence;
 import misq.common.security.DigestUtil;
 import misq.p2p.data.storage.MapKey;
 import misq.p2p.data.storage.MetaData;
+import misq.p2p.data.storage.mailbox.DataStore;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.Serializable;
 import java.security.NoSuchAlgorithmException;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 
-import static java.io.File.separator;
-
 /**
  * Appends AppendOnlyData to a map using the hash of the AppendOnlyData as key.
  * If key already exists we return. If map size exceeds MAX_MAP_SIZE we ignore new data.
  */
 @Slf4j
-public class AppendOnlyDataStore {
+public class AppendOnlyDataStore extends DataStore {
     private static final int MAX_MAP_SIZE = 10_000_000; // in bytes
 
     private final int maxMapSize;
@@ -47,13 +47,12 @@ public class AppendOnlyDataStore {
         void onAppended(AppendOnlyData appendOnlyData);
     }
 
-    private final String storageFilePath;
-
     final ConcurrentHashMap<MapKey, AppendOnlyData> map = new ConcurrentHashMap<>();
     private final Set<Listener> listeners = new CopyOnWriteArraySet<>();
 
-    public AppendOnlyDataStore(String storageDirPath, MetaData metaData) {
-        this.storageFilePath = storageDirPath + separator + metaData.getFileName();
+    public AppendOnlyDataStore(String appDirPath, MetaData metaData) throws IOException {
+        super(appDirPath, metaData);
+
         maxMapSize = MAX_MAP_SIZE / metaData.getMaxSizeInBytes();
         if (new File(storageFilePath).exists()) {
             Serializable serializable = Persistence.read(storageFilePath);
@@ -81,8 +80,9 @@ public class AppendOnlyDataStore {
         return true;
     }
 
-    private void persist() {
-        Persistence.write(map, storageFilePath);
+    @Override
+    public void shutdown() {
+
     }
 
     public void addListener(AppendOnlyDataStore.Listener listener) {
@@ -93,8 +93,17 @@ public class AppendOnlyDataStore {
         listeners.remove(listener);
     }
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // Private
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+    private void persist() {
+        Persistence.write(map, storageFilePath);
+    }
+
     @VisibleForTesting
-    public ConcurrentHashMap<MapKey, AppendOnlyData> getMap() {
+    ConcurrentHashMap<MapKey, AppendOnlyData> getMap() {
         return map;
     }
 }

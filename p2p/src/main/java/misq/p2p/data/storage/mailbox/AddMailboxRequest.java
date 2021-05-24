@@ -20,14 +20,40 @@ package misq.p2p.data.storage.mailbox;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import misq.p2p.data.storage.auth.AddRequest;
+import misq.common.security.DigestUtil;
+import misq.common.security.SignatureUtil;
+import misq.p2p.data.storage.auth.AddAuthenticatedDataRequest;
 
+import java.security.GeneralSecurityException;
+import java.security.KeyPair;
 import java.security.PublicKey;
 
 @Slf4j
 @EqualsAndHashCode(callSuper = true)
 @Getter
-public class AddMailboxRequest extends AddRequest implements MailboxRequest {
+public class AddMailboxRequest extends AddAuthenticatedDataRequest implements MailboxRequest {
+
+    public static AddMailboxRequest from(MailboxDataStore store,
+                                         MailboxPayload payload,
+                                         KeyPair senderKeyPair,
+                                         PublicKey receiverPublicKey)
+            throws GeneralSecurityException {
+        PublicKey senderPublicKey = senderKeyPair.getPublic();
+        byte[] hash = DigestUtil.sha256(payload.serialize());
+        int sequenceNumberFromMap = store.getSequenceNumber(hash);
+        if (sequenceNumberFromMap == Integer.MAX_VALUE) {
+            throw new IllegalStateException("Item was already removed in service map as sequenceNumber is marked with Integer.MAX_VALUE");
+        }
+        int newSequenceNumber = sequenceNumberFromMap + 1;
+        byte[] hashOfSendersPublicKey = DigestUtil.sha256(senderPublicKey.getEncoded());
+        byte[] hashOfReceiversPublicKey = DigestUtil.sha256(receiverPublicKey.getEncoded());
+        MailboxData entry = new MailboxData(payload, newSequenceNumber, hashOfSendersPublicKey,
+                hashOfReceiversPublicKey, receiverPublicKey);
+        byte[] serialized = entry.serialize();
+        byte[] signature = SignatureUtil.sign(serialized, senderKeyPair.getPrivate());
+        return new AddMailboxRequest(entry, signature, senderPublicKey);
+    }
+
     public AddMailboxRequest(MailboxData mailboxData, byte[] signature, PublicKey senderPublicKey) {
         super(mailboxData, signature, senderPublicKey);
     }
@@ -40,4 +66,6 @@ public class AddMailboxRequest extends AddRequest implements MailboxRequest {
     public MailboxData getMailboxData() {
         return (MailboxData) authenticatedData;
     }
+
+
 }

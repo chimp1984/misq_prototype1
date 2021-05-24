@@ -15,10 +15,10 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package misq.p2p.data.storage;
+package misq.p2p.data.storage.append;
 
 import misq.common.util.OsUtils;
-import misq.p2p.data.storage.append.AppendOnlyDataStore;
+import misq.p2p.data.storage.MockAppendOnlyData;
 import org.junit.Test;
 
 import java.io.File;
@@ -29,20 +29,20 @@ import java.util.UUID;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-public class PermanentStoreTest {
+public class AppendOnlyDataStoreTest {
     private String appDirPath = OsUtils.getUserDataDir() + File.separator + "misq_StorageTest";
 
     @Test
-    public void testPermanentStoreTest() throws NoSuchAlgorithmException, IOException {
-        MockAppendOnlyData appendOnlyData = new MockAppendOnlyData("test" + UUID.randomUUID().toString());
-        AppendOnlyDataStore appendOnlyDataStore = new AppendOnlyDataStore(appDirPath, appendOnlyData.getMetaData());
-        int previous = appendOnlyDataStore.getMap().size();
+    public void testAppend() throws NoSuchAlgorithmException, IOException {
+        MockAppendOnlyData data = new MockAppendOnlyData("test" + UUID.randomUUID().toString());
+        AppendOnlyDataStore store = new AppendOnlyDataStore(appDirPath, data.getMetaData());
+        int previous = store.getMap().size();
         int iterations = 10;
         for (int i = 0; i < iterations; i++) {
-            appendOnlyData = new MockAppendOnlyData("test" + UUID.randomUUID().toString());
-            boolean result = appendOnlyDataStore.append(appendOnlyData);
+            data = new MockAppendOnlyData("test" + UUID.randomUUID().toString());
+            boolean result = store.append(data);
             assertTrue(result);
         }
-        assertEquals(iterations + previous, appendOnlyDataStore.getMap().size());
+        assertEquals(iterations + previous, store.getMap().size());
     }
 }

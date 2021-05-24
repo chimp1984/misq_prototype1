@@ -26,35 +26,48 @@ import misq.common.util.Hex;
 import misq.p2p.data.storage.MetaData;
 
 import java.io.Serializable;
+import java.security.GeneralSecurityException;
+import java.security.KeyPair;
 import java.security.PublicKey;
 import java.util.Arrays;
 
 @Getter
 @EqualsAndHashCode
 @Slf4j
-public class AddRequest implements AuthenticatedDataRequest, Serializable {
+public class AddAuthenticatedDataRequest implements AuthenticatedDataRequest, Serializable {
+
+    public static AddAuthenticatedDataRequest from(AuthenticatedDataStore store, AuthenticatedPayload payload, KeyPair keyPair)
+            throws GeneralSecurityException {
+        byte[] hash = DigestUtil.sha256(payload.serialize());
+        byte[] hashOfPublicKey = DigestUtil.sha256(keyPair.getPublic().getEncoded());
+        int newSequenceNumber = store.getSequenceNumber(hash) + 1;
+        AuthenticatedData data = new AuthenticatedData(payload, newSequenceNumber, hashOfPublicKey, System.currentTimeMillis());
+        byte[] serialized = data.serialize();
+        byte[] signature = SignatureUtil.sign(serialized, keyPair.getPrivate());
+        return new AddAuthenticatedDataRequest(data, signature, keyPair.getPublic());
+    }
+
     protected final AuthenticatedData authenticatedData;
     protected final byte[] signature;         // 256 bytes
     protected final byte[] ownerPublicKeyBytes; // 294 bytes
     transient protected final PublicKey ownerPublicKey;
 
-    public AddRequest(AuthenticatedData authenticatedData, byte[] signature, PublicKey ownerPublicKey) {
+    public AddAuthenticatedDataRequest(AuthenticatedData authenticatedData, byte[] signature, PublicKey ownerPublicKey) {
         this(authenticatedData,
                 signature,
                 ownerPublicKey.getEncoded(),
                 ownerPublicKey);
     }
 
-    protected AddRequest(AuthenticatedData authenticatedData,
-                         byte[] signature,
-                         byte[] ownerPublicKeyBytes,
-                         PublicKey ownerPublicKey) {
+    protected AddAuthenticatedDataRequest(AuthenticatedData authenticatedData,
+                                          byte[] signature,
+                                          byte[] ownerPublicKeyBytes,
+                                          PublicKey ownerPublicKey) {
         this.authenticatedData = authenticatedData;
         this.ownerPublicKeyBytes = ownerPublicKeyBytes;
         this.ownerPublicKey = ownerPublicKey;
         this.signature = signature;
     }
-
 
     public boolean isSignatureInvalid() {
         try {

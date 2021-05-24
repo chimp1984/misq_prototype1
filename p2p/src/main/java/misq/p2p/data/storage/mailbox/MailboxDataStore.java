@@ -26,9 +26,9 @@ import misq.p2p.data.storage.MetaData;
 import misq.p2p.data.storage.auth.Result;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.Serializable;
 import java.security.NoSuchAlgorithmException;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -37,11 +37,8 @@ import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-import static com.google.common.base.Preconditions.checkArgument;
-import static java.io.File.separator;
-
 @Slf4j
-public class MailboxStore {
+public class MailboxDataStore extends DataStore {
     private static final long MAX_AGE = TimeUnit.DAYS.toMillis(10);
     private static final int MAX_MAP_SIZE = 10000;
 
@@ -55,18 +52,16 @@ public class MailboxStore {
         void onAdded(MailboxPayload mailboxPayload);
 
         void onRemoved(MailboxPayload mailboxPayload);
-
-        default void onRefreshed(MailboxPayload mailboxPayload) {
-        }
     }
 
-    private final String storageFilePath;
+
     private final int maxItems;
     private final ConcurrentHashMap<MapKey, MailboxRequest> map = new ConcurrentHashMap<>();
     private final Set<Listener> listeners = new CopyOnWriteArraySet<>();
 
-    public MailboxStore(String storageDirPath, MetaData metaData) {
-        this.storageFilePath = storageDirPath + separator + metaData.getFileName();
+    public MailboxDataStore(String appDirPath, MetaData metaData) throws IOException {
+        super(appDirPath, metaData);
+
         maxItems = MAX_INVENTORY_MAP_SIZE / metaData.getMaxSizeInBytes();
 
         if (new File(storageFilePath).exists()) {
@@ -159,6 +154,24 @@ public class MailboxStore {
     }
 
 
+    @Override
+    public void shutdown() {
+
+    }
+
+    public void addListener(Listener listener) {
+        listeners.add(listener);
+    }
+
+    public void removeListener(Listener listener) {
+        listeners.remove(listener);
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // Private
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
   /*  public Inventory getInventory(ProtectedDataFilter dataFilter) {
         List<MailboxRequest> inventoryMap = getInventoryMap(map, dataFilter.getFilterMap());
         int maxItems = getMaxItems();
@@ -173,26 +186,13 @@ public class MailboxStore {
     }*/
 
     @VisibleForTesting
-    public static List<MailboxRequest> getSubSet(List<MailboxRequest> map, int filterOffset, int filterRange, int maxItems) {
-        int size = map.size();
-        checkArgument(filterOffset >= 0);
-        checkArgument(filterOffset <= 100);
-        checkArgument(filterRange >= 0);
-        checkArgument(filterRange <= 100);
-        checkArgument(filterOffset + filterRange <= 100);
-        int offset = size * filterOffset / 100;
-        int range = size * filterRange / 100;
-        return map.stream()
-                .sorted(Comparator.comparingLong(MailboxRequest::getCreated))
-                .skip(offset)
-                .limit(range)
-                .limit(maxItems)
-                .collect(Collectors.toList());
+    int getMaxItems() {
+        return maxItems;
     }
 
     @VisibleForTesting
-    public int getMaxItems() {
-        return maxItems;
+    ConcurrentHashMap<MapKey, MailboxRequest> getMap() {
+        return map;
     }
 
     List<MailboxRequest> getInventoryMap(ConcurrentHashMap<MapKey, MailboxRequest> map,
@@ -210,11 +210,8 @@ public class MailboxStore {
                 .collect(Collectors.toList());
     }
 
-    private void persist() {
-        Persistence.write(map, storageFilePath);
-    }
 
-    public int getSequenceNumber(byte[] hash) {
+    int getSequenceNumber(byte[] hash) {
         MapKey mapKey = new MapKey(hash);
         if (map.containsKey(mapKey)) {
             return map.get(mapKey).getSequenceNumber();
@@ -222,12 +219,13 @@ public class MailboxStore {
         return 0;
     }
 
-    public void addListener(Listener listener) {
-        listeners.add(listener);
+    boolean canAddMailboxMessage(MailboxPayload mailboxPayload) throws NoSuchAlgorithmException {
+        byte[] hash = DigestUtil.sha256(mailboxPayload.serialize());
+        return getSequenceNumber(hash) < Integer.MAX_VALUE;
     }
 
-    public void removeListener(Listener listener) {
-        listeners.remove(listener);
+    private void persist() {
+        Persistence.write(map, storageFilePath);
     }
 
     // todo call by time interval
@@ -245,10 +243,5 @@ public class MailboxStore {
                 .limit(MAX_MAP_SIZE)
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
         map.putAll(pruned);
-    }
-
-    @VisibleForTesting
-    public ConcurrentHashMap<MapKey, MailboxRequest> getMap() {
-        return map;
     }
 }

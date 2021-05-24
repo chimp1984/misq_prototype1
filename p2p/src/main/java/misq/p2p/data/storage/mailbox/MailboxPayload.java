@@ -19,9 +19,14 @@ package misq.p2p.data.storage.mailbox;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import misq.common.security.HybridEncryption;
 import misq.common.security.Sealed;
 import misq.p2p.data.storage.MetaData;
 import misq.p2p.data.storage.auth.AuthenticatedPayload;
+
+import java.security.GeneralSecurityException;
+import java.security.KeyPair;
+import java.security.PublicKey;
 
 // We want to have fine grained control over mailbox messages.
 // As the data is encrypted we could not use it's TTL and we would merge all mailbox message into one storage file.
@@ -29,6 +34,14 @@ import misq.p2p.data.storage.auth.AuthenticatedPayload;
 @EqualsAndHashCode
 
 public class MailboxPayload implements AuthenticatedPayload {
+    public static MailboxPayload createMailboxPayload(MailboxMessage mailboxMessage,
+                                                      KeyPair senderKeyPair,
+                                                      PublicKey receiverPublicKey)
+            throws GeneralSecurityException {
+        Sealed sealed = HybridEncryption.encrypt(mailboxMessage.serialize(), receiverPublicKey, senderKeyPair);
+        return new MailboxPayload(sealed, mailboxMessage.getMetaData());
+    }
+
     @Getter
     private final Sealed sealed;
     private final MetaData metaData;

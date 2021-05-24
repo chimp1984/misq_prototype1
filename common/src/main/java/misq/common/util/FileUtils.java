@@ -73,6 +73,10 @@ public class FileUtils {
         dir.delete();
     }
 
+    public static void makeDirs(String dirPath) throws IOException {
+        makeDirs(new File(dirPath));
+    }
+
     public static void makeDirs(File dir) throws IOException {
         if (!dir.exists() && !dir.mkdirs()) {
             throw new IOException("Could not make dir " + dir);

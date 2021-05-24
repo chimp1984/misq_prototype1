@@ -21,10 +21,13 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import misq.common.security.DigestUtil;
+import misq.common.security.SignatureUtil;
 import misq.p2p.data.storage.MetaData;
 import misq.p2p.data.storage.auth.AuthenticatedData;
 import misq.p2p.data.storage.auth.RemoveRequest;
 
+import java.security.GeneralSecurityException;
+import java.security.KeyPair;
 import java.security.PublicKey;
 import java.util.Arrays;
 
@@ -32,6 +35,15 @@ import java.util.Arrays;
 @EqualsAndHashCode(callSuper = true)
 @Getter
 public class RemoveMailboxRequest extends RemoveRequest implements MailboxRequest {
+
+    public static RemoveMailboxRequest from(MailboxPayload mailboxPayload, KeyPair receiverKeyPair)
+            throws GeneralSecurityException {
+        byte[] hash = DigestUtil.sha256(mailboxPayload.serialize());
+        byte[] signature = SignatureUtil.sign(hash, receiverKeyPair.getPrivate());
+        int newSequenceNumber = Integer.MAX_VALUE; // Use max value for sequence number so that no other addData call is permitted.
+        return new RemoveMailboxRequest(mailboxPayload.getMetaData(), hash, receiverKeyPair.getPublic(), newSequenceNumber, signature);
+    }
+
     // Receiver is owner for remove request
     public RemoveMailboxRequest(MetaData metaData,
                                 byte[] hash,

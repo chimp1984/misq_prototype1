@@ -25,14 +25,16 @@ import misq.p2p.data.filter.ProtectedDataFilter;
 import misq.p2p.data.inventory.Inventory;
 import misq.p2p.data.storage.MapKey;
 import misq.p2p.data.storage.MetaData;
+import misq.p2p.data.storage.Util;
 import misq.p2p.data.storage.mailbox.AddMailboxRequest;
+import misq.p2p.data.storage.mailbox.DataStore;
 import misq.p2p.data.storage.mailbox.MailboxData;
 import misq.p2p.data.storage.mailbox.MailboxPayload;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.Serializable;
 import java.security.NoSuchAlgorithmException;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -41,13 +43,11 @@ import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-import static com.google.common.base.Preconditions.checkArgument;
-import static java.io.File.separator;
-
 @Slf4j
-public class AuthenticatedDataStore {
+public class AuthenticatedDataStore extends DataStore {
     private static final long MAX_AGE = TimeUnit.DAYS.toMillis(10);
     private static final int MAX_MAP_SIZE = 10000;
+
 
     // Max size of serialized NetworkData or MailboxMessage. Used to limit response map.
     // Depends on data types max. expected size.
@@ -64,13 +64,13 @@ public class AuthenticatedDataStore {
         }
     }
 
-    private final String storageFilePath;
     private final int maxItems;
     private final ConcurrentHashMap<MapKey, AuthenticatedDataRequest> map = new ConcurrentHashMap<>();
     private final Set<Listener> listeners = new CopyOnWriteArraySet<>();
 
-    public AuthenticatedDataStore(String storageDirPath, MetaData metaData) {
-        this.storageFilePath = storageDirPath + separator + metaData.getFileName();
+    public AuthenticatedDataStore(String appDirPath, MetaData metaData) throws IOException {
+        super(appDirPath, metaData);
+
         maxItems = MAX_INVENTORY_MAP_SIZE / metaData.getMaxSizeInBytes();
 
         if (new File(storageFilePath).exists()) {
@@ -82,7 +82,7 @@ public class AuthenticatedDataStore {
         }
     }
 
-    public Result add(AddRequest request) throws NoSuchAlgorithmException {
+    public Result add(AddAuthenticatedDataRequest request) throws NoSuchAlgorithmException {
         AuthenticatedData entry = request.getAuthenticatedData();
         AuthenticatedPayload authenticatedPayload = entry.getPayload();
         byte[] hash = DigestUtil.sha256(authenticatedPayload.serialize());
@@ -139,7 +139,7 @@ public class AuthenticatedDataStore {
         }
 
         // At that point we know requestFromMap is an AddProtectedDataRequest
-        AddRequest addRequest = (AddRequest) requestFromMap;
+        AddAuthenticatedDataRequest addRequest = (AddAuthenticatedDataRequest) requestFromMap;
         // We have an entry, lets validate if we can remove it
         AuthenticatedData authenticatedDataFromMap = addRequest.getAuthenticatedData();
         AuthenticatedPayload dataFromMap = authenticatedDataFromMap.getPayload();
@@ -176,7 +176,7 @@ public class AuthenticatedDataStore {
         }
 
         // At that point we know requestFromMap is an AddProtectedDataRequest
-        AddRequest addRequestFromMap = (AddRequest) requestFromMap;
+        AddAuthenticatedDataRequest addRequestFromMap = (AddAuthenticatedDataRequest) requestFromMap;
         // We have an entry, lets validate if we can remove it
         AuthenticatedData entryFromMap = addRequestFromMap.getAuthenticatedData();
         AuthenticatedPayload dataFromMap = entryFromMap.getPayload();
@@ -196,7 +196,7 @@ public class AuthenticatedDataStore {
         }
 
         // Update request with new sequence number
-        AddRequest updatedRequest;
+        AddAuthenticatedDataRequest updatedRequest;
         if (addRequestFromMap instanceof AddMailboxRequest) {
             MailboxData mailboxDataFromMap = (MailboxData) entryFromMap;
             MailboxPayload mailboxPayloadFromMap = (MailboxPayload) dataFromMap;
@@ -214,7 +214,7 @@ public class AuthenticatedDataStore {
                     request.getSequenceNumber(),
                     entryFromMap.getHashOfPublicKey(),
                     entryFromMap.getCreated());
-            updatedRequest = new AddRequest(updatedEntryFromMap,
+            updatedRequest = new AddAuthenticatedDataRequest(updatedEntryFromMap,
                     addRequestFromMap.getSignature(),
                     addRequestFromMap.getOwnerPublicKey());
         }
@@ -233,32 +233,45 @@ public class AuthenticatedDataStore {
             return new Inventory(inventoryMap, 0);
         }
 
-        List<AuthenticatedDataRequest> result = getSubSet(inventoryMap, dataFilter.getOffset(), dataFilter.getRange(), maxItems);
+        List<AuthenticatedDataRequest> result = Util.getSubSet(inventoryMap, dataFilter.getOffset(), dataFilter.getRange(), maxItems);
         int numDropped = size - result.size();
         return new Inventory(result, numDropped);
     }
 
+    @Override
+    public void shutdown() {
+
+    }
+
+    public void addListener(Listener listener) {
+        listeners.add(listener);
+    }
+
+    public void removeListener(Listener listener) {
+        listeners.remove(listener);
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // Private
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
     @VisibleForTesting
-    public static List<AuthenticatedDataRequest> getSubSet(List<AuthenticatedDataRequest> map, int filterOffset, int filterRange, int maxItems) {
-        int size = map.size();
-        checkArgument(filterOffset >= 0);
-        checkArgument(filterOffset <= 100);
-        checkArgument(filterRange >= 0);
-        checkArgument(filterRange <= 100);
-        checkArgument(filterOffset + filterRange <= 100);
-        int offset = size * filterOffset / 100;
-        int range = size * filterRange / 100;
-        return map.stream()
-                .sorted(Comparator.comparingLong(AuthenticatedDataRequest::getCreated))
-                .skip(offset)
-                .limit(range)
-                .limit(maxItems)
-                .collect(Collectors.toList());
+    int getMaxItems() {
+        return maxItems;
+    }
+
+    int getSequenceNumber(byte[] hash) {
+        MapKey mapKey = new MapKey(hash);
+        if (map.containsKey(mapKey)) {
+            return map.get(mapKey).getSequenceNumber();
+        }
+        return 0;
     }
 
     @VisibleForTesting
-    public int getMaxItems() {
-        return maxItems;
+    ConcurrentHashMap<MapKey, AuthenticatedDataRequest> getMap() {
+        return map;
     }
 
     List<AuthenticatedDataRequest> getInventoryMap(ConcurrentHashMap<MapKey, AuthenticatedDataRequest> map,
@@ -280,21 +293,6 @@ public class AuthenticatedDataStore {
         Persistence.write(map, storageFilePath);
     }
 
-    public int getSequenceNumber(byte[] hash) {
-        MapKey mapKey = new MapKey(hash);
-        if (map.containsKey(mapKey)) {
-            return map.get(mapKey).getSequenceNumber();
-        }
-        return 0;
-    }
-
-    public void addListener(Listener listener) {
-        listeners.add(listener);
-    }
-
-    public void removeListener(Listener listener) {
-        listeners.remove(listener);
-    }
 
     // todo call by time interval
     private void maybePruneMap(ConcurrentHashMap<MapKey, AuthenticatedDataRequest> current) {
@@ -306,15 +304,16 @@ public class AuthenticatedDataStore {
         Map<MapKey, AuthenticatedDataRequest> pruned = current.entrySet().stream()
                 .filter(entry -> now - entry.getValue().getCreated() < MAX_AGE)
                 .filter(entry -> entry.getValue() instanceof RemoveRequest ||
-                        !((AddRequest) entry.getValue()).getAuthenticatedData().isExpired())
+                        !((AddAuthenticatedDataRequest) entry.getValue()).getAuthenticatedData().isExpired())
                 .sorted((o1, o2) -> Long.compare(o2.getValue().getCreated(), o1.getValue().getCreated()))
                 .limit(MAX_MAP_SIZE)
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
         map.putAll(pruned);
     }
 
-    @VisibleForTesting
-    public ConcurrentHashMap<MapKey, AuthenticatedDataRequest> getMap() {
-        return map;
-    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // Static utils
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
 }

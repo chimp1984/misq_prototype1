@@ -23,9 +23,12 @@ import lombok.extern.slf4j.Slf4j;
 import misq.common.security.DigestUtil;
 import misq.common.security.SignatureUtil;
 import misq.common.util.Hex;
+import misq.p2p.data.NetworkData;
 import misq.p2p.data.storage.MetaData;
 
 import java.io.Serializable;
+import java.security.GeneralSecurityException;
+import java.security.KeyPair;
 import java.security.PublicKey;
 import java.util.Arrays;
 
@@ -33,6 +36,16 @@ import java.util.Arrays;
 @EqualsAndHashCode
 @Slf4j
 public class RemoveRequest implements AuthenticatedDataRequest, Serializable {
+
+
+    public static RemoveRequest from(AuthenticatedDataStore store, NetworkData networkData, KeyPair keyPair)
+            throws GeneralSecurityException {
+        byte[] hash = DigestUtil.sha256(networkData.serialize());
+        byte[] signature = SignatureUtil.sign(hash, keyPair.getPrivate());
+        int newSequenceNumber = store.getSequenceNumber(hash) + 1;
+        return new RemoveRequest(networkData.getMetaData(), hash, keyPair.getPublic(), newSequenceNumber, signature);
+    }
+
     protected final MetaData metaData;
     protected final byte[] hash;
     protected final byte[] ownerPublicKeyBytes; // 442 bytes
