@@ -38,7 +38,7 @@ public class AllNetworksIntegrationTest {
                 Config.getI2pNetworkConfig(role, id));
     }
 
-    //  @Test
+     @Test
     public void testInitializeServer() throws InterruptedException {
         try {
             initializeServer();

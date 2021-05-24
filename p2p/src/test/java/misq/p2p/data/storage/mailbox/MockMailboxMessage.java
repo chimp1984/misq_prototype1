@@ -15,14 +15,16 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package misq.p2p.data.storage;
+package misq.p2p.data.storage.mailbox;
 
 import lombok.EqualsAndHashCode;
-import misq.p2p.data.storage.mailbox.MailboxMessage;
+import lombok.Getter;
+import misq.p2p.data.storage.MetaData;
 
 import java.util.concurrent.TimeUnit;
 
 @EqualsAndHashCode
+@Getter
 public class MockMailboxMessage implements MailboxMessage {
     private final String text;
     private final MetaData metaData;

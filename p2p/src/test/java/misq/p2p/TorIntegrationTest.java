@@ -79,7 +79,7 @@ public class TorIntegrationTest extends BaseTest {
         }
     }
 
-    // @Test
+    //  @Test
     public void testInitializeServer() throws InterruptedException {
         try {
             super.testInitializeServer(2);
@@ -89,7 +89,7 @@ public class TorIntegrationTest extends BaseTest {
         }
     }
 
-    //@Test
+    // @Test
     public void testConfidentialSend() throws InterruptedException, GeneralSecurityException {
         try {
             super.testConfidentialSend();
@@ -99,14 +99,14 @@ public class TorIntegrationTest extends BaseTest {
         }
     }
 
-    //  @Test
+    @Test
     public void testStartOfMultipleIds() throws InterruptedException {
         NetworkType networkType = NetworkType.TOR;
         Set<NetworkType> mySupportedNetworks = getMySupportedNetworks();
         startOfMultipleIds(networkType, mySupportedNetworks);
     }
 
-    @Test
+    // @Test
     public void testSendMsgWithMultipleIds() throws InterruptedException, GeneralSecurityException {
         NetworkType networkType = NetworkType.TOR;
         Set<NetworkType> mySupportedNetworks = getMySupportedNetworks();

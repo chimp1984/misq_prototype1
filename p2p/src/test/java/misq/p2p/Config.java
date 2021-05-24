@@ -82,7 +82,8 @@ public abstract class Config {
     };
 
     static NetworkConfig getI2pNetworkConfig(Role role) {
-        return getI2pNetworkConfig(role, "default");
+        // Session in I2P need to be unique even if we use 2 diff SAM instances. So we add role name to default server id.
+        return getI2pNetworkConfig(role, "default" + role);
     }
 
     static NetworkConfig getI2pNetworkConfig(Role role, String id) {

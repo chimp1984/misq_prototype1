@@ -35,13 +35,13 @@ import java.util.Set;
 @Slf4j
 @EqualsAndHashCode
 @Getter
-public abstract class AuthorizedData implements AuthenticatedPayload {
+public abstract class AuthorizedPayload implements AuthenticatedPayload {
     private final NetworkData networkData;
     private final byte[] signature;
     private final byte[] authorizedPublicKeyBytes;
     transient private final PublicKey authorizedPublicKey;
 
-    public AuthorizedData(NetworkData networkData, byte[] signature, PublicKey authorizedPublicKey) {
+    public AuthorizedPayload(NetworkData networkData, byte[] signature, PublicKey authorizedPublicKey) {
         this.networkData = networkData;
         this.signature = signature;
         this.authorizedPublicKey = authorizedPublicKey;

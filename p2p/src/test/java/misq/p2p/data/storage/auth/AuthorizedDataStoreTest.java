@@ -23,9 +23,8 @@ import misq.common.security.KeyPairGeneratorUtil;
 import misq.common.security.SignatureUtil;
 import misq.common.util.Hex;
 import misq.common.util.OsUtils;
+import misq.p2p.data.NetworkData;
 import misq.p2p.data.storage.MapKey;
-import misq.p2p.data.storage.MockAuthorizedData;
-import misq.p2p.data.storage.MockProtectedData;
 import org.junit.Test;
 
 import java.io.File;
@@ -50,15 +49,14 @@ public class AuthorizedDataStoreTest {
         byte[] privateKeyBytes = Hex.decode(privateKeyAsHex);
         PrivateKey privateKey = KeyPairGeneratorUtil.generatePrivate(privateKeyBytes);
         PublicKey publicKey = KeyPairGeneratorUtil.generatePublic(privateKey);
-        AuthenticatedPayload payload = new MockProtectedData("test" + UUID.randomUUID().toString());
-        byte[] signature = SignatureUtil.sign(payload.serialize(), privateKey);
-        MockAuthorizedData data = new MockAuthorizedData(payload, signature, publicKey);
+        NetworkData networkData = new MockNetworkData("test" + UUID.randomUUID().toString());
+        byte[] signature = SignatureUtil.sign(networkData.serialize(), privateKey);
+        MockAuthorizedPayload authorizedPayload = new MockAuthorizedPayload(networkData, signature, publicKey);
 
         KeyPair keyPair = KeyPairGeneratorUtil.generateKeyPair();
-
-        AuthenticatedDataStore store = new AuthenticatedDataStore(appDirPath, data.getMetaData());
-        AddAuthenticatedDataRequest addRequest = AddAuthenticatedDataRequest.from(store, data, keyPair);
-        byte[] hash = DigestUtil.sha256(data.serialize());
+        AuthenticatedDataStore store = new AuthenticatedDataStore(appDirPath, authorizedPayload.getMetaData());
+        AddAuthenticatedDataRequest addRequest = AddAuthenticatedDataRequest.from(store, authorizedPayload, keyPair);
+        byte[] hash = DigestUtil.sha256(authorizedPayload.serialize());
         int initialSeqNum = store.getSequenceNumber(hash);
         Result result = store.add(addRequest);
         assertTrue(result.isSuccess());
@@ -69,10 +67,11 @@ public class AuthorizedDataStoreTest {
         AuthenticatedData dataFromMap = addRequestFromMap.getAuthenticatedData();
 
         assertEquals(initialSeqNum + 1, dataFromMap.getSequenceNumber());
-        assertEquals(dataFromMap.getPayload(), payload);
+        MockAuthorizedPayload payload = (MockAuthorizedPayload) dataFromMap.getPayload();
+        assertEquals(payload.getNetworkData(), networkData);
 
         // refresh
-        RefreshRequest refreshRequest = RefreshRequest.from(store, data, keyPair);
+        RefreshRequest refreshRequest = RefreshRequest.from(store, authorizedPayload, keyPair);
         Result refreshResult = store.refresh(refreshRequest);
         assertTrue(refreshResult.isSuccess());
 
@@ -81,7 +80,7 @@ public class AuthorizedDataStoreTest {
         assertEquals(initialSeqNum + 2, dataFromMap.getSequenceNumber());
 
         //remove
-        RemoveRequest removeRequest = RemoveRequest.from(store, data, keyPair);
+        RemoveRequest removeRequest = RemoveRequest.from(store, authorizedPayload, keyPair);
         Result removeDataResult = store.remove(removeRequest);
         assertTrue(removeDataResult.isSuccess());
 

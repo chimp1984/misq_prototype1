@@ -22,7 +22,6 @@ import misq.common.security.DigestUtil;
 import misq.common.security.KeyPairGeneratorUtil;
 import misq.common.util.OsUtils;
 import misq.p2p.data.storage.MapKey;
-import misq.p2p.data.storage.MockMailboxMessage;
 import misq.p2p.data.storage.auth.RemoveRequest;
 import misq.p2p.data.storage.auth.Result;
 import org.junit.Test;

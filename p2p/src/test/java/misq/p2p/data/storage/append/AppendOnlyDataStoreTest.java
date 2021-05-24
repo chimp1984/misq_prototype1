@@ -18,7 +18,6 @@
 package misq.p2p.data.storage.append;
 
 import misq.common.util.OsUtils;
-import misq.p2p.data.storage.MockAppendOnlyData;
 import org.junit.Test;
 
 import java.io.File;

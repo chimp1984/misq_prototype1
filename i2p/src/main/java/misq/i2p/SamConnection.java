@@ -69,6 +69,7 @@ class SamConnection {
             log.info("<< {}", reply.split("PRIV=")[0] + "PRIV=... [private key hidden from logs]");
         }*/
         if (reply.isError()) {
+            log.error("Handshake failed: reply={}", reply);
             close();
             throw new SamProtocolError(request, reply);
         }

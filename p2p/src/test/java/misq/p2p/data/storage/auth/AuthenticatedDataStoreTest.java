@@ -27,7 +27,6 @@ import misq.p2p.data.filter.FilterItem;
 import misq.p2p.data.filter.ProtectedDataFilter;
 import misq.p2p.data.inventory.Inventory;
 import misq.p2p.data.storage.MapKey;
-import misq.p2p.data.storage.MockProtectedData;
 import misq.p2p.data.storage.Util;
 import org.junit.Test;
 
@@ -113,7 +112,7 @@ public class AuthenticatedDataStoreTest {
 
     @Test
     public void testAddAndRemove() throws GeneralSecurityException, IOException {
-        MockProtectedData data = new MockProtectedData("test" + UUID.randomUUID().toString());
+        MockAuthenticatedPayload data = new MockAuthenticatedPayload("test" + UUID.randomUUID().toString());
         AuthenticatedDataStore store = new AuthenticatedDataStore(appDirPath, data.getMetaData());
         KeyPair keyPair = KeyPairGeneratorUtil.generateKeyPair();
 
@@ -191,16 +190,16 @@ public class AuthenticatedDataStoreTest {
 
     @Test
     public void testGetInv() throws GeneralSecurityException, IOException {
-        MockProtectedData data = new MockProtectedData("test");
+        MockAuthenticatedPayload data = new MockAuthenticatedPayload("test");
         AuthenticatedDataStore store = new AuthenticatedDataStore(appDirPath, data.getMetaData());
         KeyPair keyPair = KeyPairGeneratorUtil.generateKeyPair();
         int initialSeqNumFirstItem = 0;
-        MockProtectedData first;
+        MockAuthenticatedPayload first;
         byte[] hashOfFirst = new byte[]{};
         int iterations = 10;
         long ts = System.currentTimeMillis();
         for (int i = 0; i < iterations; i++) {
-            data = new MockProtectedData("test" + UUID.randomUUID().toString());
+            data = new MockAuthenticatedPayload("test" + UUID.randomUUID().toString());
             AddAuthenticatedDataRequest addRequest = AddAuthenticatedDataRequest.from(store, data, keyPair);
             Result addRequestResult = store.add(addRequest);
             assertTrue(addRequestResult.isSuccess());

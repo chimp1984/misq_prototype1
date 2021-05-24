@@ -311,6 +311,10 @@ public abstract class BaseTest {
         assertTrue(allSent);
         boolean allReceived = receivedLatch.await(getTimeout(), TimeUnit.SECONDS);
         assertTrue(allReceived);
-    }
 
+        alice1.shutdown();
+        alice2.shutdown();
+        bob1.shutdown();
+        bob2.shutdown();
+    }
 }

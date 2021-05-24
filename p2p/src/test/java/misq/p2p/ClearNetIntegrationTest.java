@@ -46,21 +46,21 @@ public class ClearNetIntegrationTest extends BaseTest {
         return Address.localHost(getNetworkConfig(role).getNodeId().getServerPort());
     }
 
-    //   @Test
+    @Test
     public void testInitializeServer() throws InterruptedException {
         super.testInitializeServer(2);
         alice.shutdown();
         bob.shutdown();
     }
 
-    //  @Test
+    @Test
     public void testConfidentialSend() throws InterruptedException, GeneralSecurityException {
         super.testConfidentialSend();
         alice.shutdown();
         bob.shutdown();
     }
 
-    // @Test
+    @Test
     public void testStartOfMultipleIds() throws InterruptedException {
         NetworkType networkType = NetworkType.CLEAR;
         Set<NetworkType> mySupportedNetworks = getMySupportedNetworks();

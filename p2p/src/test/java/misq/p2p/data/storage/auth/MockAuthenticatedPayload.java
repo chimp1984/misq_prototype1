@@ -15,20 +15,27 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package misq.p2p.data.storage;
+package misq.p2p.data.storage.auth;
 
 import lombok.EqualsAndHashCode;
-import misq.p2p.data.storage.append.AppendOnlyData;
+import lombok.Getter;
+import misq.p2p.data.storage.MetaData;
+
+import java.util.concurrent.TimeUnit;
 
 @EqualsAndHashCode
-public class MockAppendOnlyData implements AppendOnlyData {
+@Getter
+public class MockAuthenticatedPayload implements AuthenticatedPayload {
     private final String text;
     MetaData metaData;
 
-    public MockAppendOnlyData(String text) {
+    public MockAuthenticatedPayload(String text) {
         this.text = text;
-        metaData = new MetaData(251, getClass().getSimpleName());
+        // 463 is overhead of sig/pubkeys,...
+        // 582 is pubkey+sig+hash
+        metaData = new MetaData(TimeUnit.DAYS.toMillis(10), 251 + 463, getClass().getSimpleName());
     }
+
 
     @Override
     public MetaData getMetaData() {

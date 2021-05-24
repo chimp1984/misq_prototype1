@@ -15,13 +15,14 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package misq.p2p.data.storage;
+package misq.p2p.data.storage.auth;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import misq.p2p.data.storage.auth.AuthenticatedPayload;
-import misq.p2p.data.storage.auth.authorized.AuthorizedData;
+import misq.p2p.data.NetworkData;
+import misq.p2p.data.storage.MetaData;
+import misq.p2p.data.storage.auth.authorized.AuthorizedPayload;
 
 import java.security.PublicKey;
 import java.util.Set;
@@ -30,11 +31,11 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 @EqualsAndHashCode(callSuper = true)
 @Getter
-public final class MockAuthorizedData extends AuthorizedData {
+public final class MockAuthorizedPayload extends AuthorizedPayload {
     private final MetaData metaData;
 
-    public MockAuthorizedData(AuthenticatedPayload authenticatedPayload, byte[] signature, PublicKey publicKey) {
-        super(authenticatedPayload, signature, publicKey);
+    public MockAuthorizedPayload(NetworkData networkData, byte[] signature, PublicKey publicKey) {
+        super(networkData, signature, publicKey);
 
         this.metaData = new MetaData(TimeUnit.DAYS.toMillis(10), 10000, this.getClass().getSimpleName());
     }
