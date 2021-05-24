@@ -31,7 +31,7 @@ import java.util.Arrays;
 @Slf4j
 @EqualsAndHashCode(callSuper = true)
 @Getter
-public class RemoveMailboxRequest extends RemoveRequest {
+public class RemoveMailboxRequest extends RemoveRequest implements MailboxRequest {
     // Receiver is owner for remove request
     public RemoveMailboxRequest(MetaData metaData,
                                 byte[] hash,

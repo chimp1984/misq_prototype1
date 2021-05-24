@@ -15,19 +15,15 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package misq.p2p.data.storage.auth;
+package misq.p2p.data.storage.mailbox;
 
 import com.google.common.annotations.VisibleForTesting;
 import lombok.extern.slf4j.Slf4j;
 import misq.common.persistence.Persistence;
 import misq.common.security.DigestUtil;
-import misq.p2p.data.filter.ProtectedDataFilter;
-import misq.p2p.data.inventory.Inventory;
 import misq.p2p.data.storage.MapKey;
 import misq.p2p.data.storage.MetaData;
-import misq.p2p.data.storage.mailbox.AddMailboxRequest;
-import misq.p2p.data.storage.mailbox.MailboxData;
-import misq.p2p.data.storage.mailbox.MailboxPayload;
+import misq.p2p.data.storage.auth.Result;
 
 import java.io.File;
 import java.io.Serializable;
@@ -45,7 +41,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static java.io.File.separator;
 
 @Slf4j
-public class AuthenticatedDataStore {
+public class MailboxStore {
     private static final long MAX_AGE = TimeUnit.DAYS.toMillis(10);
     private static final int MAX_MAP_SIZE = 10000;
 
@@ -56,49 +52,49 @@ public class AuthenticatedDataStore {
     private static final int MAX_INVENTORY_MAP_SIZE = 1_000_000;
 
     public interface Listener {
-        void onAdded(AuthenticatedPayload authenticatedPayload);
+        void onAdded(MailboxPayload mailboxPayload);
 
-        void onRemoved(AuthenticatedPayload authenticatedPayload);
+        void onRemoved(MailboxPayload mailboxPayload);
 
-        default void onRefreshed(AuthenticatedPayload authenticatedPayload) {
+        default void onRefreshed(MailboxPayload mailboxPayload) {
         }
     }
 
     private final String storageFilePath;
     private final int maxItems;
-    private final ConcurrentHashMap<MapKey, AuthenticatedDataRequest> map = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<MapKey, MailboxRequest> map = new ConcurrentHashMap<>();
     private final Set<Listener> listeners = new CopyOnWriteArraySet<>();
 
-    public AuthenticatedDataStore(String storageDirPath, MetaData metaData) {
+    public MailboxStore(String storageDirPath, MetaData metaData) {
         this.storageFilePath = storageDirPath + separator + metaData.getFileName();
         maxItems = MAX_INVENTORY_MAP_SIZE / metaData.getMaxSizeInBytes();
 
         if (new File(storageFilePath).exists()) {
             Serializable serializable = Persistence.read(storageFilePath);
             if (serializable instanceof ConcurrentHashMap) {
-                ConcurrentHashMap<MapKey, AuthenticatedDataRequest> persisted = (ConcurrentHashMap<MapKey, AuthenticatedDataRequest>) serializable;
+                ConcurrentHashMap<MapKey, MailboxRequest> persisted = (ConcurrentHashMap<MapKey, MailboxRequest>) serializable;
                 maybePruneMap(persisted);
             }
         }
     }
 
-    public Result add(AddRequest request) throws NoSuchAlgorithmException {
-        AuthenticatedData entry = request.getAuthenticatedData();
-        AuthenticatedPayload authenticatedPayload = entry.getPayload();
-        byte[] hash = DigestUtil.sha256(authenticatedPayload.serialize());
+    public Result add(AddMailboxRequest request) throws NoSuchAlgorithmException {
+        MailboxData data = request.getMailboxData();
+        MailboxPayload payload = data.getMailboxPayload();
+        byte[] hash = DigestUtil.sha256(payload.serialize());
         MapKey mapKey = new MapKey(hash);
-        AuthenticatedDataRequest dataRequest = map.get(mapKey);
-        int sequenceNumberFromMap = dataRequest != null ? dataRequest.getSequenceNumber() : 0;
+        MailboxRequest requestFromMap = map.get(mapKey);
+        int sequenceNumberFromMap = requestFromMap != null ? requestFromMap.getSequenceNumber() : 0;
 
-        if (dataRequest != null && entry.isSequenceNrInvalid(sequenceNumberFromMap)) {
+        if (requestFromMap != null && data.isSequenceNrInvalid(sequenceNumberFromMap)) {
             return new Result(false).sequenceNrInvalid();
         }
 
-        if (entry.isExpired()) {
+        if (data.isExpired()) {
             return new Result(false).expired();
         }
 
-        if (authenticatedPayload.isDataInvalid()) {
+        if (payload.isDataInvalid()) {
             return new Result(false).dataInvalid();
         }
 
@@ -111,14 +107,14 @@ public class AuthenticatedDataStore {
         }
 
         map.put(mapKey, request);
-        listeners.forEach(listener -> listener.onAdded(authenticatedPayload));
+        listeners.forEach(listener -> listener.onAdded(payload));
         persist();
         return new Result(true);
     }
 
-    public Result remove(RemoveRequest request) {
+    public Result remove(RemoveMailboxRequest request) {
         MapKey mapKey = new MapKey(request.getHash());
-        AuthenticatedDataRequest requestFromMap = map.get(mapKey);
+        MailboxRequest requestFromMap = map.get(mapKey);
 
         if (requestFromMap == null) {
             // We don't have any entry but it might be that we would receive later an add request, so we need to keep
@@ -128,7 +124,7 @@ public class AuthenticatedDataStore {
             return new Result(false).noEntry();
         }
 
-        if (requestFromMap instanceof RemoveRequest) {
+        if (requestFromMap instanceof RemoveMailboxRequest) {
             // We have had the entry already removed.
             if (request.isSequenceNrInvalid(requestFromMap.getSequenceNumber())) {
                 // We update the request so we have latest sequence number.
@@ -139,16 +135,15 @@ public class AuthenticatedDataStore {
         }
 
         // At that point we know requestFromMap is an AddProtectedDataRequest
-        AddRequest addRequest = (AddRequest) requestFromMap;
+        AddMailboxRequest addRequest = (AddMailboxRequest) requestFromMap;
         // We have an entry, lets validate if we can remove it
-        AuthenticatedData authenticatedDataFromMap = addRequest.getAuthenticatedData();
-        AuthenticatedPayload dataFromMap = authenticatedDataFromMap.getPayload();
-        if (request.isSequenceNrInvalid(authenticatedDataFromMap.getSequenceNumber())) {
+        MailboxData dataFromMap = addRequest.getMailboxData();
+        if (request.isSequenceNrInvalid(dataFromMap.getSequenceNumber())) {
             // Sequence number has not increased
             return new Result(false).sequenceNrInvalid();
         }
 
-        if (request.isPublicKeyInvalid(authenticatedDataFromMap)) {
+        if (request.isPublicKeyInvalid(dataFromMap)) {
             // Hash of publicKey of data does not match provided one
             return new Result(false).publicKeyInvalid();
         }
@@ -158,88 +153,27 @@ public class AuthenticatedDataStore {
         }
 
         map.put(mapKey, request);
-        listeners.forEach(listener -> listener.onRemoved(dataFromMap));
+        listeners.forEach(listener -> listener.onRemoved(dataFromMap.getMailboxPayload()));
         persist();
         return new Result(true);
     }
 
-    public Result refresh(RefreshRequest request) {
-        MapKey mapKey = new MapKey(request.getHash());
-        AuthenticatedDataRequest requestFromMap = map.get(mapKey);
 
-        if (requestFromMap == null) {
-            return new Result(false).noEntry();
-        }
-
-        if (requestFromMap instanceof RemoveRequest) {
-            return new Result(false).alreadyRemoved();
-        }
-
-        // At that point we know requestFromMap is an AddProtectedDataRequest
-        AddRequest addRequestFromMap = (AddRequest) requestFromMap;
-        // We have an entry, lets validate if we can remove it
-        AuthenticatedData entryFromMap = addRequestFromMap.getAuthenticatedData();
-        AuthenticatedPayload dataFromMap = entryFromMap.getPayload();
-        int sequenceNumberFromMap = entryFromMap.getSequenceNumber();
-        if (request.isSequenceNrInvalid(sequenceNumberFromMap)) {
-            // Sequence number has not increased
-            return new Result(false).sequenceNrInvalid();
-        }
-
-        if (request.isPublicKeyInvalid(entryFromMap)) {
-            // Hash of publicKey of data does not match provided one
-            return new Result(false).publicKeyInvalid();
-        }
-
-        if (request.isSignatureInvalid()) {
-            return new Result(false).signatureInvalid();
-        }
-
-        // Update request with new sequence number
-        AddRequest updatedRequest;
-        if (addRequestFromMap instanceof AddMailboxRequest) {
-            MailboxData mailboxDataFromMap = (MailboxData) entryFromMap;
-            MailboxPayload mailboxPayloadFromMap = (MailboxPayload) dataFromMap;
-            MailboxData updatedEntryFromMap = new MailboxData(mailboxPayloadFromMap,
-                    request.getSequenceNumber(),
-                    mailboxDataFromMap.getHashOfPublicKey(),
-                    mailboxDataFromMap.getHashOfReceiversPublicKey(),
-                    mailboxDataFromMap.getReceiversPubKey(),
-                    mailboxDataFromMap.getCreated());
-            updatedRequest = new AddMailboxRequest(updatedEntryFromMap,
-                    addRequestFromMap.getSignature(),
-                    addRequestFromMap.getOwnerPublicKey());
-        } else {
-            AuthenticatedData updatedEntryFromMap = new AuthenticatedData(dataFromMap,
-                    request.getSequenceNumber(),
-                    entryFromMap.getHashOfPublicKey(),
-                    entryFromMap.getCreated());
-            updatedRequest = new AddRequest(updatedEntryFromMap,
-                    addRequestFromMap.getSignature(),
-                    addRequestFromMap.getOwnerPublicKey());
-        }
-
-        map.put(mapKey, updatedRequest);
-        listeners.forEach(listener -> listener.onRefreshed(dataFromMap));
-        persist();
-        return new Result(true);
-    }
-
-    public Inventory getInventory(ProtectedDataFilter dataFilter) {
-        List<AuthenticatedDataRequest> inventoryMap = getInventoryMap(map, dataFilter.getFilterMap());
+  /*  public Inventory getInventory(ProtectedDataFilter dataFilter) {
+        List<MailboxRequest> inventoryMap = getInventoryMap(map, dataFilter.getFilterMap());
         int maxItems = getMaxItems();
         int size = inventoryMap.size();
         if (size <= maxItems) {
             return new Inventory(inventoryMap, 0);
         }
 
-        List<AuthenticatedDataRequest> result = getSubSet(inventoryMap, dataFilter.getOffset(), dataFilter.getRange(), maxItems);
+        List<MailboxRequest> result = getSubSet(inventoryMap, dataFilter.getOffset(), dataFilter.getRange(), maxItems);
         int numDropped = size - result.size();
         return new Inventory(result, numDropped);
-    }
+    }*/
 
     @VisibleForTesting
-    public static List<AuthenticatedDataRequest> getSubSet(List<AuthenticatedDataRequest> map, int filterOffset, int filterRange, int maxItems) {
+    public static List<MailboxRequest> getSubSet(List<MailboxRequest> map, int filterOffset, int filterRange, int maxItems) {
         int size = map.size();
         checkArgument(filterOffset >= 0);
         checkArgument(filterOffset <= 100);
@@ -249,7 +183,7 @@ public class AuthenticatedDataStore {
         int offset = size * filterOffset / 100;
         int range = size * filterRange / 100;
         return map.stream()
-                .sorted(Comparator.comparingLong(AuthenticatedDataRequest::getCreated))
+                .sorted(Comparator.comparingLong(MailboxRequest::getCreated))
                 .skip(offset)
                 .limit(range)
                 .limit(maxItems)
@@ -261,8 +195,8 @@ public class AuthenticatedDataStore {
         return maxItems;
     }
 
-    List<AuthenticatedDataRequest> getInventoryMap(ConcurrentHashMap<MapKey, AuthenticatedDataRequest> map,
-                                                   Map<MapKey, Integer> requesterMap) {
+    List<MailboxRequest> getInventoryMap(ConcurrentHashMap<MapKey, MailboxRequest> map,
+                                         Map<MapKey, Integer> requesterMap) {
         return map.entrySet().stream()
                 .filter(entry -> {
                     // Any entry we have but is not included in filter gets added
@@ -297,16 +231,16 @@ public class AuthenticatedDataStore {
     }
 
     // todo call by time interval
-    private void maybePruneMap(ConcurrentHashMap<MapKey, AuthenticatedDataRequest> current) {
+    private void maybePruneMap(ConcurrentHashMap<MapKey, MailboxRequest> current) {
         long now = System.currentTimeMillis();
         // Remove entries older than MAX_AGE
         // Remove expired ProtectedEntry in case value is of type AddProtectedDataRequest
         // Sort by created date
         // Limit to MAX_MAP_SIZE
-        Map<MapKey, AuthenticatedDataRequest> pruned = current.entrySet().stream()
+        Map<MapKey, MailboxRequest> pruned = current.entrySet().stream()
                 .filter(entry -> now - entry.getValue().getCreated() < MAX_AGE)
-                .filter(entry -> entry.getValue() instanceof RemoveRequest ||
-                        !((AddRequest) entry.getValue()).getAuthenticatedData().isExpired())
+                .filter(entry -> entry.getValue() instanceof RemoveMailboxRequest ||
+                        !((AddMailboxRequest) entry.getValue()).getMailboxData().isExpired())
                 .sorted((o1, o2) -> Long.compare(o2.getValue().getCreated(), o1.getValue().getCreated()))
                 .limit(MAX_MAP_SIZE)
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
@@ -314,7 +248,7 @@ public class AuthenticatedDataStore {
     }
 
     @VisibleForTesting
-    public ConcurrentHashMap<MapKey, AuthenticatedDataRequest> getMap() {
+    public ConcurrentHashMap<MapKey, MailboxRequest> getMap() {
         return map;
     }
 }

@@ -130,8 +130,8 @@ public class StorageTest {
         AuthenticatedData entryFromMap = addRequestFromMap.getAuthenticatedData();
 
         assertEquals(initialSeqNum + 1, entryFromMap.getSequenceNumber());
-        AuthenticatedPayload authenticatedPayload = addRequest.getAuthenticatedData().getAuthenticatedPayload();
-        assertEquals(entryFromMap.getAuthenticatedPayload(), authenticatedPayload);
+        AuthenticatedPayload authenticatedPayload = addRequest.getAuthenticatedData().getPayload();
+        assertEquals(entryFromMap.getPayload(), authenticatedPayload);
 
         // refresh
         RefreshRequest refreshRequest = storage.getRefreshProtectedDataRequest(mockAuthorizedData, keyPair);
@@ -171,8 +171,8 @@ public class StorageTest {
         AuthenticatedData entryFromMap = addRequestFromMap.getAuthenticatedData();
 
         assertEquals(initialSeqNum + 1, entryFromMap.getSequenceNumber());
-        AuthenticatedPayload authenticatedPayload = addRequest.getAuthenticatedData().getAuthenticatedPayload();
-        assertEquals(entryFromMap.getAuthenticatedPayload(), authenticatedPayload);
+        AuthenticatedPayload authenticatedPayload = addRequest.getAuthenticatedData().getPayload();
+        assertEquals(entryFromMap.getPayload(), authenticatedPayload);
 
         // request inventory with old seqNum
         String dataType = mockProtectedData.getMetaData().getFileName();
@@ -255,7 +255,7 @@ public class StorageTest {
 
         assertTrue(entryFromMap instanceof MailboxData);
         MailboxData mailboxDataFromMap = (MailboxData) entryFromMap;
-        NetworkData sealedDataFromMap = mailboxDataFromMap.getAuthenticatedPayload();
+        NetworkData sealedDataFromMap = mailboxDataFromMap.getPayload();
         assertEquals(sealedDataFromMap, mailboxPayload);
 
         // request inventory with old seqNum

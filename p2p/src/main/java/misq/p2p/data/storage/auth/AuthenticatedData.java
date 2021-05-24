@@ -27,23 +27,23 @@ import java.io.Serializable;
 @Getter
 @EqualsAndHashCode
 public class AuthenticatedData implements Serializable {
-    private final AuthenticatedPayload authenticatedPayload;
-    private final int sequenceNumber;
-    private final long created;
+    protected final AuthenticatedPayload payload;
+    protected final int sequenceNumber;
+    protected final long created;
     protected final byte[] hashOfPublicKey;
 
-    public AuthenticatedData(AuthenticatedPayload authenticatedPayload,
+    public AuthenticatedData(AuthenticatedPayload payload,
                              int sequenceNumber,
                              byte[] hashOfPublicKey,
                              long created) {
-        this.authenticatedPayload = authenticatedPayload;
+        this.payload = payload;
         this.sequenceNumber = sequenceNumber;
         this.hashOfPublicKey = hashOfPublicKey;
         this.created = created;
     }
 
     public boolean isExpired() {
-        return (System.currentTimeMillis() - created) > authenticatedPayload.getMetaData().getTtl();
+        return (System.currentTimeMillis() - created) > payload.getMetaData().getTtl();
     }
 
     public boolean isSequenceNrInvalid(long seqNumberFromMap) {
@@ -57,7 +57,7 @@ public class AuthenticatedData implements Serializable {
     @Override
     public String toString() {
         return "ProtectedEntry{" +
-                "\n     protectedData=" + authenticatedPayload +
+                "\n     protectedData=" + payload +
                 ",\n     sequenceNumber=" + sequenceNumber +
                 ",\n     created=" + created +
                 ",\n     hashOfPublicKey=" + Hex.encode(hashOfPublicKey) +

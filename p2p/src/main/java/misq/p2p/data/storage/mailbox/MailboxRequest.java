@@ -17,27 +17,7 @@
 
 package misq.p2p.data.storage.mailbox;
 
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
-import misq.p2p.data.storage.auth.AddRequest;
+import misq.p2p.data.storage.auth.AuthenticatedDataRequest;
 
-import java.security.PublicKey;
-
-@Slf4j
-@EqualsAndHashCode(callSuper = true)
-@Getter
-public class AddMailboxRequest extends AddRequest implements MailboxRequest {
-    public AddMailboxRequest(MailboxData mailboxData, byte[] signature, PublicKey senderPublicKey) {
-        super(mailboxData, signature, senderPublicKey);
-    }
-
-    @Override
-    public String toString() {
-        return "AddMailboxDataRequest{} " + super.toString();
-    }
-
-    public MailboxData getMailboxData() {
-        return (MailboxData) authenticatedData;
-    }
+public interface MailboxRequest extends AuthenticatedDataRequest {
 }

@@ -73,7 +73,7 @@ public class AddRequest implements AuthenticatedDataRequest, Serializable {
     }
 
     public String getFileName() {
-        return authenticatedData.getAuthenticatedPayload().getMetaData().getFileName();
+        return authenticatedData.getPayload().getMetaData().getFileName();
     }
 
     @Override
@@ -87,7 +87,7 @@ public class AddRequest implements AuthenticatedDataRequest, Serializable {
     }
 
     public MetaData getMetaData() {
-        return authenticatedData.getAuthenticatedPayload().getMetaData();
+        return authenticatedData.getPayload().getMetaData();
     }
 
     @Override

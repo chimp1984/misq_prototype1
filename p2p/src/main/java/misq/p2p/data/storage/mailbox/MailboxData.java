@@ -65,4 +65,8 @@ public class MailboxData extends AuthenticatedData {
                 ",\n     hashOfReceiversPublicKey=" + Hex.encode(hashOfReceiversPublicKey) +
                 "\n} " + super.toString();
     }
+
+    public MailboxPayload getMailboxPayload() {
+        return (MailboxPayload) payload;
+    }
 }
