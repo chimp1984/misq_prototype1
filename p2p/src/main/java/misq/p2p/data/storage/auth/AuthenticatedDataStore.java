@@ -25,9 +25,9 @@ import misq.p2p.data.filter.ProtectedDataFilter;
 import misq.p2p.data.inventory.Inventory;
 import misq.p2p.data.storage.MapKey;
 import misq.p2p.data.storage.MetaData;
-import misq.p2p.data.storage.auth.mailbox.AddMailboxRequest;
-import misq.p2p.data.storage.auth.mailbox.Mailbox;
-import misq.p2p.data.storage.auth.mailbox.MailboxPayload;
+import misq.p2p.data.storage.mailbox.AddMailboxRequest;
+import misq.p2p.data.storage.mailbox.MailboxData;
+import misq.p2p.data.storage.mailbox.MailboxPayload;
 
 import java.io.File;
 import java.io.Serializable;
@@ -198,14 +198,14 @@ public class AuthenticatedDataStore {
         // Update request with new sequence number
         AddRequest updatedRequest;
         if (addRequestFromMap instanceof AddMailboxRequest) {
-            Mailbox mailboxFromMap = (Mailbox) entryFromMap;
+            MailboxData mailboxDataFromMap = (MailboxData) entryFromMap;
             MailboxPayload mailboxPayloadFromMap = (MailboxPayload) dataFromMap;
-            Mailbox updatedEntryFromMap = new Mailbox(mailboxPayloadFromMap,
+            MailboxData updatedEntryFromMap = new MailboxData(mailboxPayloadFromMap,
                     request.getSequenceNumber(),
-                    mailboxFromMap.getHashOfPublicKey(),
-                    mailboxFromMap.getHashOfReceiversPublicKey(),
-                    mailboxFromMap.getReceiversPubKey(),
-                    mailboxFromMap.getCreated());
+                    mailboxDataFromMap.getHashOfPublicKey(),
+                    mailboxDataFromMap.getHashOfReceiversPublicKey(),
+                    mailboxDataFromMap.getReceiversPubKey(),
+                    mailboxDataFromMap.getCreated());
             updatedRequest = new AddMailboxRequest(updatedEntryFromMap,
                     addRequestFromMap.getSignature(),
                     addRequestFromMap.getOwnerPublicKey());

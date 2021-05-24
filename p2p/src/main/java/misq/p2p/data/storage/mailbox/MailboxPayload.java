@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package misq.p2p.data.storage.auth.mailbox;
+package misq.p2p.data.storage.mailbox;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;

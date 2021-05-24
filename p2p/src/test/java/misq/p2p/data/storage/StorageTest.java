@@ -28,10 +28,10 @@ import misq.p2p.data.NetworkData;
 import misq.p2p.data.filter.FilterItem;
 import misq.p2p.data.filter.ProtectedDataFilter;
 import misq.p2p.data.storage.auth.*;
-import misq.p2p.data.storage.auth.mailbox.AddMailboxRequest;
-import misq.p2p.data.storage.auth.mailbox.Mailbox;
-import misq.p2p.data.storage.auth.mailbox.MailboxPayload;
-import misq.p2p.data.storage.auth.mailbox.RemoveMailboxRequest;
+import misq.p2p.data.storage.mailbox.AddMailboxRequest;
+import misq.p2p.data.storage.mailbox.MailboxData;
+import misq.p2p.data.storage.mailbox.MailboxPayload;
+import misq.p2p.data.storage.mailbox.RemoveMailboxRequest;
 import org.junit.Test;
 
 import java.io.File;
@@ -253,9 +253,9 @@ public class StorageTest {
 
         assertEquals(initialSeqNum + 1, entryFromMap.getSequenceNumber());
 
-        assertTrue(entryFromMap instanceof Mailbox);
-        Mailbox mailboxFromMap = (Mailbox) entryFromMap;
-        NetworkData sealedDataFromMap = mailboxFromMap.getAuthenticatedPayload();
+        assertTrue(entryFromMap instanceof MailboxData);
+        MailboxData mailboxDataFromMap = (MailboxData) entryFromMap;
+        NetworkData sealedDataFromMap = mailboxDataFromMap.getAuthenticatedPayload();
         assertEquals(sealedDataFromMap, mailboxPayload);
 
         // request inventory with old seqNum

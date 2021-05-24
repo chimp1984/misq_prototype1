@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package misq.p2p.data.storage.auth.mailbox;
+package misq.p2p.data.storage.mailbox;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -50,8 +50,8 @@ public class RemoveMailboxRequest extends RemoveRequest {
     @Override
     public boolean isPublicKeyInvalid(AuthenticatedData entryFromMap) {
         try {
-            Mailbox mailbox = (Mailbox) entryFromMap;
-            return !Arrays.equals(mailbox.getHashOfReceiversPublicKey(), DigestUtil.sha256(ownerPublicKeyBytes));
+            MailboxData mailboxData = (MailboxData) entryFromMap;
+            return !Arrays.equals(mailboxData.getHashOfReceiversPublicKey(), DigestUtil.sha256(ownerPublicKeyBytes));
         } catch (Exception e) {
             return true;
         }

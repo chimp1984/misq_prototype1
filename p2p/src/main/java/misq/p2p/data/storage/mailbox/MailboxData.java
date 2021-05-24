@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package misq.p2p.data.storage.auth.mailbox;
+package misq.p2p.data.storage.mailbox;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -26,16 +26,16 @@ import java.security.PublicKey;
 
 @Getter
 @EqualsAndHashCode(callSuper = true)
-public class Mailbox extends AuthenticatedData {
+public class MailboxData extends AuthenticatedData {
     private final byte[] receiversPubKeyBytes;
     private final byte[] hashOfReceiversPublicKey;
     transient final private PublicKey receiversPubKey;
 
-    public Mailbox(MailboxPayload data,
-                   int sequenceNumber,
-                   byte[] hashOfSenderPublicKey,
-                   byte[] hashOfReceiversPublicKey,
-                   PublicKey receiversPubKey) {
+    public MailboxData(MailboxPayload data,
+                       int sequenceNumber,
+                       byte[] hashOfSenderPublicKey,
+                       byte[] hashOfReceiversPublicKey,
+                       PublicKey receiversPubKey) {
         this(data,
                 sequenceNumber,
                 hashOfSenderPublicKey,
@@ -44,12 +44,12 @@ public class Mailbox extends AuthenticatedData {
                 System.currentTimeMillis());
     }
 
-    public Mailbox(MailboxPayload data,
-                   int sequenceNumber,
-                   byte[] hashOfSenderPublicKey,
-                   byte[] hashOfReceiversPublicKey,
-                   PublicKey receiversPubKey,
-                   long created) {
+    public MailboxData(MailboxPayload data,
+                       int sequenceNumber,
+                       byte[] hashOfSenderPublicKey,
+                       byte[] hashOfReceiversPublicKey,
+                       PublicKey receiversPubKey,
+                       long created) {
         super(data, sequenceNumber, hashOfSenderPublicKey, created);
 
         receiversPubKeyBytes = receiversPubKey.getEncoded();

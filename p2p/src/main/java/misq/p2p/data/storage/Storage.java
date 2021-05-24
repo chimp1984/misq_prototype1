@@ -27,7 +27,7 @@ import misq.p2p.data.NetworkData;
 import misq.p2p.data.filter.ProtectedDataFilter;
 import misq.p2p.data.inventory.Inventory;
 import misq.p2p.data.storage.auth.*;
-import misq.p2p.data.storage.auth.mailbox.*;
+import misq.p2p.data.storage.mailbox.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -140,7 +140,7 @@ public class Storage {
         int newSequenceNumber = sequenceNumberFromMap + 1;
         byte[] hashOfSendersPublicKey = DigestUtil.sha256(senderPublicKey.getEncoded());
         byte[] hashOfReceiversPublicKey = DigestUtil.sha256(receiverPublicKey.getEncoded());
-        Mailbox entry = new Mailbox(mailboxPayload, newSequenceNumber, hashOfSendersPublicKey,
+        MailboxData entry = new MailboxData(mailboxPayload, newSequenceNumber, hashOfSendersPublicKey,
                 hashOfReceiversPublicKey, receiverPublicKey);
         byte[] serialized = entry.serialize();
         byte[] signature = SignatureUtil.sign(serialized, senderKeyPair.getPrivate());
