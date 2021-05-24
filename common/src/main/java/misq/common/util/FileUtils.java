@@ -22,8 +22,13 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.io.*;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.HashSet;
 import java.util.Scanner;
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Slf4j
 public class FileUtils {
@@ -150,6 +155,19 @@ public class FileUtils {
                 if (read == -1) break;
                 outputStream.write(buffer, 0, read);
             }
+        }
+    }
+
+    public static Set<String> listFiles(String dirPath) {
+        try (Stream<Path> stream = Files.list(Paths.get(dirPath))) {
+            return stream
+                    .filter(file -> !Files.isDirectory(file))
+                    .map(Path::getFileName)
+                    .map(Path::toString)
+                    .collect(Collectors.toSet());
+        } catch (IOException e) {
+            log.error(e.toString(), e);
+            return new HashSet<>();
         }
     }
 }

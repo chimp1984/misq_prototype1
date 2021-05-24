@@ -15,12 +15,15 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package misq.p2p.data.storage;
+package misq.p2p.data.storage.auth.mailbox;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import misq.common.security.DigestUtil;
+import misq.p2p.data.storage.MetaData;
+import misq.p2p.data.storage.auth.AuthenticatedData;
+import misq.p2p.data.storage.auth.RemoveRequest;
 
 import java.security.PublicKey;
 import java.util.Arrays;
@@ -28,26 +31,27 @@ import java.util.Arrays;
 @Slf4j
 @EqualsAndHashCode(callSuper = true)
 @Getter
-public class RemoveMailboxDataRequest extends RemoveProtectedDataRequest {
+public class RemoveMailboxRequest extends RemoveRequest {
     // Receiver is owner for remove request
-    public RemoveMailboxDataRequest(MetaData metaData,
-                                    byte[] dataHash,
-                                    PublicKey receiverPublicKey,
-                                    int sequenceNumber,
-                                    byte[] signature) {
+    public RemoveMailboxRequest(MetaData metaData,
+                                byte[] hash,
+                                PublicKey receiverPublicKey,
+                                int sequenceNumber,
+                                byte[] signature) {
         super(metaData,
-                dataHash,
+                hash,
                 receiverPublicKey.getEncoded(),
                 receiverPublicKey,
                 sequenceNumber,
                 signature);
+        log.error(this.toString());
     }
 
     @Override
-    public boolean isPublicKeyInvalid(ProtectedData protectedData) {
+    public boolean isPublicKeyInvalid(AuthenticatedData entryFromMap) {
         try {
-            MailboxData mailboxData = (MailboxData) protectedData;
-            return !Arrays.equals(mailboxData.getHashOfReceiversPublicKey(), DigestUtil.sha256(ownerPublicKeyBytes));
+            Mailbox mailbox = (Mailbox) entryFromMap;
+            return !Arrays.equals(mailbox.getHashOfReceiversPublicKey(), DigestUtil.sha256(ownerPublicKeyBytes));
         } catch (Exception e) {
             return true;
         }

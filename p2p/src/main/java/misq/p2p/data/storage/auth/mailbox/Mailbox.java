@@ -15,33 +15,54 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package misq.p2p.data.storage;
+package misq.p2p.data.storage.auth.mailbox;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import misq.common.util.Hex;
+import misq.p2p.data.storage.auth.AuthenticatedData;
 
 import java.security.PublicKey;
 
 @Getter
 @EqualsAndHashCode(callSuper = true)
-public class MailboxEntry extends ProtectedEntry {
+public class Mailbox extends AuthenticatedData {
     private final byte[] receiversPubKeyBytes;
+    private final byte[] hashOfReceiversPublicKey;
     transient final private PublicKey receiversPubKey;
 
-    public MailboxEntry(MailboxData data,
-                        int sequenceNumber,
-                        PublicKey receiversPubKey) {
-        super(data, sequenceNumber, System.currentTimeMillis());
-        this.receiversPubKey = receiversPubKey;
-        receiversPubKeyBytes = receiversPubKey.getEncoded();
+    public Mailbox(MailboxPayload data,
+                   int sequenceNumber,
+                   byte[] hashOfSenderPublicKey,
+                   byte[] hashOfReceiversPublicKey,
+                   PublicKey receiversPubKey) {
+        this(data,
+                sequenceNumber,
+                hashOfSenderPublicKey,
+                hashOfReceiversPublicKey,
+                receiversPubKey,
+                System.currentTimeMillis());
     }
+
+    public Mailbox(MailboxPayload data,
+                   int sequenceNumber,
+                   byte[] hashOfSenderPublicKey,
+                   byte[] hashOfReceiversPublicKey,
+                   PublicKey receiversPubKey,
+                   long created) {
+        super(data, sequenceNumber, hashOfSenderPublicKey, created);
+
+        receiversPubKeyBytes = receiversPubKey.getEncoded();
+        this.hashOfReceiversPublicKey = hashOfReceiversPublicKey;
+        this.receiversPubKey = receiversPubKey;
+    }
+
 
     @Override
     public String toString() {
         return "MailboxEntry{" +
                 "\n     receiversPubKeyBytes=" + Hex.encode(receiversPubKeyBytes) +
-                ",\n     receiversPubKey=" + receiversPubKey +
+                ",\n     hashOfReceiversPublicKey=" + Hex.encode(hashOfReceiversPublicKey) +
                 "\n} " + super.toString();
     }
 }

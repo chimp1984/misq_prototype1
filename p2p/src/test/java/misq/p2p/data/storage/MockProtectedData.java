@@ -18,24 +18,22 @@
 package misq.p2p.data.storage;
 
 import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import misq.common.security.Sealed;
-import misq.p2p.data.NetworkData;
+import misq.p2p.data.storage.auth.AuthenticatedPayload;
 
-// We want to have fine grained control over mailbox messages.
-// As the data is encrypted we could not use it's TTL and we would merge all mailbox message into one storage file.
-// By wrapping the sealed data into that NetworkData we can add the fileName and ttl from the unencrypted NetworkData.
+import java.util.concurrent.TimeUnit;
+
 @EqualsAndHashCode
+public class MockProtectedData implements AuthenticatedPayload {
+    private final String text;
+    MetaData metaData;
 
-public class SealedData implements NetworkData {
-    @Getter
-    private final Sealed sealed;
-    private final MetaData metaData;
-
-    public SealedData(Sealed sealed, MetaData metaData) {
-        this.sealed = sealed;
-        this.metaData = metaData;
+    public MockProtectedData(String text) {
+        this.text = text;
+        // 463 is overhead of sig/pubkeys,...
+        // 582 is pubkey+sig+hash
+        metaData = new MetaData(TimeUnit.DAYS.toMillis(10), 251 + 463, getClass().getSimpleName());
     }
+
 
     @Override
     public MetaData getMetaData() {
@@ -45,13 +43,5 @@ public class SealedData implements NetworkData {
     @Override
     public boolean isDataInvalid() {
         return false;
-    }
-
-    @Override
-    public String toString() {
-        return "SealedData{" +
-                "\n     sealed=" + sealed +
-                ",\n     metaData='" + metaData + '\'' +
-                "\n}";
     }
 }

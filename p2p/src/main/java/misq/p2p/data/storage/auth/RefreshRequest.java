@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package misq.p2p.data.storage;
+package misq.p2p.data.storage.auth;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -23,6 +23,7 @@ import lombok.extern.slf4j.Slf4j;
 import misq.common.security.DigestUtil;
 import misq.common.security.SignatureUtil;
 import misq.common.util.Hex;
+import misq.p2p.data.storage.MetaData;
 
 import java.io.Serializable;
 import java.security.PublicKey;
@@ -31,7 +32,7 @@ import java.util.Arrays;
 @Getter
 @EqualsAndHashCode
 @Slf4j
-public class RefreshProtectedDataRequest implements Serializable {
+public class RefreshRequest implements Serializable {
     protected final MetaData metaData;
     protected final byte[] hash;
     protected final byte[] ownerPublicKeyBytes; // 442 bytes
@@ -39,11 +40,11 @@ public class RefreshProtectedDataRequest implements Serializable {
     protected final int sequenceNumber;
     protected final byte[] signature;         // 47 bytes
 
-    public RefreshProtectedDataRequest(MetaData metaData,
-                                       byte[] hash,
-                                       PublicKey ownerPublicKey,
-                                       int sequenceNumber,
-                                       byte[] signature) {
+    public RefreshRequest(MetaData metaData,
+                          byte[] hash,
+                          PublicKey ownerPublicKey,
+                          int sequenceNumber,
+                          byte[] signature) {
         this(metaData,
                 hash,
                 ownerPublicKey.getEncoded(),
@@ -52,12 +53,12 @@ public class RefreshProtectedDataRequest implements Serializable {
                 signature);
     }
 
-    protected RefreshProtectedDataRequest(MetaData metaData,
-                                          byte[] hash,
-                                          byte[] ownerPublicKeyBytes,
-                                          PublicKey ownerPublicKey,
-                                          int sequenceNumber,
-                                          byte[] signature) {
+    protected RefreshRequest(MetaData metaData,
+                             byte[] hash,
+                             byte[] ownerPublicKeyBytes,
+                             PublicKey ownerPublicKey,
+                             int sequenceNumber,
+                             byte[] signature) {
         this.metaData = metaData;
         this.hash = hash;
         this.ownerPublicKeyBytes = ownerPublicKeyBytes;
@@ -75,9 +76,9 @@ public class RefreshProtectedDataRequest implements Serializable {
         }
     }
 
-    public boolean isPublicKeyInvalid(ProtectedData protectedData) {
+    public boolean isPublicKeyInvalid(AuthenticatedData entryFromMap) {
         try {
-            return !Arrays.equals(protectedData.getHashOfPublicKey(), DigestUtil.sha256(ownerPublicKeyBytes));
+            return !Arrays.equals(entryFromMap.getHashOfPublicKey(), DigestUtil.sha256(ownerPublicKeyBytes));
         } catch (Exception e) {
             return true;
         }

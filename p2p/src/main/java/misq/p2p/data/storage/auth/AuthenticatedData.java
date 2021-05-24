@@ -15,49 +15,52 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package misq.p2p.data.storage;
+package misq.p2p.data.storage.auth;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import misq.common.util.Hex;
 import misq.common.util.ObjectSerializer;
 
 import java.io.Serializable;
 
 @Getter
 @EqualsAndHashCode
-public class ProtectedEntry implements Serializable {
-    private final ProtectedData protectedData;
+public class AuthenticatedData implements Serializable {
+    private final AuthenticatedPayload authenticatedPayload;
     private final int sequenceNumber;
     private final long created;
+    protected final byte[] hashOfPublicKey;
 
-
-    public ProtectedEntry(ProtectedData protectedData,
-                          int sequenceNumber,
-                          long created) {
-        this.protectedData = protectedData;
+    public AuthenticatedData(AuthenticatedPayload authenticatedPayload,
+                             int sequenceNumber,
+                             byte[] hashOfPublicKey,
+                             long created) {
+        this.authenticatedPayload = authenticatedPayload;
         this.sequenceNumber = sequenceNumber;
+        this.hashOfPublicKey = hashOfPublicKey;
         this.created = created;
     }
 
     public boolean isExpired() {
-        return (System.currentTimeMillis() - created) > protectedData.getNetworkData().getMetaData().getTtl();
+        return (System.currentTimeMillis() - created) > authenticatedPayload.getMetaData().getTtl();
     }
 
     public boolean isSequenceNrInvalid(long seqNumberFromMap) {
         return sequenceNumber <= seqNumberFromMap;
     }
 
+    public byte[] serialize() {
+        return ObjectSerializer.serialize(this);
+    }
 
     @Override
     public String toString() {
         return "ProtectedEntry{" +
-                "\n     protectedData=" + protectedData +
+                "\n     protectedData=" + authenticatedPayload +
                 ",\n     sequenceNumber=" + sequenceNumber +
-                ",\n     creationTimeStamp=" + created +
+                ",\n     created=" + created +
+                ",\n     hashOfPublicKey=" + Hex.encode(hashOfPublicKey) +
                 "\n}";
-    }
-
-    public byte[] serialize() {
-        return ObjectSerializer.serialize(this);
     }
 }

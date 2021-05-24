@@ -15,24 +15,21 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package misq.p2p.data.storage;
+package misq.p2p.data.storage.auth.mailbox;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import misq.p2p.data.storage.auth.AddRequest;
 
 import java.security.PublicKey;
 
 @Slf4j
 @EqualsAndHashCode(callSuper = true)
 @Getter
-public class AddMailboxDataRequest extends AddProtectedDataRequest {
-    public AddMailboxDataRequest(MailboxEntry mailboxEntry,
-                                 byte[] signature,
-                                 PublicKey senderPublicKey) {
-        super(mailboxEntry,
-                signature,
-                senderPublicKey);
+public class AddMailboxRequest extends AddRequest {
+    public AddMailboxRequest(Mailbox mailbox, byte[] signature, PublicKey senderPublicKey) {
+        super(mailbox, signature, senderPublicKey);
     }
 
     @Override

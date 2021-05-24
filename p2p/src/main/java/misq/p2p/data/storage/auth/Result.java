@@ -15,54 +15,67 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package misq.p2p.data.storage;
+package misq.p2p.data.storage.auth;
 
 import lombok.Getter;
 
 @Getter
-public class DataRequestResult {
+public class Result {
     private final boolean success;
-    private boolean publicKeyInvalid, sequenceNrInvalid, noEntry, alreadyRemoved, signatureInvalid;
+    private boolean publicKeyInvalid, sequenceNrInvalid, signatureInvalid,
+            dataInvalid, expired, noEntry, alreadyRemoved;
 
-    public DataRequestResult(boolean success) {
+    public Result(boolean success) {
         this.success = success;
     }
 
-    public DataRequestResult publicKeyInvalid() {
+    public Result publicKeyInvalid() {
         publicKeyInvalid = true;
         return this;
     }
 
-    public DataRequestResult sequenceNrInvalid() {
+    public Result sequenceNrInvalid() {
         sequenceNrInvalid = true;
         return this;
     }
 
-
-    public DataRequestResult noEntry() {
-        noEntry = true;
-        return this;
-    }
-
-    public DataRequestResult signatureInvalid() {
+    public Result signatureInvalid() {
         signatureInvalid = true;
         return this;
     }
 
-    public DataRequestResult alreadyRemoved() {
+    public Result expired() {
+        expired = true;
+        return this;
+    }
+
+    public Result dataInvalid() {
+        dataInvalid = true;
+        return this;
+    }
+
+
+    public Result noEntry() {
+        noEntry = true;
+        return this;
+    }
+
+    public Result alreadyRemoved() {
         alreadyRemoved = true;
         return this;
     }
 
     @Override
     public String toString() {
-        return "RemoveDataResult{" +
+        return "Result{" +
                 "\n     success=" + success +
                 ",\n     publicKeyInvalid=" + publicKeyInvalid +
                 ",\n     sequenceNrInvalid=" + sequenceNrInvalid +
+                ",\n     signatureInvalid=" + signatureInvalid +
+                ",\n     dataInvalid=" + dataInvalid +
+                ",\n     expired=" + expired +
                 ",\n     noEntry=" + noEntry +
                 ",\n     alreadyRemoved=" + alreadyRemoved +
-                ",\n     signatureInvalid=" + signatureInvalid +
                 "\n}";
     }
 }

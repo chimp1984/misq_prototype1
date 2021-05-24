@@ -17,8 +17,26 @@
 
 package misq.p2p.data.storage;
 
-import misq.p2p.Proto;
+import lombok.EqualsAndHashCode;
+import misq.p2p.data.storage.append.AppendOnlyData;
 
-public interface MailboxMessage extends Proto {
-    MetaData getMetaData();
+@EqualsAndHashCode
+public class MockAppendOnlyData implements AppendOnlyData {
+    private final String text;
+    MetaData metaData;
+
+    public MockAppendOnlyData(String text) {
+        this.text = text;
+        metaData = new MetaData(251, getClass().getSimpleName());
+    }
+
+    @Override
+    public MetaData getMetaData() {
+        return metaData;
+    }
+
+    @Override
+    public boolean isDataInvalid() {
+        return false;
+    }
 }

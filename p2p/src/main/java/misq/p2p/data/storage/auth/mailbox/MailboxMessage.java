@@ -15,18 +15,11 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package misq.p2p.data;
+package misq.p2p.data.storage.auth.mailbox;
 
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import misq.p2p.message.Message;
+import misq.p2p.Proto;
+import misq.p2p.data.storage.MetaData;
 
-@EqualsAndHashCode
-@Getter
-public class ProtectedPayload implements Message {
-    private final Message message;
-
-    public ProtectedPayload(Message message) {
-        this.message = message;
-    }
+public interface MailboxMessage extends Proto {
+    MetaData getMetaData();
 }

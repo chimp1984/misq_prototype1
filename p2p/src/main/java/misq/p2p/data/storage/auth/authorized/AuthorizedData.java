@@ -15,45 +15,50 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package misq.p2p.data;
+package misq.p2p.data.storage.auth.authorized;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import misq.common.security.SignatureUtil;
 import misq.common.util.Hex;
+import misq.p2p.data.NetworkData;
+import misq.p2p.data.storage.auth.AuthenticatedPayload;
 
 import java.security.GeneralSecurityException;
 import java.security.PublicKey;
 import java.util.Set;
 
+/**
+ * Data which is signed by an authorized key (e.g. Filter, Alert, DisputeAgent...)
+ */
 @Slf4j
 @EqualsAndHashCode
 @Getter
-public abstract class SignedData implements NetworkData {
+public abstract class AuthorizedData implements AuthenticatedPayload {
     private final NetworkData networkData;
     private final byte[] signature;
-    private final byte[] publicKeyBytes;
-    transient private final PublicKey publicKey;
+    private final byte[] authorizedPublicKeyBytes;
+    transient private final PublicKey authorizedPublicKey;
 
-    public SignedData(NetworkData networkData, byte[] signature, PublicKey publicKey) {
+    public AuthorizedData(NetworkData networkData, byte[] signature, PublicKey authorizedPublicKey) {
         this.networkData = networkData;
         this.signature = signature;
-        this.publicKey = publicKey;
-        publicKeyBytes = publicKey.getEncoded();
+        this.authorizedPublicKey = authorizedPublicKey;
+        authorizedPublicKeyBytes = authorizedPublicKey.getEncoded();
     }
 
     @Override
     public boolean isDataInvalid() {
         try {
             return networkData.isDataInvalid() ||
-                    !getPermittedPublicKeys().contains(Hex.encode(publicKeyBytes)) ||
-                    !SignatureUtil.verify(networkData.serialize(), signature, publicKey);
+                    !getAuthorizedPublicKeys().contains(Hex.encode(authorizedPublicKeyBytes)) ||
+                    !SignatureUtil.verify(networkData.serialize(), signature, authorizedPublicKey);
         } catch (GeneralSecurityException e) {
             e.printStackTrace();
             return true;
         }
     }
 
-    public abstract Set<String> getPermittedPublicKeys();
+    public abstract Set<String> getAuthorizedPublicKeys();
 }

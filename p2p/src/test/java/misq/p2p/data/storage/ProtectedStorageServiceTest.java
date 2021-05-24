@@ -18,6 +18,8 @@
 package misq.p2p.data.storage;
 
 import lombok.Getter;
+import misq.p2p.data.storage.auth.AuthenticatedDataRequest;
+import misq.p2p.data.storage.auth.AuthenticatedDataStore;
 import org.junit.Test;
 
 import java.util.ArrayList;
@@ -28,7 +30,7 @@ import static org.junit.Assert.assertTrue;
 
 public class ProtectedStorageServiceTest {
     @Getter
-    class MockDataTransaction implements DataTransaction {
+    class MockDataTransaction implements AuthenticatedDataRequest {
         private final int sequenceNumber;
         private final long created;
 
@@ -40,12 +42,12 @@ public class ProtectedStorageServiceTest {
 
     @Test
     public void testGetSubSet() {
-        List<DataTransaction> map = new ArrayList<>();
+        List<AuthenticatedDataRequest> map = new ArrayList<>();
         map.add(new MockDataTransaction(1, 0));
         int filterOffset = 0;
         int filterRange = 100;
         int maxItems = Integer.MAX_VALUE;
-        List<DataTransaction> result = ProtectedStore.getSubSet(map, filterOffset, filterRange, maxItems);
+        List<AuthenticatedDataRequest> result = AuthenticatedDataStore.getSubSet(map, filterOffset, filterRange, maxItems);
         assertEquals(1, result.size());
 
         map = new ArrayList<>();
@@ -56,11 +58,11 @@ public class ProtectedStorageServiceTest {
         for (int i = 0; i < iterations; i++) {
             map.add(new MockDataTransaction(i, iterations - i)); // created are inverse order so we can test sorting
         }
-        result = ProtectedStore.getSubSet(map, filterOffset, filterRange, maxItems);
+        result = AuthenticatedDataStore.getSubSet(map, filterOffset, filterRange, maxItems);
         assertEquals(50, result.size());
 
         filterOffset = 25;
-        result = ProtectedStore.getSubSet(map, filterOffset, filterRange, maxItems);
+        result = AuthenticatedDataStore.getSubSet(map, filterOffset, filterRange, maxItems);
         assertEquals(50, result.size());
         assertEquals(74, result.get(0).getSequenceNumber()); // sorted by date, so list is inverted -> 99-25
         assertEquals(26, result.get(0).getCreated());       // original item i=74 had 100-74=26
@@ -68,7 +70,7 @@ public class ProtectedStorageServiceTest {
 
         filterOffset = 85; // 85+50 > 100 -> throw
         try {
-            ProtectedStore.getSubSet(map, filterOffset, filterRange, maxItems);
+            AuthenticatedDataStore.getSubSet(map, filterOffset, filterRange, maxItems);
         } catch (Exception e) {
             assertTrue(e instanceof IllegalArgumentException);
         }
@@ -76,7 +78,7 @@ public class ProtectedStorageServiceTest {
         filterRange = 150; // > 100 -> throw
         filterOffset = 0;
         try {
-            ProtectedStore.getSubSet(map, filterOffset, filterRange, maxItems);
+            AuthenticatedDataStore.getSubSet(map, filterOffset, filterRange, maxItems);
         } catch (Exception e) {
             assertTrue(e instanceof IllegalArgumentException);
         }
@@ -84,13 +86,13 @@ public class ProtectedStorageServiceTest {
         filterOffset = 0;
         filterRange = 100;
         maxItems = 5;
-        result = ProtectedStore.getSubSet(map, filterOffset, filterRange, maxItems);
+        result = AuthenticatedDataStore.getSubSet(map, filterOffset, filterRange, maxItems);
         assertEquals(5, result.size());
 
         filterOffset = 0;
         filterRange = 100;
         maxItems = 500;
-        result = ProtectedStore.getSubSet(map, filterOffset, filterRange, maxItems);
+        result = AuthenticatedDataStore.getSubSet(map, filterOffset, filterRange, maxItems);
         assertEquals(100, result.size());
     }
 }

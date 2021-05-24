@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package misq.p2p.data.storage;
+package misq.p2p.data.storage.auth;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -23,6 +23,7 @@ import lombok.extern.slf4j.Slf4j;
 import misq.common.security.DigestUtil;
 import misq.common.security.SignatureUtil;
 import misq.common.util.Hex;
+import misq.p2p.data.storage.MetaData;
 
 import java.io.Serializable;
 import java.security.PublicKey;
@@ -31,7 +32,7 @@ import java.util.Arrays;
 @Getter
 @EqualsAndHashCode
 @Slf4j
-public class RemoveProtectedDataRequest implements DataTransaction, Serializable {
+public class RemoveRequest implements AuthenticatedDataRequest, Serializable {
     protected final MetaData metaData;
     protected final byte[] hash;
     protected final byte[] ownerPublicKeyBytes; // 442 bytes
@@ -41,11 +42,11 @@ public class RemoveProtectedDataRequest implements DataTransaction, Serializable
     protected final long created;
     ;
 
-    public RemoveProtectedDataRequest(MetaData metaData,
-                                      byte[] hash,
-                                      PublicKey ownerPublicKey,
-                                      int sequenceNumber,
-                                      byte[] signature) {
+    public RemoveRequest(MetaData metaData,
+                         byte[] hash,
+                         PublicKey ownerPublicKey,
+                         int sequenceNumber,
+                         byte[] signature) {
         this(metaData,
                 hash,
                 ownerPublicKey.getEncoded(),
@@ -54,12 +55,12 @@ public class RemoveProtectedDataRequest implements DataTransaction, Serializable
                 signature);
     }
 
-    protected RemoveProtectedDataRequest(MetaData metaData,
-                                         byte[] hash,
-                                         byte[] ownerPublicKeyBytes,
-                                         PublicKey ownerPublicKey,
-                                         int sequenceNumber,
-                                         byte[] signature) {
+    protected RemoveRequest(MetaData metaData,
+                            byte[] hash,
+                            byte[] ownerPublicKeyBytes,
+                            PublicKey ownerPublicKey,
+                            int sequenceNumber,
+                            byte[] signature) {
         this.metaData = metaData;
         this.hash = hash;
         this.ownerPublicKeyBytes = ownerPublicKeyBytes;
@@ -77,9 +78,9 @@ public class RemoveProtectedDataRequest implements DataTransaction, Serializable
         }
     }
 
-    public boolean isPublicKeyInvalid(ProtectedData protectedData) {
+    public boolean isPublicKeyInvalid(AuthenticatedData entryFromMap) {
         try {
-            return !Arrays.equals(protectedData.getHashOfPublicKey(), DigestUtil.sha256(ownerPublicKeyBytes));
+            return !Arrays.equals(entryFromMap.getHashOfPublicKey(), DigestUtil.sha256(ownerPublicKeyBytes));
         } catch (Exception e) {
             return true;
         }
@@ -89,15 +90,17 @@ public class RemoveProtectedDataRequest implements DataTransaction, Serializable
         return sequenceNumber <= seqNumberFromMap;
     }
 
+
     @Override
     public String toString() {
         return "RemoveProtectedDataRequest{" +
-                "\n     metaData=" + metaData +
-                ",\n     hash=" + Hex.encode(hash) +
+              /*  "\n     metaData=" + metaData +
+                ",\n     hash=" + Hex.encode(hash) +*/
                 ",\n     ownerPublicKeyBytes=" + Hex.encode(ownerPublicKeyBytes) +
+             /*   ",\n     ownerPublicKey=" + ownerPublicKey +
                 ",\n     sequenceNumber=" + sequenceNumber +
                 ",\n     signature=" + Hex.encode(signature) +
-                ",\n     created=" + created +
+                ",\n     created=" + created +*/
                 "\n}";
     }
 }

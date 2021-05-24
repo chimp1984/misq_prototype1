@@ -27,6 +27,11 @@ import misq.common.util.OsUtils;
 import misq.p2p.data.NetworkData;
 import misq.p2p.data.filter.FilterItem;
 import misq.p2p.data.filter.ProtectedDataFilter;
+import misq.p2p.data.storage.auth.*;
+import misq.p2p.data.storage.auth.mailbox.AddMailboxRequest;
+import misq.p2p.data.storage.auth.mailbox.Mailbox;
+import misq.p2p.data.storage.auth.mailbox.MailboxPayload;
+import misq.p2p.data.storage.auth.mailbox.RemoveMailboxRequest;
 import org.junit.Test;
 
 import java.io.File;
@@ -45,34 +50,34 @@ import static org.junit.Assert.*;
 public class StorageTest {
     private String appDirPath = OsUtils.getUserDataDir() + File.separator + "misq_StorageTest";
 
-    // @Test
+    @Test
     public void testGetInv() throws GeneralSecurityException {
         Storage storage = new Storage(appDirPath);
         KeyPair keyPair = KeyPairGeneratorUtil.generateKeyPair();
-        MockNetworkData dummy = new MockNetworkData("");
-        ProtectedStore service = storage.getService(dummy.getMetaData());
+        MockProtectedData dummy = new MockProtectedData("");
+        AuthenticatedDataStore service = storage.getService(dummy.getMetaData());
         int initialSeqNumFirstItem = 0;
-        MockNetworkData first = null;
+        MockProtectedData first = null;
         byte[] hashOfFirst = new byte[]{};
         int iterations = 1;
         long ts = System.currentTimeMillis();
-        int initialMapSize = service.map.size();
+        int initialMapSize = service.getMap().size();
         log.error("initialMapSize={}", initialMapSize);
         for (int i = 0; i < iterations; i++) {
             // MockNetworkData mockNetworkData = new MockNetworkData("test" + i);
-            MockNetworkData mockNetworkData = new MockNetworkData("test" + UUID.randomUUID().toString());
-            AddProtectedDataRequest addRequest = storage.getAddProtectedDataRequest(mockNetworkData, keyPair); //2
-            AddProtectedDataRequest.Result result = storage.addProtectedStorageEntry(addRequest); //6
+            MockProtectedData mockProtectedData = new MockProtectedData("test" + UUID.randomUUID().toString());
+            AddRequest addRequest = storage.getAddProtectedDataRequest(mockProtectedData, keyPair); //2
+            Result result = storage.addProtectedStorageEntry(addRequest); //6
             assertTrue(result.isSuccess());
 
             if (i == 0) {
-                first = mockNetworkData;
-                hashOfFirst = addRequest.getEntry().getProtectedData().getHashOfNetworkData();
+                first = mockProtectedData;
+                hashOfFirst = DigestUtil.sha256(first.serialize());
                 initialSeqNumFirstItem = service.getSequenceNumber(hashOfFirst);
             }
         }
-        log.error("post map={}", service.map.size()); //took 5038 ms  100 initialMapSize=2111 / took 682 ms  for new map / took 1188 ms  300 init map
-        //assertEquals(initialMapSize + iterations, service.map.size());
+        log.error("post map={}", service.getMap().size()); //took 5038 ms  100 initialMapSize=2111 / took 682 ms  for new map / took 1188 ms  300 init map
+        //assertEquals(initialMapSize + iterations, service.getMap().size());
         log.error("took {} ms", System.currentTimeMillis() - ts);
 
         // request inventory with first item and same seq num
@@ -82,13 +87,13 @@ public class StorageTest {
         filterItems.add(new FilterItem(new MapKey(hashOfFirst).getHash(), initialSeqNumFirstItem + 1));
         ProtectedDataFilter filter = new ProtectedDataFilter(dataType, filterItems);
         int maxItems = service.getMaxItems();
-        int expectedSize = Math.min(maxItems, service.map.size() - 1);
-        int expectedTruncated = Math.max(0, service.map.size() - maxItems - 1);
-        log.error("map={}, maxItems={}, iterations={}, maxItems={}, expectedSize {}, expectedTruncated={}",
-                service.map.size(), maxItems, iterations, maxItems, expectedSize, expectedTruncated);
+        int expectedSize = Math.min(maxItems, service.getMap().size() - 1);
+        int expectedTruncated = Math.max(0, service.getMap().size() - maxItems - 1);
+        log.error("getMap()={}, maxItems={}, iterations={}, maxItems={}, expectedSize {}, expectedTruncated={}",
+                service.getMap().size(), maxItems, iterations, maxItems, expectedSize, expectedTruncated);
         log.error("dummy size={}", ObjectSerializer.serialize(dummy).length); // 251
         storage.getInventory(filter).ifPresent(inventory -> {
-            assertEquals(expectedSize, inventory.getResult().size());
+            assertEquals(expectedSize, inventory.getEntries().size());
             assertEquals(expectedTruncated, inventory.getNumDropped());
 
             log.error("inventory size={}", ObjectSerializer.serialize(inventory).length); //inventory size=238601 for 333 items. 716 bytes per item
@@ -106,76 +111,76 @@ public class StorageTest {
         byte[] privateKeyBytes = Hex.decode(privateKeyAsHex);
         PrivateKey privateKey = KeyPairGeneratorUtil.generatePrivate(privateKeyBytes);
         PublicKey publicKey = KeyPairGeneratorUtil.generatePublic(privateKey);
-        NetworkData networkData = new MockNetworkData("test" + UUID.randomUUID().toString());
+        AuthenticatedPayload networkData = new MockProtectedData("test" + UUID.randomUUID().toString());
         byte[] signature = SignatureUtil.sign(networkData.serialize(), privateKey);
-        MockSignedData mockSignedData = new MockSignedData(networkData, signature, publicKey);
+        MockAuthorizedData mockAuthorizedData = new MockAuthorizedData(networkData, signature, publicKey);
 
         KeyPair keyPair = KeyPairGeneratorUtil.generateKeyPair();
-        AddProtectedDataRequest addRequest = storage.getAddProtectedDataRequest(mockSignedData, keyPair);
-        ProtectedStore service = storage.protectedStorageServices.get(addRequest.getFileName());
-        byte[] hash = DigestUtil.sha256(mockSignedData.serialize());
+        AddRequest addRequest = storage.getAddProtectedDataRequest(mockAuthorizedData, keyPair);
+        AuthenticatedDataStore service = storage.protectedStorageServices.get(addRequest.getFileName());
+        byte[] hash = DigestUtil.sha256(mockAuthorizedData.serialize());
         int initialSeqNum = service.getSequenceNumber(hash);
-        AddProtectedDataRequest.Result result = storage.addProtectedStorageEntry(addRequest);
+        Result result = storage.addProtectedStorageEntry(addRequest);
         log.error(result.toString());
         assertTrue(result.isSuccess());
 
-        ConcurrentHashMap<MapKey, DataTransaction> map = service.map;
+        ConcurrentHashMap<MapKey, AuthenticatedDataRequest> map = service.getMap();
         MapKey mapKey = new MapKey(hash);
-        AddProtectedDataRequest addRequestFromMap = (AddProtectedDataRequest) map.get(mapKey);
-        ProtectedEntry entryFromMap = addRequestFromMap.getEntry();
+        AddRequest addRequestFromMap = (AddRequest) map.get(mapKey);
+        AuthenticatedData entryFromMap = addRequestFromMap.getAuthenticatedData();
 
         assertEquals(initialSeqNum + 1, entryFromMap.getSequenceNumber());
-        ProtectedData protectedData = addRequest.getEntry().getProtectedData();
-        assertEquals(entryFromMap.getProtectedData(), protectedData);
+        AuthenticatedPayload authenticatedPayload = addRequest.getAuthenticatedData().getAuthenticatedPayload();
+        assertEquals(entryFromMap.getAuthenticatedPayload(), authenticatedPayload);
 
         // refresh
-        RefreshProtectedDataRequest refreshRequest = storage.getRefreshProtectedDataRequest(mockSignedData, keyPair);
-        DataRequestResult refreshResult = storage.refreshProtectedStorageEntry(refreshRequest);
+        RefreshRequest refreshRequest = storage.getRefreshProtectedDataRequest(mockAuthorizedData, keyPair);
+        Result refreshResult = storage.refreshProtectedStorageEntry(refreshRequest);
         assertTrue(refreshResult.isSuccess());
 
-        addRequestFromMap = (AddProtectedDataRequest) map.get(mapKey);
-        entryFromMap = addRequestFromMap.getEntry();
+        addRequestFromMap = (AddRequest) map.get(mapKey);
+        entryFromMap = addRequestFromMap.getAuthenticatedData();
         assertEquals(initialSeqNum + 2, entryFromMap.getSequenceNumber());
 
         //remove
-        RemoveProtectedDataRequest removeRequest = storage.getRemoveProtectedDataRequest(mockSignedData, keyPair);
-        DataRequestResult removeDataResult = storage.removeProtectedStorageEntry(removeRequest);
+        RemoveRequest removeRequest = storage.getRemoveProtectedDataRequest(mockAuthorizedData, keyPair);
+        Result removeDataResult = storage.removeProtectedStorageEntry(removeRequest);
         assertTrue(removeDataResult.isSuccess());
 
-        RemoveProtectedDataRequest removeRequestFromMap = (RemoveProtectedDataRequest) map.get(mapKey);
+        RemoveRequest removeRequestFromMap = (RemoveRequest) map.get(mapKey);
         assertEquals(initialSeqNum + 3, removeRequestFromMap.getSequenceNumber());
     }
 
-    // @Test
+    @Test
     public void testAddAndRemove() throws GeneralSecurityException {
         Storage storage = new Storage(appDirPath);
-        MockNetworkData mockNetworkData = new MockNetworkData("test" + UUID.randomUUID().toString());
+        MockProtectedData mockProtectedData = new MockProtectedData("test" + UUID.randomUUID().toString());
         KeyPair keyPair = KeyPairGeneratorUtil.generateKeyPair();
 
-        AddProtectedDataRequest addRequest = storage.getAddProtectedDataRequest(mockNetworkData, keyPair);
-        ProtectedStore service = storage.protectedStorageServices.get(addRequest.getFileName());
-        int initialMapSize = service.map.size();
-        byte[] hash = DigestUtil.sha256(mockNetworkData.serialize());
+        AddRequest addRequest = storage.getAddProtectedDataRequest(mockProtectedData, keyPair);
+        AuthenticatedDataStore service = storage.protectedStorageServices.get(addRequest.getFileName());
+        int initialMapSize = service.getMap().size();
+        byte[] hash = DigestUtil.sha256(mockProtectedData.serialize());
         int initialSeqNum = service.getSequenceNumber(hash);
-        AddProtectedDataRequest.Result result = storage.addProtectedStorageEntry(addRequest);
+        Result result = storage.addProtectedStorageEntry(addRequest);
         assertTrue(result.isSuccess());
 
-        ConcurrentHashMap<MapKey, DataTransaction> map = service.map;
+        ConcurrentHashMap<MapKey, AuthenticatedDataRequest> map = service.getMap();
         MapKey mapKey = new MapKey(hash);
-        AddProtectedDataRequest addRequestFromMap = (AddProtectedDataRequest) map.get(mapKey);
-        ProtectedEntry entryFromMap = addRequestFromMap.getEntry();
+        AddRequest addRequestFromMap = (AddRequest) map.get(mapKey);
+        AuthenticatedData entryFromMap = addRequestFromMap.getAuthenticatedData();
 
         assertEquals(initialSeqNum + 1, entryFromMap.getSequenceNumber());
-        ProtectedData protectedData = addRequest.getEntry().getProtectedData();
-        assertEquals(entryFromMap.getProtectedData(), protectedData);
+        AuthenticatedPayload authenticatedPayload = addRequest.getAuthenticatedData().getAuthenticatedPayload();
+        assertEquals(entryFromMap.getAuthenticatedPayload(), authenticatedPayload);
 
         // request inventory with old seqNum
-        String dataType = mockNetworkData.getMetaData().getFileName();
+        String dataType = mockProtectedData.getMetaData().getFileName();
         Set<FilterItem> filterItems = new HashSet<>();
         filterItems.add(new FilterItem(mapKey.getHash(), initialSeqNum));
         ProtectedDataFilter filter = new ProtectedDataFilter(dataType, filterItems);
         storage.getInventory(filter).ifPresent(inventory -> {
-            assertEquals(initialMapSize + 1, inventory.getResult().size());
+            assertEquals(initialMapSize + 1, inventory.getEntries().size());
         });
 
         // request inventory with new seqNum
@@ -183,29 +188,29 @@ public class StorageTest {
         filterItems.add(new FilterItem(mapKey.getHash(), initialSeqNum + 1));
         filter = new ProtectedDataFilter(dataType, filterItems);
         storage.getInventory(filter).ifPresent(inventory -> {
-            assertEquals(initialMapSize, inventory.getResult().size());
+            assertEquals(initialMapSize, inventory.getEntries().size());
         });
 
         // refresh
-        RefreshProtectedDataRequest refreshRequest = storage.getRefreshProtectedDataRequest(mockNetworkData, keyPair);
-        DataRequestResult refreshResult = storage.refreshProtectedStorageEntry(refreshRequest);
+        RefreshRequest refreshRequest = storage.getRefreshProtectedDataRequest(mockProtectedData, keyPair);
+        Result refreshResult = storage.refreshProtectedStorageEntry(refreshRequest);
         assertTrue(refreshResult.isSuccess());
 
-        addRequestFromMap = (AddProtectedDataRequest) map.get(mapKey);
-        entryFromMap = addRequestFromMap.getEntry();
+        addRequestFromMap = (AddRequest) map.get(mapKey);
+        entryFromMap = addRequestFromMap.getAuthenticatedData();
         assertEquals(initialSeqNum + 2, entryFromMap.getSequenceNumber());
 
         //remove
-        RemoveProtectedDataRequest removeRequest = storage.getRemoveProtectedDataRequest(mockNetworkData, keyPair);
-        DataRequestResult removeDataResult = storage.removeProtectedStorageEntry(removeRequest);
+        RemoveRequest removeRequest = storage.getRemoveProtectedDataRequest(mockProtectedData, keyPair);
+        Result removeDataResult = storage.removeProtectedStorageEntry(removeRequest);
         assertTrue(removeDataResult.isSuccess());
 
-        RemoveProtectedDataRequest removeRequestFromMap = (RemoveProtectedDataRequest) map.get(mapKey);
+        RemoveRequest removeRequestFromMap = (RemoveRequest) map.get(mapKey);
         assertEquals(initialSeqNum + 3, removeRequestFromMap.getSequenceNumber());
 
         // refresh on removed fails
-        RefreshProtectedDataRequest refreshAfterRemoveRequest = storage.getRefreshProtectedDataRequest(mockNetworkData, keyPair);
-        DataRequestResult refreshAfterRemoveResult = storage.refreshProtectedStorageEntry(refreshAfterRemoveRequest);
+        RefreshRequest refreshAfterRemoveRequest = storage.getRefreshProtectedDataRequest(mockProtectedData, keyPair);
+        Result refreshAfterRemoveResult = storage.refreshProtectedStorageEntry(refreshAfterRemoveRequest);
         assertFalse(refreshAfterRemoveResult.isSuccess());
 
         // request inventory with old seqNum
@@ -213,7 +218,7 @@ public class StorageTest {
         filterItems.add(new FilterItem(mapKey.getHash(), initialSeqNum + 2));
         filter = new ProtectedDataFilter(dataType, filterItems);
         storage.getInventory(filter).ifPresent(inventory -> {
-            assertEquals(initialMapSize + 1, inventory.getResult().size());
+            assertEquals(initialMapSize + 1, inventory.getEntries().size());
         });
 
         // request inventory with new seqNum
@@ -221,86 +226,87 @@ public class StorageTest {
         filterItems.add(new FilterItem(mapKey.getHash(), initialSeqNum + 3));
         filter = new ProtectedDataFilter(dataType, filterItems);
         storage.getInventory(filter).ifPresent(inventory -> {
-            assertEquals(initialMapSize, inventory.getResult().size());
+            assertEquals(initialMapSize, inventory.getEntries().size());
         });
     }
 
-    //  @Test
+    @Test
     public void testAddAndRemoveMailboxMsg() throws GeneralSecurityException {
         Storage storage = new Storage(appDirPath);
         KeyPair senderKeyPair = KeyPairGeneratorUtil.generateKeyPair();
         KeyPair receiverKeyPair = KeyPairGeneratorUtil.generateKeyPair();
 
         MockMailboxMessage mockMailboxMessage = new MockMailboxMessage("test" + UUID.randomUUID().toString());
-        SealedData sealedData = storage.getSealedData(mockMailboxMessage, senderKeyPair, receiverKeyPair.getPublic());
-        ProtectedStore service = storage.getService(sealedData.getMetaData());
-        ConcurrentHashMap<MapKey, DataTransaction> map = service.map;
+        MailboxPayload mailboxPayload = storage.getSealedData(mockMailboxMessage, senderKeyPair, receiverKeyPair.getPublic());
+        AuthenticatedDataStore service = storage.getService(mailboxPayload.getMetaData());
+        ConcurrentHashMap<MapKey, AuthenticatedDataRequest> map = service.getMap();
         int initialMapSize = map.size();
-        byte[] hash = DigestUtil.sha256(sealedData.serialize());
+        byte[] hash = DigestUtil.sha256(mailboxPayload.serialize());
         int initialSeqNum = service.getSequenceNumber(hash);
-        AddMailboxDataRequest request = storage.getAddMailboxDataRequest(sealedData, senderKeyPair, receiverKeyPair.getPublic());
-        AddProtectedDataRequest.Result result = storage.addProtectedStorageEntry(request);
+        AddMailboxRequest request = storage.getAddMailboxDataRequest(mailboxPayload, senderKeyPair, receiverKeyPair.getPublic());
+        Result result = storage.addProtectedStorageEntry(request);
         assertTrue(result.isSuccess());
 
         MapKey mapKey = new MapKey(hash);
-        AddProtectedDataRequest addRequestFromMap = (AddProtectedDataRequest) map.get(mapKey);
-        ProtectedEntry entryFromMap = addRequestFromMap.getEntry();
+        AddRequest addRequestFromMap = (AddRequest) map.get(mapKey);
+        AuthenticatedData entryFromMap = addRequestFromMap.getAuthenticatedData();
 
         assertEquals(initialSeqNum + 1, entryFromMap.getSequenceNumber());
 
-        assertTrue(entryFromMap instanceof MailboxEntry);
-        MailboxEntry mailboxEntryFromMap = (MailboxEntry) entryFromMap;
-        NetworkData sealedDataFromMap = mailboxEntryFromMap.getProtectedData().getNetworkData();
-        assertEquals(sealedDataFromMap, sealedData);
+        assertTrue(entryFromMap instanceof Mailbox);
+        Mailbox mailboxFromMap = (Mailbox) entryFromMap;
+        NetworkData sealedDataFromMap = mailboxFromMap.getAuthenticatedPayload();
+        assertEquals(sealedDataFromMap, mailboxPayload);
 
         // request inventory with old seqNum
-        String dataType = sealedData.getMetaData().getFileName();
+        String dataType = mailboxPayload.getMetaData().getFileName();
         Set<FilterItem> filterItems = new HashSet<>();
         filterItems.add(new FilterItem(mapKey.getHash(), initialSeqNum));
         ProtectedDataFilter filter = new ProtectedDataFilter(dataType, filterItems);
         storage.getInventory(filter).ifPresent(inventory -> {
-            assertEquals(initialMapSize + 1, inventory.getResult().size());
+            assertEquals(initialMapSize + 1, inventory.getEntries().size());
         });
 
 
         // refresh
-        RefreshProtectedDataRequest refreshRequest = storage.getRefreshProtectedDataRequest(sealedData, senderKeyPair);
-        DataRequestResult refreshResult = storage.refreshProtectedStorageEntry(refreshRequest);
+        RefreshRequest refreshRequest = storage.getRefreshProtectedDataRequest(mailboxPayload, senderKeyPair);
+        Result refreshResult = storage.refreshProtectedStorageEntry(refreshRequest);
         assertTrue(refreshResult.isSuccess());
 
-        addRequestFromMap = (AddProtectedDataRequest) map.get(mapKey);
-        entryFromMap = addRequestFromMap.getEntry();
+        addRequestFromMap = (AddRequest) map.get(mapKey);
+        entryFromMap = addRequestFromMap.getAuthenticatedData();
         assertEquals(initialSeqNum + 2, entryFromMap.getSequenceNumber());
 
         // remove
-        RemoveMailboxDataRequest removeMailboxDataRequest = storage.getRemoveMailboxDataRequest(sealedData, receiverKeyPair);
+        RemoveMailboxRequest removeMailboxRequest = storage.getRemoveMailboxDataRequest(mailboxPayload, receiverKeyPair);
 
-        DataRequestResult removeDataResult = storage.removeProtectedStorageEntry(removeMailboxDataRequest);
+        Result removeDataResult = storage.removeProtectedStorageEntry(removeMailboxRequest);
+        log.error(removeDataResult.toString());
         assertTrue(removeDataResult.isSuccess());
 
-        RemoveProtectedDataRequest removeRequestFromMap = (RemoveProtectedDataRequest) map.get(mapKey);
+        RemoveRequest removeRequestFromMap = (RemoveRequest) map.get(mapKey);
         assertEquals(Integer.MAX_VALUE, removeRequestFromMap.getSequenceNumber());
 
         // we must not create a new sealed data as it would have a diff. secret key and so a diff hash...
         // If users re-publish mailbox messages they need to keep the original sealed data and re-use that instead
         // of creating new ones, as otherwise it would appear like a new mailbox msg.
-        assertFalse(storage.canAddMailboxMessage(sealedData));
+        assertFalse(storage.canAddMailboxMessage(mailboxPayload));
         try {
             // calling getAddMailboxDataRequest without the previous canAddMailboxMessage check will throw
-            storage.getAddMailboxDataRequest(sealedData, senderKeyPair, receiverKeyPair.getPublic());
+            storage.getAddMailboxDataRequest(mailboxPayload, senderKeyPair, receiverKeyPair.getPublic());
             fail();
         } catch (Exception e) {
             assertTrue(e instanceof IllegalStateException);
         }
 
         // using the old request again would fail as seq number is not allowing it
-        AddProtectedDataRequest.Result result2 = storage.addProtectedStorageEntry(request);
+        Result result2 = storage.addProtectedStorageEntry(request);
         assertFalse(result2.isSuccess());
         assertTrue(result2.isSequenceNrInvalid());
 
         // refresh on removed fails
-        RefreshProtectedDataRequest refreshRequest2 = storage.getRefreshProtectedDataRequest(sealedData, senderKeyPair);
-        DataRequestResult refreshResult2 = storage.refreshProtectedStorageEntry(refreshRequest);
+        RefreshRequest refreshRequest2 = storage.getRefreshProtectedDataRequest(mailboxPayload, senderKeyPair);
+        Result refreshResult2 = storage.refreshProtectedStorageEntry(refreshRequest);
         assertFalse(refreshResult2.isSuccess());
     }
 }

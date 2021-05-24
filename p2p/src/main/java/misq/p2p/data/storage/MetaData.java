@@ -28,6 +28,10 @@ public class MetaData implements Proto {
     private final int maxSizeInBytes;
     private final String fileName;
 
+    public MetaData(int maxSizeInBytes, String fileName) {
+        this(-1, maxSizeInBytes, fileName);
+    }
+
     public MetaData(long ttl, int maxSizeInBytes, String fileName) {
         this.ttl = ttl;
         this.maxSizeInBytes = maxSizeInBytes;

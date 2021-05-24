@@ -15,33 +15,9 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package misq.p2p.data.storage;
+package misq.p2p.data.storage.auth;
 
-import lombok.EqualsAndHashCode;
 import misq.p2p.data.NetworkData;
 
-import java.util.concurrent.TimeUnit;
-
-@EqualsAndHashCode
-public class MockNetworkData implements NetworkData {
-    private final String text;
-    MetaData metaData;
-
-    public MockNetworkData(String text) {
-        this.text = text;
-        // 463 is overhead of sig/pubkeys,...
-        // 582 is pubkey+sig+hash
-        metaData = new MetaData(TimeUnit.DAYS.toMillis(10), 251 + 463, getClass().getSimpleName());
-    }
-
-
-    @Override
-    public MetaData getMetaData() {
-        return metaData;
-    }
-
-    @Override
-    public boolean isDataInvalid() {
-        return false;
-    }
+public interface AuthenticatedPayload extends NetworkData {
 }

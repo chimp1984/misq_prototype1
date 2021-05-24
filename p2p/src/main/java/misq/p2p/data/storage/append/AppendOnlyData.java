@@ -15,25 +15,9 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package misq.p2p.data.storage;
+package misq.p2p.data.storage.append;
 
-import lombok.EqualsAndHashCode;
-import misq.p2p.data.storage.auth.mailbox.MailboxMessage;
+import misq.p2p.data.NetworkData;
 
-import java.util.concurrent.TimeUnit;
-
-@EqualsAndHashCode
-public class MockMailboxMessage implements MailboxMessage {
-    private final String text;
-    private final MetaData metaData;
-
-    public MockMailboxMessage(String text) {
-        this.text = text;
-        metaData = new MetaData(TimeUnit.DAYS.toMillis(10), 100000, getClass().getSimpleName());
-    }
-
-    @Override
-    public MetaData getMetaData() {
-        return metaData;
-    }
+public interface AppendOnlyData extends NetworkData {
 }

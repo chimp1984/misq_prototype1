@@ -15,9 +15,9 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package misq.p2p.data.storage;
+package misq.p2p.data.storage.auth;
 
-public interface DataTransaction {
+public interface AuthenticatedDataRequest {
     int getSequenceNumber();
 
     long getCreated();
