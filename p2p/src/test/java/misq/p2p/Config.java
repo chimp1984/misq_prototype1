@@ -19,7 +19,7 @@ package misq.p2p;
 
 import com.google.common.collect.Sets;
 import lombok.extern.slf4j.Slf4j;
-import misq.common.security.KeyPairGeneratorUtil;
+import misq.common.security.KeyGeneration;
 import misq.common.util.OsUtils;
 
 import java.security.GeneralSecurityException;
@@ -35,10 +35,10 @@ public abstract class Config {
 
     static {
         try {
-            keyPairAlice1 = KeyPairGeneratorUtil.generateKeyPair();
-            keyPairBob1 = KeyPairGeneratorUtil.generateKeyPair();
-            keyPairAlice2 = KeyPairGeneratorUtil.generateKeyPair();
-            keyPairBob2 = KeyPairGeneratorUtil.generateKeyPair();
+            keyPairAlice1 = KeyGeneration.generateKeyPair();
+            keyPairBob1 = KeyGeneration.generateKeyPair();
+            keyPairAlice2 = KeyGeneration.generateKeyPair();
+            keyPairBob2 = KeyGeneration.generateKeyPair();
         } catch (GeneralSecurityException e) {
             e.printStackTrace();
         }

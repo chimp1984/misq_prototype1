@@ -22,7 +22,7 @@ import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import java.security.*;
 
 public class SignatureUtil {
-    public static final String ALGO = "SHA256withECDSA";
+    public static final String ECDSA = "SHA256withECDSA";
 
     static {
         if (Security.getProvider(BouncyCastleProvider.PROVIDER_NAME) == null) {
@@ -31,14 +31,14 @@ public class SignatureUtil {
     }
 
     public static byte[] sign(byte[] message, PrivateKey privateKey) throws GeneralSecurityException {
-        Signature signature = Signature.getInstance(ALGO, "BC");
+        Signature signature = Signature.getInstance(ECDSA, "BC");
         signature.initSign(privateKey);
         signature.update(message);
         return signature.sign();
     }
 
     public static boolean verify(byte[] message, byte[] signature, PublicKey publicKey) throws GeneralSecurityException {
-        Signature sig = Signature.getInstance(ALGO, "BC");
+        Signature sig = Signature.getInstance(ECDSA, "BC");
         sig.initVerify(publicKey);
         sig.update(message);
         return sig.verify(signature);

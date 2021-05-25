@@ -18,7 +18,6 @@
 package misq.common.security;
 
 import org.bouncycastle.crypto.digests.RIPEMD160Digest;
-import org.bouncycastle.jcajce.provider.digest.Keccak;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -53,10 +52,5 @@ public class DigestUtil {
         } catch (NoSuchAlgorithmException e) {
             throw new RuntimeException(e);
         }
-    }
-
-    public static byte[] keccak(byte[] input) {
-        Keccak.Digest256 digest256 = new Keccak.Digest256();
-        return digest256.digest(input);
     }
 }

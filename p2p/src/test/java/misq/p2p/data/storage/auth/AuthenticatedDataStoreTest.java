@@ -20,7 +20,7 @@ package misq.p2p.data.storage.auth;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import misq.common.security.DigestUtil;
-import misq.common.security.KeyPairGeneratorUtil;
+import misq.common.security.KeyGeneration;
 import misq.common.util.ObjectSerializer;
 import misq.common.util.OsUtils;
 import misq.p2p.data.filter.FilterItem;
@@ -114,7 +114,7 @@ public class AuthenticatedDataStoreTest {
     public void testAddAndRemove() throws GeneralSecurityException, IOException {
         MockAuthenticatedPayload data = new MockAuthenticatedPayload("test" + UUID.randomUUID().toString());
         AuthenticatedDataStore store = new AuthenticatedDataStore(appDirPath, data.getMetaData());
-        KeyPair keyPair = KeyPairGeneratorUtil.generateKeyPair();
+        KeyPair keyPair = KeyGeneration.generateKeyPair();
 
         AddAuthenticatedDataRequest addRequest = AddAuthenticatedDataRequest.from(store, data, keyPair);
         int initialMapSize = store.getMap().size();
@@ -188,7 +188,7 @@ public class AuthenticatedDataStoreTest {
     public void testGetInv() throws GeneralSecurityException, IOException {
         MockAuthenticatedPayload data = new MockAuthenticatedPayload("test");
         AuthenticatedDataStore store = new AuthenticatedDataStore(appDirPath, data.getMetaData());
-        KeyPair keyPair = KeyPairGeneratorUtil.generateKeyPair();
+        KeyPair keyPair = KeyGeneration.generateKeyPair();
         int initialSeqNumFirstItem = 0;
         MockAuthenticatedPayload first;
         byte[] hashOfFirst = new byte[]{};

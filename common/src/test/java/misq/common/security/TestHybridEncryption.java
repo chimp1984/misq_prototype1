@@ -33,23 +33,23 @@ public class TestHybridEncryption {
     @Test
     public void testHybridEncryption() throws GeneralSecurityException {
         byte[] message = "hello".getBytes();
-        KeyPair keyPairSender = KeyPairGeneratorUtil.generateKeyPair();
-        KeyPair keyPairReceiver = KeyPairGeneratorUtil.generateKeyPair();
+        KeyPair keyPairSender = KeyGeneration.generateKeyPair();
+        KeyPair keyPairReceiver = KeyGeneration.generateKeyPair();
 
-        Sealed sealed = HybridEncryption.encrypt(message, keyPairReceiver.getPublic(), keyPairSender);
-        byte[] decrypted = HybridEncryption.decrypt(sealed, keyPairReceiver, keyPairSender.getPublic());
+        ConfidentialData confidentialData = HybridEncryption.encrypt(message, keyPairReceiver.getPublic(), keyPairSender);
+        byte[] decrypted = HybridEncryption.decrypt(confidentialData, keyPairReceiver, keyPairSender.getPublic());
         assertArrayEquals(message, decrypted);
 
         // failure cases
-        byte[] hmac = sealed.getHmac();
-        byte[] iv = sealed.getIv();
-        byte[] encryptedMessage = sealed.getCypherText();
-        byte[] signature = sealed.getSignature();
+        byte[] hmac = confidentialData.getHmac();
+        byte[] iv = confidentialData.getIv();
+        byte[] encryptedMessage = confidentialData.getCypherText();
+        byte[] signature = confidentialData.getSignature();
 
-        KeyPair fakeKeyPair = KeyPairGeneratorUtil.generateKeyPair();
+        KeyPair fakeKeyPair = KeyGeneration.generateKeyPair();
         byte[] bitStream = ByteArrayUtils.concat(hmac, encryptedMessage);
         byte[] fakeSignature = SignatureUtil.sign(bitStream, fakeKeyPair.getPrivate());
-        Sealed withFakeSigAndPubKey = new Sealed(hmac, iv, encryptedMessage, fakeSignature);
+        ConfidentialData withFakeSigAndPubKey = new ConfidentialData(hmac, iv, encryptedMessage, fakeSignature);
         try {
             // Expect to fail as pub key in method call not matching the one in sealed data
             HybridEncryption.decrypt(withFakeSigAndPubKey, keyPairReceiver, keyPairSender.getPublic());
@@ -60,7 +60,7 @@ public class TestHybridEncryption {
 
         // fake sig or fake signed message throw SignatureException
         try {
-            Sealed withFakeSig = new Sealed(hmac, iv, encryptedMessage, "signature".getBytes());
+            ConfidentialData withFakeSig = new ConfidentialData(hmac, iv, encryptedMessage, "signature".getBytes());
             HybridEncryption.decrypt(withFakeSig, keyPairReceiver, keyPairSender.getPublic());
             fail();
         } catch (Throwable e) {
@@ -69,7 +69,7 @@ public class TestHybridEncryption {
 
         // fake iv
         try {
-            Sealed withFakeSig = new Sealed(hmac, "iv".getBytes(), encryptedMessage, signature);
+            ConfidentialData withFakeSig = new ConfidentialData(hmac, "iv".getBytes(), encryptedMessage, signature);
             HybridEncryption.decrypt(withFakeSig, keyPairReceiver, keyPairSender.getPublic());
             fail();
         } catch (Throwable e) {
@@ -78,7 +78,7 @@ public class TestHybridEncryption {
 
         // fake hmac
         try {
-            Sealed withFakeSig = new Sealed("hmac".getBytes(), iv, encryptedMessage, signature);
+            ConfidentialData withFakeSig = new ConfidentialData("hmac".getBytes(), iv, encryptedMessage, signature);
             HybridEncryption.decrypt(withFakeSig, keyPairReceiver, keyPairSender.getPublic());
             fail();
         } catch (Throwable e) {

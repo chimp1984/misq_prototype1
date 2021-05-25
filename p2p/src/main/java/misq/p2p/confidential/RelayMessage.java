@@ -28,7 +28,7 @@ public class RelayMessage extends ConfidentialMessage {
     private final Address targetAddress;
 
     public RelayMessage(Message message, Address targetAddress) {
-        super(null, null);
+        super(null, null, null);
         // super(message, peersPublicKey);
         this.targetAddress = targetAddress;
     }

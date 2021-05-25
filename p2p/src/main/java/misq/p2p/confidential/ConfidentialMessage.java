@@ -19,7 +19,7 @@ package misq.p2p.confidential;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import misq.common.security.Sealed;
+import misq.common.security.ConfidentialData;
 import misq.p2p.message.Message;
 
 import java.security.PublicKey;
@@ -27,19 +27,22 @@ import java.security.PublicKey;
 @EqualsAndHashCode
 @Getter
 public class ConfidentialMessage implements Message {
-    private final Sealed sealed;
+    private final ConfidentialData confidentialData;
+    private final PublicKey sendersPublicKey;
     // We support multiple key pairs, so receiver need to know which key is associated to message
     private final PublicKey receiversPublicKey;
 
-    public ConfidentialMessage(Sealed sealed, PublicKey receiversPublicKey) {
-        this.sealed = sealed;
+    public ConfidentialMessage(ConfidentialData confidentialData, PublicKey sendersPublicKey, PublicKey receiversPublicKey) {
+        this.confidentialData = confidentialData;
+        this.sendersPublicKey = sendersPublicKey;
         this.receiversPublicKey = receiversPublicKey;
     }
+
 
     @Override
     public String toString() {
         return "ConfidentialMessage{" +
-                "\n     sealedMessage=" + sealed +
+                "\n     sealed=" + confidentialData +
                 "\n}";
     }
 }

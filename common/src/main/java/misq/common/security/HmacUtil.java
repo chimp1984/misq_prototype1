@@ -18,30 +18,22 @@
 package misq.common.security;
 
 import lombok.extern.slf4j.Slf4j;
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
 import javax.crypto.Mac;
 import javax.crypto.SecretKey;
 import java.security.GeneralSecurityException;
-import java.security.Security;
 import java.util.Arrays;
 
 @Slf4j
-public class Hmac {
-    static {
-        if (Security.getProvider(BouncyCastleProvider.PROVIDER_NAME) == null) {
-            Security.addProvider(new BouncyCastleProvider());
-        }
-    }
-
+class HmacUtil {
     public static final String HMAC = "HmacSHA256";
 
-    public static boolean verifyHmac(byte[] message, byte[] hmac, SecretKey secretKey) throws GeneralSecurityException {
+    static boolean verifyHmac(byte[] message, byte[] hmac, SecretKey secretKey) throws GeneralSecurityException {
         byte[] hmacTest = createHmac(message, secretKey);
         return Arrays.equals(hmacTest, hmac);
     }
 
-    public static byte[] createHmac(byte[] data, SecretKey secretKey) throws GeneralSecurityException {
+    static byte[] createHmac(byte[] data, SecretKey secretKey) throws GeneralSecurityException {
         Mac mac = Mac.getInstance(HMAC);
         mac.init(secretKey);
         return mac.doFinal(data);

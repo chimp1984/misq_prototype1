@@ -18,40 +18,43 @@
 package misq.common.persistence;
 
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import misq.common.util.FileUtils;
+import misq.common.util.OsUtils;
 import org.junit.Test;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+
+import static org.junit.Assert.assertEquals;
 
 @Slf4j
 public class PersistenceTest {
     @EqualsAndHashCode
+    @Getter
     static class MockObject implements Persistable {
-        int i;
-        ArrayList<Integer> list = new ArrayList<>();
+        private int index;
+        private final ArrayList<Integer> list = new ArrayList<>();
 
-        public MockObject(int i) {
-            this.i = i;
-        }
-
-        public String getDefaultStorageFileName() {
-            return this.getClass().getSimpleName();
+        public MockObject(int index) {
+            this.index = index;
         }
     }
 
     @Test
     public void testPersistence() throws IOException {
+        String dir = OsUtils.getUserDataDir() + File.separator + "misq_PersistenceTest";
+        FileUtils.makeDirs(dir);
+        String storagePath = dir + File.separator + "MockObject";
         MockObject mockObject = new MockObject(1);
-        long ts = System.currentTimeMillis();
         for (int i = 0; i < 100; i++) {
             mockObject.list.add(i);
-            Persistence.write(mockObject);
+            Persistence.write(mockObject, storagePath);
         }
-        log.error(" {}", System.currentTimeMillis() - ts);
-
-        //   MockObject mockObject2 = (MockObject) Persistence.read(MockObject.class.getSimpleName());
-        //  log.error(" {}", mockObject2.list);
-        //   assertEquals(mockObject.i, mockObject2.i);
+        MockObject mockObject2 = (MockObject) Persistence.read(storagePath);
+        assertEquals(mockObject.getIndex(), mockObject2.getIndex());
+        assertEquals(mockObject.getList(), mockObject2.getList());
     }
 }

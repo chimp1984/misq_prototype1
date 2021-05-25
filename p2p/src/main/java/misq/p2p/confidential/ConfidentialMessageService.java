@@ -18,8 +18,8 @@
 package misq.p2p.confidential;
 
 import lombok.extern.slf4j.Slf4j;
+import misq.common.security.ConfidentialData;
 import misq.common.security.HybridEncryption;
-import misq.common.security.Sealed;
 import misq.common.util.CollectionUtil;
 import misq.common.util.ObjectSerializer;
 import misq.p2p.Address;
@@ -68,10 +68,10 @@ public class ConfidentialMessageService implements MessageListener {
                 // send(message, targetAddress);
             } else {
                 try {
-                    Sealed sealed = confidentialMessage.getSealed();
-                    PublicKey receiversPublicKey = confidentialMessage.getReceiversPublicKey();
-                    KeyPair keyPair = keyPairSupplier.apply(receiversPublicKey);
-                    byte[] decrypted = HybridEncryption.decrypt(sealed, keyPair, receiversPublicKey);
+                    ConfidentialData confidentialData = confidentialMessage.getConfidentialData();
+                    KeyPair receiversKeyPair = keyPairSupplier.apply(confidentialMessage.getReceiversPublicKey());
+                    PublicKey sendersPublicKey = confidentialMessage.getSendersPublicKey();
+                    byte[] decrypted = HybridEncryption.decrypt(confidentialData, receiversKeyPair, sendersPublicKey);
                     Message decryptedMessage = (Message) ObjectSerializer.deserialize(decrypted);
                     messageListeners.forEach(listener -> listener.onMessage(decryptedMessage, connection));
                 } catch (GeneralSecurityException e) {
@@ -84,16 +84,16 @@ public class ConfidentialMessageService implements MessageListener {
     public CompletableFuture<Connection> send(Message message, Address peerAddress,
                                               PublicKey peersPublicKey, KeyPair myKeyPair)
             throws GeneralSecurityException {
-        Sealed sealed = HybridEncryption.encrypt(message.serialize(), peersPublicKey, myKeyPair);
-        ConfidentialMessage confidentialMessage = new ConfidentialMessage(sealed, peersPublicKey);
+        ConfidentialData confidentialData = HybridEncryption.encrypt(message.serialize(), peersPublicKey, myKeyPair);
+        ConfidentialMessage confidentialMessage = new ConfidentialMessage(confidentialData, myKeyPair.getPublic(), peersPublicKey);
         return node.send(confidentialMessage, peerAddress);
     }
 
     public CompletableFuture<Connection> send(Message message, Connection connection,
                                               PublicKey peersPublicKey, KeyPair myKeyPair)
             throws GeneralSecurityException {
-        Sealed sealed = HybridEncryption.encrypt(message.serialize(), peersPublicKey, myKeyPair);
-        ConfidentialMessage confidentialMessage = new ConfidentialMessage(sealed, peersPublicKey);
+        ConfidentialData confidentialData = HybridEncryption.encrypt(message.serialize(), peersPublicKey, myKeyPair);
+        ConfidentialMessage confidentialMessage = new ConfidentialMessage(confidentialData, myKeyPair.getPublic(), peersPublicKey);
         return node.send(confidentialMessage, connection);
     }
 

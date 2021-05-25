@@ -31,11 +31,11 @@ public class SymEncryptionUtilTest {
     public void testSymEncryption() {
         try {
             byte[] message = "hello".getBytes();
-            SecretKey sessionKey = SymEncryptionUtil.generateAESKey();
-            IvParameterSpec ivSpec = SymEncryptionUtil.generateIv();
-            byte[] encryptedMessage = SymEncryptionUtil.encrypt(message, sessionKey, ivSpec);
+            SecretKey sessionKey = SymEncryption.generateAESKey();
+            IvParameterSpec ivSpec = SymEncryption.generateIv();
+            byte[] encryptedMessage = SymEncryption.encrypt(message, sessionKey, ivSpec);
             byte[] iv = ivSpec.getIV();
-            byte[] result = SymEncryptionUtil.decrypt(encryptedMessage, sessionKey, new IvParameterSpec(iv));
+            byte[] result = SymEncryption.decrypt(encryptedMessage, sessionKey, new IvParameterSpec(iv));
             assertArrayEquals(message, result);
         } catch (GeneralSecurityException e) {
             e.printStackTrace();

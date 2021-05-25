@@ -30,13 +30,7 @@ public class DigestUtilTest {
         int iterations = 100000;
         byte[] bytes = new byte[1000];
         new Random().nextBytes(bytes);
-        DigestUtil.keccak(bytes); // call once to not pollute time tests, first call is slow.
-
-        ts = System.currentTimeMillis();
-        for (int i = 0; i < iterations; i++) {
-            DigestUtil.keccak(bytes);
-        }
-        log.info("keccak {}", System.currentTimeMillis() - ts);
+        DigestUtil.hash(bytes); // call once to not pollute time tests, first call is slow.
 
         ts = System.currentTimeMillis();
         for (int i = 0; i < iterations; i++) {

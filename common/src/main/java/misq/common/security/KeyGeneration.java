@@ -25,8 +25,8 @@ import java.security.spec.EncodedKeySpec;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 
-public class KeyPairGeneratorUtil {
-    private static final String ALGO = "ECDH";
+public class KeyGeneration {
+    public static final String ECDH = "ECDH";
     private static final String CURVE = "secp256k1";
 
     static {
@@ -35,13 +35,9 @@ public class KeyPairGeneratorUtil {
         }
     }
 
-    private static KeyFactory getKeyFactory() throws NoSuchAlgorithmException {
-        return KeyFactory.getInstance(ALGO);
-    }
-
     public static KeyPair generateKeyPair() throws GeneralSecurityException {
         ECGenParameterSpec ecSpec = new ECGenParameterSpec(CURVE);
-        KeyPairGenerator generator = KeyPairGenerator.getInstance(ALGO, "BC");
+        KeyPairGenerator generator = KeyPairGenerator.getInstance(ECDH, "BC");
         generator.initialize(ecSpec, new SecureRandom());
         return generator.generateKeyPair();
     }
@@ -54,5 +50,9 @@ public class KeyPairGeneratorUtil {
     public static PrivateKey generatePrivate(byte[] encodedKey) throws GeneralSecurityException {
         EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(encodedKey);
         return getKeyFactory().generatePrivate(keySpec);
+    }
+
+    private static KeyFactory getKeyFactory() throws NoSuchAlgorithmException {
+        return KeyFactory.getInstance(ECDH);
     }
 }

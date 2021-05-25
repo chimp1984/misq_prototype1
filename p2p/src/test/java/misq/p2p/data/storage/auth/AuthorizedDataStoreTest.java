@@ -19,7 +19,7 @@ package misq.p2p.data.storage.auth;
 
 import lombok.extern.slf4j.Slf4j;
 import misq.common.security.DigestUtil;
-import misq.common.security.KeyPairGeneratorUtil;
+import misq.common.security.KeyGeneration;
 import misq.common.security.SignatureUtil;
 import misq.common.util.Hex;
 import misq.common.util.OsUtils;
@@ -47,17 +47,17 @@ public class AuthorizedDataStoreTest {
     public void testAddAndRemove() throws GeneralSecurityException, IOException {
         String publicKeyAsHex = "3056301006072a8648ce3d020106052b8104000a03420004170a828efbaa0316b7a59ec5a1e8033ca4c215b5e58b17b16f3e3cbfa5ec085f4bdb660c7b766ec5ba92b432265ba3ed3689c5d87118fbebe19e92b9228aca63";
         byte[] publicKeyBytes = Hex.decode(publicKeyAsHex);
-        PublicKey publicKey = KeyPairGeneratorUtil.generatePublic(publicKeyBytes);
+        PublicKey publicKey = KeyGeneration.generatePublic(publicKeyBytes);
 
         String privateKeyAsHex = "30818d020100301006072a8648ce3d020106052b8104000a04763074020101042010c2ea3b2b1f1787f8a57d074e550b120cc04b326b43c545214434e474e5cde2a00706052b8104000aa14403420004170a828efbaa0316b7a59ec5a1e8033ca4c215b5e58b17b16f3e3cbfa5ec085f4bdb660c7b766ec5ba92b432265ba3ed3689c5d87118fbebe19e92b9228aca63";
         byte[] privateKeyBytes = Hex.decode(privateKeyAsHex);
 
-        PrivateKey privateKey = KeyPairGeneratorUtil.generatePrivate(privateKeyBytes);
+        PrivateKey privateKey = KeyGeneration.generatePrivate(privateKeyBytes);
         NetworkData networkData = new MockNetworkData("test" + UUID.randomUUID().toString());
         byte[] signature = SignatureUtil.sign(networkData.serialize(), privateKey);
         MockAuthorizedPayload authorizedPayload = new MockAuthorizedPayload(networkData, signature, publicKey);
 
-        KeyPair keyPair = KeyPairGeneratorUtil.generateKeyPair();
+        KeyPair keyPair = KeyGeneration.generateKeyPair();
         AuthenticatedDataStore store = new AuthenticatedDataStore(appDirPath, authorizedPayload.getMetaData());
         AddAuthenticatedDataRequest addRequest = AddAuthenticatedDataRequest.from(store, authorizedPayload, keyPair);
         byte[] hash = DigestUtil.hash(authorizedPayload.serialize());

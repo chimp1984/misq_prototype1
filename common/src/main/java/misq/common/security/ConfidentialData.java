@@ -25,16 +25,16 @@ import java.io.Serializable;
 
 @EqualsAndHashCode
 @Getter
-public class Sealed implements Serializable {
+public class ConfidentialData implements Serializable {
     private final byte[] hmac;// 32 bytes
-    private final byte[] iv;
+    private final byte[] iv; //16 bytes
     private final byte[] cypherText;
-    private final byte[] signature;// 256 bytes
+    private final byte[] signature;// 71-73 bytes
 
-    public Sealed(byte[] hmac,
-                  byte[] iv,
-                  byte[] cypherText,
-                  byte[] signature) {
+    ConfidentialData(byte[] hmac,
+                     byte[] iv,
+                     byte[] cypherText,
+                     byte[] signature) {
         this.hmac = hmac;
         this.iv = iv;
         this.cypherText = cypherText;

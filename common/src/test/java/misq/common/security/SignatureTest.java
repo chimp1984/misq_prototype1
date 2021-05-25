@@ -37,7 +37,7 @@ public class SignatureTest {
     public void testSignature() {
         byte[] message = "hello".getBytes();
         try {
-            KeyPair keyPair = KeyPairGeneratorUtil.generateKeyPair();
+            KeyPair keyPair = KeyGeneration.generateKeyPair();
             byte[] signature = SignatureUtil.sign(message, keyPair.getPrivate());
             boolean result = SignatureUtil.verify(message, signature, keyPair.getPublic());
             assertTrue(result);

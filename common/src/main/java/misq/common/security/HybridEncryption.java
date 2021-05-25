@@ -47,49 +47,49 @@ public class HybridEncryption {
         }
     }
 
-    public static Sealed encrypt(byte[] message, PublicKey receiverPublicKey, KeyPair senderKeyPair)
+    public static ConfidentialData encrypt(byte[] message, PublicKey receiverPublicKey, KeyPair senderKeyPair)
             throws GeneralSecurityException {
         // Create shared secret with our private key and receivers public key
-        byte[] sharedSecret = SymEncryptionUtil.generateSharedSecret(senderKeyPair.getPrivate(), receiverPublicKey);
+        byte[] sharedSecret = SymEncryption.generateSharedSecret(senderKeyPair.getPrivate(), receiverPublicKey);
 
         // Use that shared secret to derive the hmacKey and the sessionKey
         Tuple2<byte[], byte[]> tuple = deriveKeyMaterial(sharedSecret);
-        SecretKey hmacKey = SymEncryptionUtil.generateAESKey(tuple.first);
-        SecretKey sessionKey = SymEncryptionUtil.generateAESKey(tuple.second);
+        SecretKey hmacKey = SymEncryption.generateAESKey(tuple.first);
+        SecretKey sessionKey = SymEncryption.generateAESKey(tuple.second);
 
-        IvParameterSpec ivSpec = SymEncryptionUtil.generateIv();
-        byte[] encryptedMessage = SymEncryptionUtil.encrypt(message, sessionKey, ivSpec);
+        IvParameterSpec ivSpec = SymEncryption.generateIv();
+        byte[] encryptedMessage = SymEncryption.encrypt(message, sessionKey, ivSpec);
 
         byte[] iv = ivSpec.getIV();
         byte[] hmacInput = concat(concat(iv, receiverPublicKey.getEncoded()), encryptedMessage);
-        byte[] hmac = Hmac.createHmac(hmacInput, hmacKey);
+        byte[] hmac = HmacUtil.createHmac(hmacInput, hmacKey);
 
         byte[] messageToSign = concat(hmac, encryptedMessage);
 
         byte[] signature = SignatureUtil.sign(messageToSign, senderKeyPair.getPrivate());
-        return new Sealed(hmac, iv, encryptedMessage, signature);
+        return new ConfidentialData(hmac, iv, encryptedMessage, signature);
     }
 
-    public static byte[] decrypt(Sealed sealed, KeyPair receiversKeyPair, PublicKey senderPublicKey) throws GeneralSecurityException {
-        byte[] hmac = sealed.getHmac();
-        byte[] iv = sealed.getIv();
-        byte[] cypherText = sealed.getCypherText();
-        byte[] signature = sealed.getSignature();
+    public static byte[] decrypt(ConfidentialData confidentialData, KeyPair receiversKeyPair, PublicKey senderPublicKey) throws GeneralSecurityException {
+        byte[] hmac = confidentialData.getHmac();
+        byte[] iv = confidentialData.getIv();
+        byte[] cypherText = confidentialData.getCypherText();
+        byte[] signature = confidentialData.getSignature();
 
         byte[] messageToVerify = concat(hmac, cypherText);
         checkArgument(SignatureUtil.verify(messageToVerify, signature, senderPublicKey), "Invalid signature");
 
         // Create shared secret with our private key and senders public key
-        byte[] sharedSecret = SymEncryptionUtil.generateSharedSecret(receiversKeyPair.getPrivate(), senderPublicKey);
+        byte[] sharedSecret = SymEncryption.generateSharedSecret(receiversKeyPair.getPrivate(), senderPublicKey);
 
         Tuple2<byte[], byte[]> tuple = deriveKeyMaterial(sharedSecret);
-        SecretKey hmacKey = SymEncryptionUtil.generateAESKey(tuple.first);
-        SecretKey sessionKey = SymEncryptionUtil.generateAESKey(tuple.second);
+        SecretKey hmacKey = SymEncryption.generateAESKey(tuple.first);
+        SecretKey sessionKey = SymEncryption.generateAESKey(tuple.second);
 
         byte[] hmacInput = concat(concat(iv, receiversKeyPair.getPublic().getEncoded()), cypherText);
-        checkArgument(Hmac.verifyHmac(hmacInput, hmac, hmacKey), "Invalid Hmac");
+        checkArgument(HmacUtil.verifyHmac(hmacInput, hmac, hmacKey), "Invalid Hmac");
 
-        return SymEncryptionUtil.decrypt(cypherText, sessionKey, new IvParameterSpec(iv));
+        return SymEncryption.decrypt(cypherText, sessionKey, new IvParameterSpec(iv));
     }
 
 

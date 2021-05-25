@@ -27,8 +27,8 @@ public class Persistence {
         write(persistable, persistable.getDefaultStorageFileName());
     }
 
-    public static void write(Serializable serializable, String fileName) {
-        try (FileOutputStream fileOutputStream = new FileOutputStream(fileName);
+    public static void write(Serializable serializable, String storagePath) {
+        try (FileOutputStream fileOutputStream = new FileOutputStream(storagePath);
              ObjectOutputStream objectOutputStream = new ObjectOutputStream(fileOutputStream)) {
             objectOutputStream.writeObject(serializable);
             objectOutputStream.flush();
@@ -39,8 +39,8 @@ public class Persistence {
         }
     }
 
-    public static Serializable read(String fileName) {
-        try (FileInputStream fileInputStream = new FileInputStream(fileName);
+    public static Serializable read(String storagePath) {
+        try (FileInputStream fileInputStream = new FileInputStream(storagePath);
              ObjectInputStream objectInputStream = new ObjectInputStream(fileInputStream)) {
             return (Serializable) objectInputStream.readObject();
         } catch (IOException | ClassNotFoundException exception) {

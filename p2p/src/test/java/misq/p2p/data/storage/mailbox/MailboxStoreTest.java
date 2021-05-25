@@ -19,7 +19,7 @@ package misq.p2p.data.storage.mailbox;
 
 import lombok.extern.slf4j.Slf4j;
 import misq.common.security.DigestUtil;
-import misq.common.security.KeyPairGeneratorUtil;
+import misq.common.security.KeyGeneration;
 import misq.common.util.OsUtils;
 import misq.p2p.data.filter.FilterItem;
 import misq.p2p.data.filter.ProtectedDataFilter;
@@ -48,8 +48,8 @@ public class MailboxStoreTest {
     public void testAddAndRemoveMailboxMsg() throws GeneralSecurityException, IOException {
         MockMailboxMessage message = new MockMailboxMessage("test" + UUID.randomUUID().toString());
         MailboxDataStore store = new MailboxDataStore(appDirPath, message.getMetaData());
-        KeyPair senderKeyPair = KeyPairGeneratorUtil.generateKeyPair();
-        KeyPair receiverKeyPair = KeyPairGeneratorUtil.generateKeyPair();
+        KeyPair senderKeyPair = KeyGeneration.generateKeyPair();
+        KeyPair receiverKeyPair = KeyGeneration.generateKeyPair();
 
         MailboxPayload payload = MailboxPayload.createMailboxPayload(message, senderKeyPair, receiverKeyPair.getPublic());
         ConcurrentHashMap<MapKey, MailboxRequest> map = store.getMap();

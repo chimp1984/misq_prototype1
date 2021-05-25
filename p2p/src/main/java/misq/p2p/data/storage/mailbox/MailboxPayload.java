@@ -19,8 +19,8 @@ package misq.p2p.data.storage.mailbox;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import misq.common.security.ConfidentialData;
 import misq.common.security.HybridEncryption;
-import misq.common.security.Sealed;
 import misq.p2p.data.storage.MetaData;
 import misq.p2p.data.storage.auth.AuthenticatedPayload;
 
@@ -38,16 +38,16 @@ public class MailboxPayload implements AuthenticatedPayload {
                                                       KeyPair senderKeyPair,
                                                       PublicKey receiverPublicKey)
             throws GeneralSecurityException {
-        Sealed sealed = HybridEncryption.encrypt(mailboxMessage.serialize(), receiverPublicKey, senderKeyPair);
-        return new MailboxPayload(sealed, mailboxMessage.getMetaData());
+        ConfidentialData confidentialData = HybridEncryption.encrypt(mailboxMessage.serialize(), receiverPublicKey, senderKeyPair);
+        return new MailboxPayload(confidentialData, mailboxMessage.getMetaData());
     }
 
     @Getter
-    private final Sealed sealed;
+    private final ConfidentialData confidentialData;
     private final MetaData metaData;
 
-    public MailboxPayload(Sealed sealed, MetaData metaData) {
-        this.sealed = sealed;
+    public MailboxPayload(ConfidentialData confidentialData, MetaData metaData) {
+        this.confidentialData = confidentialData;
         this.metaData = metaData;
     }
 
@@ -64,7 +64,7 @@ public class MailboxPayload implements AuthenticatedPayload {
     @Override
     public String toString() {
         return "SealedData{" +
-                "\n     sealed=" + sealed +
+                "\n     sealed=" + confidentialData +
                 ",\n     metaData='" + metaData + '\'' +
                 "\n}";
     }
