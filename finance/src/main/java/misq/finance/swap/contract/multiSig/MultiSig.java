@@ -22,6 +22,7 @@ import lombok.extern.slf4j.Slf4j;
 import misq.chain.Chain;
 import misq.chain.Wallet;
 import misq.finance.contract.SecurityProvider;
+import misq.finance.contract.sharedState.*;
 import misq.finance.swap.contract.multiSig.maker.FundsSentMessage;
 import misq.finance.swap.contract.multiSig.maker.TxInputsMessage;
 import misq.finance.swap.contract.multiSig.taker.DepositTxBroadcastMessage;
@@ -31,8 +32,160 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 
+import static misq.finance.contract.sharedState.SharedStateFactory.oneOf;
+
 @Slf4j
 public class MultiSig implements SecurityProvider, Chain.Listener {
+    @State(parties = {"maker", "taker"})
+    public interface SharedState {
+        // STARTING SECRETS...
+
+        @Supplied(by = "maker")
+        Wallet makerWallet();
+
+        @Supplied(by = "taker")
+        Wallet takerWallet();
+
+        @Access("ALL")
+        @Supplied(by = "maker")
+        String makerEscrowPublicKey();
+
+        @Access("ALL")
+        @Supplied(by = "taker")
+        String takerEscrowPublicKey();
+
+        @Access("ALL")
+        @Supplied(by = "maker")
+        String makerPayoutAddress();
+
+        @Access("ALL")
+        @Supplied(by = "taker")
+        String takerPayoutAddress();
+
+        // DERIVED PROPERTIES...
+
+        @Access("ALL")
+        @DependsOn("makerWallet")
+        default String makerDepositTxInputs() {
+            return makerWallet().getUtxos().join();
+        }
+
+        @Access("ALL")
+        @DependsOn("takerWallet")
+        default String takerDepositTxInputs() {
+            return takerWallet().getUtxos().join();
+        }
+
+        @DependsOn({"makerEscrowPublicKey", "takerEscrowPublicKey"})
+        default String escrowAddress() {
+            return "multisigAddress(" + makerEscrowPublicKey() + ", " + takerEscrowPublicKey() + ")";
+        }
+
+        @DependsOn({"makerDepositTxInputs", "takerDepositTxInputs", "escrowAddress"})
+        @DependsOn("makerSignedDepositTx")
+        @DependsOn("takerSignedDepositTx")
+        @DependsOn("depositTx")
+        default String unsignedDepositTx() {
+            return oneOf(
+                    () -> "mergeTxs(" + makerDepositTxInputs() + ", " + takerDepositTxInputs() + ", " + escrowAddress() + ")",
+                    () -> "stripSignature(" + makerSignedDepositTx() + ")",
+                    () -> "stripSignature(" + takerSignedDepositTx() + ")",
+                    () -> "stripSignature(" + depositTx() + ")"
+            );
+        }
+
+        @Access("ALL")
+        @DependsOn({"makerWallet", "unsignedDepositTx"})
+        default String makerSignedDepositTx() {
+            return makerWallet().sign(unsignedDepositTx()).join();
+        }
+
+        @Access("ALL")
+        @DependsOn({"takerWallet", "unsignedDepositTx"})
+        default String takerSignedDepositTx() {
+            return takerWallet().sign(unsignedDepositTx()).join();
+        }
+
+        @DependsOn({"makerWallet", "takerSignedDepositTx"})
+        @DependsOn({"takerWallet", "makerSignedDepositTx"})
+        @DependsOn("makerSeesDepositTxInMempool")
+        @DependsOn("takerSeesDepositTxInMempool")
+        default String depositTx() {
+            return oneOf(
+                    () -> makerWallet().sign(takerSignedDepositTx()).join(),
+                    () -> takerWallet().sign(makerSignedDepositTx()).join(),
+                    this::makerSeesDepositTxInMempool,
+                    this::takerSeesDepositTxInMempool
+            );
+        }
+
+        @DependsOn({"unsignedDepositTx", "makerPayoutAddress", "takerPayoutAddress"})
+        @DependsOn("makerSignedPayoutTx")
+        @DependsOn("takerSignedPayoutTx")
+        @DependsOn("payoutTx")
+        default String unsignedPayoutTx() {
+            return oneOf(
+                    () -> "mergeTxs(outpoint(" + unsignedDepositTx() + "), " + makerPayoutAddress() + ", " + takerPayoutAddress() + ")",
+                    () -> "stripSignature(" + makerSignedPayoutTx() + ")",
+                    () -> "stripSignature(" + takerSignedPayoutTx() + ")",
+                    () -> "stripSignature(" + payoutTx() + ")"
+            );
+        }
+
+        @Access("makerStartsCountercurrencyPayment")
+        @DependsOn({"makerWallet", "unsignedPayoutTx"})
+        default String makerSignedPayoutTx() {
+            return makerWallet().sign(unsignedPayoutTx()).join();
+        }
+
+        @Access("takerConfirmsCountercurrencyPayment")
+        @DependsOn({"takerWallet", "unsignedPayoutTx"})
+        default String takerSignedPayoutTx() {
+            return takerWallet().sign(unsignedPayoutTx()).join();
+        }
+
+        @DependsOn({"makerWallet", "takerSignedPayoutTx"})
+        @DependsOn({"takerWallet", "makerSignedPayoutTx"})
+        @DependsOn("makerSeesPayoutTxInMempool")
+        @DependsOn("takerSeesPayoutTxInMempool")
+        default String payoutTx() {
+            return oneOf(
+                    () -> makerWallet().sign(takerSignedPayoutTx()).join(),
+                    () -> takerWallet().sign(makerSignedPayoutTx()).join(),
+                    this::makerSeesPayoutTxInMempool,
+                    this::takerSeesPayoutTxInMempool
+            );
+        }
+
+        // ACTIONS AND EVENTS...
+
+        @Action(by = "taker")
+        @DependsOn("depositTx")
+        void takerBroadcastsDepositTx();
+
+        @Event(seenBy = "taker")
+        String takerSeesDepositTxInMempool();
+
+        @Event(seenBy = "maker")
+        String makerSeesDepositTxInMempool();
+
+        @Event(seenBy = "maker")
+        Void makerStartsCountercurrencyPayment();
+
+        @Event(seenBy = "taker")
+        Void takerConfirmsCountercurrencyPayment();
+
+        @Action(by = "taker")
+        @DependsOn({"takerConfirmsCountercurrencyPayment", "payoutTx"})
+        void takerBroadcastsPayoutTx();
+
+        @Event(seenBy = "taker")
+        String takerSeesPayoutTxInMempool();
+
+        @Event(seenBy = "maker")
+        String makerSeesPayoutTxInMempool();
+    }
+
     public interface Listener {
         void onDepositTxConfirmed();
     }

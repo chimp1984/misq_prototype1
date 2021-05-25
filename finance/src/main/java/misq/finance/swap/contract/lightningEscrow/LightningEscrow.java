@@ -164,7 +164,7 @@ public class LightningEscrow implements SecurityProvider {
         Void takerConfirmsCountercurrencyPayment();
 
         @Action(by = "taker")
-        @DependsOn("escrowAgentPaymentPreimage")
+        @DependsOn({"takerConfirmsCountercurrencyPayment", "escrowAgentPaymentPreimage"})
         void takerFinalizesEscrowAgentPayment();
 
         @Event(seenBy = "escrowAgent")

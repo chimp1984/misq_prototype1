@@ -1,12 +1,13 @@
 package misq.finance.contract.sharedState;
 
-import misq.finance.swap.contract.lightningEscrow.LightningEscrow;
+import misq.finance.swap.contract.multiSig.MultiSig;
 import org.junit.Test;
 
 public class SharedStateFactoryTest {
     @Test
     public void testNew() {
-        var factory = new SharedStateFactory<>(LightningEscrow.SharedState.class);
+//        var factory = new SharedStateFactory<>(LightningEscrow.SharedState.class);
+        var factory = new SharedStateFactory<>(MultiSig.SharedState.class);
 
         System.out.println();
         System.out.println(factory.getParties());
