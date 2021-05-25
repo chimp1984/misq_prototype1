@@ -37,7 +37,7 @@ import static misq.finance.contract.sharedState.SharedStateFactory.oneOf;
 @Slf4j
 public class MultiSig implements SecurityProvider, Chain.Listener {
     @State(parties = {"maker", "taker"})
-    public interface SharedState {
+    public interface SharedState extends SecurityProvider.SharedState {
         // STARTING SECRETS...
 
         @Supplied(by = "maker")
@@ -161,7 +161,8 @@ public class MultiSig implements SecurityProvider, Chain.Listener {
 
         @Action(by = "taker")
         @DependsOn("depositTx")
-        void takerBroadcastsDepositTx();
+        default void takerBroadcastsDepositTx() {
+        }
 
         @Event(seenBy = "taker")
         String takerSeesDepositTxInMempool();
@@ -170,14 +171,15 @@ public class MultiSig implements SecurityProvider, Chain.Listener {
         String makerSeesDepositTxInMempool();
 
         @Event(seenBy = "maker")
-        Void makerStartsCountercurrencyPayment();
+        Unit makerStartsCountercurrencyPayment();
 
         @Event(seenBy = "taker")
-        Void takerConfirmsCountercurrencyPayment();
+        Unit takerConfirmsCountercurrencyPayment();
 
         @Action(by = "taker")
         @DependsOn({"takerConfirmsCountercurrencyPayment", "payoutTx"})
-        void takerBroadcastsPayoutTx();
+        default void takerBroadcastsPayoutTx() {
+        }
 
         @Event(seenBy = "taker")
         String takerSeesPayoutTxInMempool();

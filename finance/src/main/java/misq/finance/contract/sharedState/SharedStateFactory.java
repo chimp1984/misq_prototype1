@@ -4,6 +4,7 @@ import com.google.common.base.Functions;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.*;
 import lombok.Getter;
+import misq.finance.contract.SecurityProvider;
 
 import java.lang.reflect.Method;
 import java.util.*;
@@ -13,11 +14,11 @@ import static misq.finance.contract.sharedState.AccessCondition.atom;
 
 // TODO: Need to decide rules concerning mutual incompatibility of @Supplied, @DependsOn, @Access, @Action and @Event annotations.
 @Getter
-public class SharedStateFactory<T> {
+public class SharedStateFactory<T extends SecurityProvider.SharedState> {
     private final Class<T> clazz;
     private final Set<String> parties;
     private final Set<String> propertyNames;
-    private final Multimap<String, Set<String>> dependencyMultimap;
+    private final ListMultimap<String, Set<String>> dependencyMultimap;
     private final Map<String, String> actorMap;
     private final Map<String, String> supplierMap;
     private final Map<String, String> eventObserverMap;
@@ -52,21 +53,23 @@ public class SharedStateFactory<T> {
         return ImmutableSet.copyOf(annotation.parties());
     }
 
-    private Multimap<String, Set<String>> processDependsOnAnnotations() {
+    private ListMultimap<String, Set<String>> processDependsOnAnnotations() {
         var multimapBuilder = ImmutableListMultimap.<String, Set<String>>builder();
 
         for (Method method : clazz.getMethods()) {
             var dependsOnAnnotations = method.getAnnotationsByType(DependsOn.class);
             var name = method.getName();
             Preconditions.checkArgument(dependsOnAnnotations.length == 0 || propertyNames.contains(name),
-                    "Illegal @DependsOn annotation on non-property %s", method);
+                    "Illegal @DependsOn annotation on non-property: %s", method);
+            Preconditions.checkArgument(dependsOnAnnotations.length == 0 || method.isDefault(),
+                    "Missing default method body for property '%s' annotated with @DependsOn", name);
 
             for (DependsOn annotation : dependsOnAnnotations) {
                 Preconditions.checkArgument(annotation.value().length != 0,
-                        "Empty dependency list on property %s", name);
+                        "Empty dependency list on property '%s'", name);
                 for (String dependencyName : annotation.value()) {
                     Preconditions.checkArgument(propertyNames.contains(dependencyName),
-                            "Unrecognized dependency %s of property %s", dependencyName, name);
+                            "Unrecognized dependency '%s' of property '%s'", dependencyName, name);
                 }
                 multimapBuilder.put(name, ImmutableSet.copyOf(annotation.value()));
             }
@@ -84,9 +87,9 @@ public class SharedStateFactory<T> {
 
             if (actionAnnotation != null) {
                 Preconditions.checkArgument(propertyNames.contains(name),
-                        "Illegal @Action annotation on non-property %s", method);
+                        "Illegal @Action annotation on non-property: %s", method);
                 Preconditions.checkArgument(parties.contains(actionAnnotation.by()),
-                        "Unrecognized actor %s for action %s", actionAnnotation.by(), name);
+                        "Unrecognized actor '%s' for action '%s'", actionAnnotation.by(), name);
                 mapBuilder.put(name, actionAnnotation.by());
             }
         }
@@ -102,9 +105,9 @@ public class SharedStateFactory<T> {
 
             if (suppliedAnnotation != null) {
                 Preconditions.checkArgument(propertyNames.contains(name),
-                        "Illegal @Supplied annotation on non-property %s", method);
+                        "Illegal @Supplied annotation on non-property: %s", method);
                 Preconditions.checkArgument(parties.contains(suppliedAnnotation.by()),
-                        "Unrecognized supplier %s for property %s", suppliedAnnotation.by(), name);
+                        "Unrecognized supplier '%s' for property '%s'", suppliedAnnotation.by(), name);
                 mapBuilder.put(name, suppliedAnnotation.by());
             }
         }
@@ -120,11 +123,11 @@ public class SharedStateFactory<T> {
 
             if (eventAnnotation != null) {
                 Preconditions.checkArgument(propertyNames.contains(name),
-                        "Illegal @Event annotation on non-property %s", method);
+                        "Illegal @Event annotation on non-property: %s", method);
                 Preconditions.checkArgument(!dependencyMultimap.containsKey(name),
-                        "Illegal simultaneous annotation of property %s with @Event and @DependsOn", method);
+                        "Illegal simultaneous annotation of property '%s' with @Event and @DependsOn", name);
                 Preconditions.checkArgument(parties.contains(eventAnnotation.seenBy()),
-                        "Unrecognized observer %s for event %s", eventAnnotation.seenBy(), name);
+                        "Unrecognized observer '%s' for event '%s'", eventAnnotation.seenBy(), name);
                 mapBuilder.put(name, eventAnnotation.seenBy());
             }
         }
@@ -141,7 +144,7 @@ public class SharedStateFactory<T> {
 
             if (accessAnnotation != null) {
                 Preconditions.checkArgument(propertyNames.contains(name),
-                        "Illegal @Access annotation on non-property %s", method);
+                        "Illegal @Access annotation on non-property: %s", method);
                 mapBuilder.put(name, AccessCondition.parse(accessAnnotation.value(), allowedNames));
             }
         }
