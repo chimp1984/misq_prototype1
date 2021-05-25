@@ -233,7 +233,7 @@ public class AuthenticatedDataStore extends DataStore {
             return new Inventory(inventoryMap, 0);
         }
 
-        List<AuthenticatedDataRequest> result = Util.getSubSet(inventoryMap, dataFilter.getOffset(), dataFilter.getRange(), maxItems);
+        List<? extends AuthenticatedDataRequest> result = Util.getSubSet(inventoryMap, dataFilter.getOffset(), dataFilter.getRange(), maxItems);
         int numDropped = size - result.size();
         return new Inventory(result, numDropped);
     }

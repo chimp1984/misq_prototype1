@@ -36,7 +36,6 @@ public class MockAuthenticatedPayload implements AuthenticatedPayload {
         metaData = new MetaData(TimeUnit.DAYS.toMillis(10), 251 + 463, getClass().getSimpleName());
     }
 
-
     @Override
     public MetaData getMetaData() {
         return metaData;

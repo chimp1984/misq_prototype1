@@ -26,7 +26,7 @@ import java.util.stream.Collectors;
 import static com.google.common.base.Preconditions.checkArgument;
 
 public class Util {
-    public static List<AuthenticatedDataRequest> getSubSet(List<AuthenticatedDataRequest> map, int filterOffset, int filterRange, int maxItems) {
+    public static List<? extends AuthenticatedDataRequest> getSubSet(List<? extends AuthenticatedDataRequest> map, int filterOffset, int filterRange, int maxItems) {
         int size = map.size();
         checkArgument(filterOffset >= 0);
         checkArgument(filterOffset <= 100);

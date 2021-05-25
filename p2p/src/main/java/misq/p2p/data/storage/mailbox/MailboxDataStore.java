@@ -21,8 +21,12 @@ import com.google.common.annotations.VisibleForTesting;
 import lombok.extern.slf4j.Slf4j;
 import misq.common.persistence.Persistence;
 import misq.common.security.DigestUtil;
+import misq.p2p.data.filter.ProtectedDataFilter;
+import misq.p2p.data.inventory.Inventory;
 import misq.p2p.data.storage.MapKey;
 import misq.p2p.data.storage.MetaData;
+import misq.p2p.data.storage.Util;
+import misq.p2p.data.storage.auth.AuthenticatedDataRequest;
 import misq.p2p.data.storage.auth.Result;
 
 import java.io.File;
@@ -153,6 +157,18 @@ public class MailboxDataStore extends DataStore {
         return new Result(true);
     }
 
+    public Inventory getInventory(ProtectedDataFilter dataFilter) {
+        List<MailboxRequest> inventoryMap = getInventoryMap(map, dataFilter.getFilterMap());
+        int maxItems = getMaxItems();
+        int size = inventoryMap.size();
+        if (size <= maxItems) {
+            return new Inventory(inventoryMap, 0);
+        }
+
+        List<? extends AuthenticatedDataRequest> result = Util.getSubSet(inventoryMap, dataFilter.getOffset(), dataFilter.getRange(), maxItems);
+        int numDropped = size - result.size();
+        return new Inventory(result, numDropped);
+    }
 
     @Override
     public void shutdown() {
@@ -172,18 +188,6 @@ public class MailboxDataStore extends DataStore {
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-  /*  public Inventory getInventory(ProtectedDataFilter dataFilter) {
-        List<MailboxRequest> inventoryMap = getInventoryMap(map, dataFilter.getFilterMap());
-        int maxItems = getMaxItems();
-        int size = inventoryMap.size();
-        if (size <= maxItems) {
-            return new Inventory(inventoryMap, 0);
-        }
-
-        List<MailboxRequest> result = getSubSet(inventoryMap, dataFilter.getOffset(), dataFilter.getRange(), maxItems);
-        int numDropped = size - result.size();
-        return new Inventory(result, numDropped);
-    }*/
 
     @VisibleForTesting
     int getMaxItems() {
@@ -219,13 +223,9 @@ public class MailboxDataStore extends DataStore {
         return 0;
     }
 
-    boolean canAddMailboxMessage(MailboxPayload mailboxPayload) throws NoSuchAlgorithmException {
+    boolean canAddMailboxMessage(MailboxPayload mailboxPayload) {
         byte[] hash = DigestUtil.hash(mailboxPayload.serialize());
         return getSequenceNumber(hash) < Integer.MAX_VALUE;
-    }
-
-    private void persist() {
-        Persistence.write(map, storageFilePath);
     }
 
     // todo call by time interval
@@ -244,4 +244,9 @@ public class MailboxDataStore extends DataStore {
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
         map.putAll(pruned);
     }
+
+    private void persist() {
+        Persistence.write(map, storageFilePath);
+    }
+
 }

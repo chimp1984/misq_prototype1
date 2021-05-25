@@ -21,6 +21,9 @@ import lombok.extern.slf4j.Slf4j;
 import misq.common.security.DigestUtil;
 import misq.common.security.KeyPairGeneratorUtil;
 import misq.common.util.OsUtils;
+import misq.p2p.data.filter.FilterItem;
+import misq.p2p.data.filter.ProtectedDataFilter;
+import misq.p2p.data.inventory.Inventory;
 import misq.p2p.data.storage.MapKey;
 import misq.p2p.data.storage.auth.RemoveRequest;
 import misq.p2p.data.storage.auth.Result;
@@ -30,6 +33,8 @@ import java.io.File;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -66,14 +71,12 @@ public class MailboxStoreTest {
         assertEquals(payloadFromMap, payload);
 
         // request inventory with old seqNum
-      /*  String dataType = payload.getMetaData().getFileName();
+        String dataType = payload.getMetaData().getFileName();
         Set<FilterItem> filterItems = new HashSet<>();
         filterItems.add(new FilterItem(mapKey.getHash(), initialSeqNum));
         ProtectedDataFilter filter = new ProtectedDataFilter(dataType, filterItems);
-        store.getInventory(filter).ifPresent(inventory -> {
-            assertEquals(initialMapSize + 1, inventory.getEntries().size());
-        });*/
-
+        Inventory inventory = store.getInventory(filter);
+        assertEquals(initialMapSize + 1, inventory.getEntries().size());
 
         // remove
         RemoveMailboxRequest removeMailboxRequest = RemoveMailboxRequest.from(payload, receiverKeyPair);

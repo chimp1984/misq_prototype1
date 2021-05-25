@@ -27,10 +27,10 @@ import java.util.List;
 @EqualsAndHashCode
 @Getter
 public class Inventory implements Message {
-    private final List<AuthenticatedDataRequest> entries;
+    private final List<? extends AuthenticatedDataRequest> entries;
     private final int numDropped;
 
-    public Inventory(List<AuthenticatedDataRequest> entries, int numDropped) {
+    public Inventory(List<? extends AuthenticatedDataRequest> entries, int numDropped) {
         this.entries = entries;
         this.numDropped = numDropped;
     }

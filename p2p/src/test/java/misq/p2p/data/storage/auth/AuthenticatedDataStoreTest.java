@@ -61,7 +61,7 @@ public class AuthenticatedDataStoreTest {
         int filterOffset = 0;
         int filterRange = 100;
         int maxItems = Integer.MAX_VALUE;
-        List<AuthenticatedDataRequest> result = Util.getSubSet(map, filterOffset, filterRange, maxItems);
+        List<? extends AuthenticatedDataRequest> result = Util.getSubSet(map, filterOffset, filterRange, maxItems);
         assertEquals(1, result.size());
 
         map = new ArrayList<>();
@@ -133,21 +133,19 @@ public class AuthenticatedDataStoreTest {
         assertEquals(dataFromMap.getPayload(), payload);
 
         // request inventory with old seqNum
-       /* String dataType = data.getMetaData().getFileName();
+        String dataType = data.getMetaData().getFileName();
         Set<FilterItem> filterItems = new HashSet<>();
         filterItems.add(new FilterItem(mapKey.getHash(), initialSeqNum));
         ProtectedDataFilter filter = new ProtectedDataFilter(dataType, filterItems);
-        store.getInventory(filter).ifPresent(inventory -> {
-            assertEquals(initialMapSize + 1, inventory.getEntries().size());
-        });
+        Inventory inventory = store.getInventory(filter);
+        assertEquals(initialMapSize + 1, inventory.getEntries().size());
 
         // request inventory with new seqNum
         filterItems = new HashSet<>();
         filterItems.add(new FilterItem(mapKey.getHash(), initialSeqNum + 1));
         filter = new ProtectedDataFilter(dataType, filterItems);
-        store.getInventory(filter).ifPresent(inventory -> {
-            assertEquals(initialMapSize, inventory.getEntries().size());
-        });*/
+        inventory = store.getInventory(filter);
+        assertEquals(initialMapSize, inventory.getEntries().size());
 
         // refresh
         RefreshRequest refreshRequest = RefreshRequest.from(store, data, keyPair);
@@ -172,20 +170,18 @@ public class AuthenticatedDataStoreTest {
         assertFalse(refreshAfterRemoveResult.isSuccess());
 
         // request inventory with old seqNum
-      /*  filterItems = new HashSet<>();
+        filterItems = new HashSet<>();
         filterItems.add(new FilterItem(mapKey.getHash(), initialSeqNum + 2));
         filter = new ProtectedDataFilter(dataType, filterItems);
-        store.getInventory(filter).ifPresent(inventory -> {
-            assertEquals(initialMapSize + 1, inventory.getEntries().size());
-        });
+        inventory = store.getInventory(filter);
+        assertEquals(initialMapSize + 1, inventory.getEntries().size());
 
         // request inventory with new seqNum
         filterItems = new HashSet<>();
         filterItems.add(new FilterItem(mapKey.getHash(), initialSeqNum + 3));
         filter = new ProtectedDataFilter(dataType, filterItems);
-        store.getInventory(filter).ifPresent(inventory -> {
-            assertEquals(initialMapSize, inventory.getEntries().size());
-        });*/
+        inventory = store.getInventory(filter);
+        assertEquals(initialMapSize, inventory.getEntries().size());
     }
 
     @Test
@@ -229,6 +225,5 @@ public class AuthenticatedDataStoreTest {
 
         log.error("inventory size={}", ObjectSerializer.serialize(inventory).length); //inventory size=238601 for 333 items. 716 bytes per item
         // map with 1440 items: file: 1.068.599 bytes, inventory size=1000517 ,  maxItems=1400
-
     }
 }
