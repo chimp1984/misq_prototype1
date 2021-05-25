@@ -40,7 +40,7 @@ public class RemoveRequest implements AuthenticatedDataRequest, Serializable {
 
     public static RemoveRequest from(AuthenticatedDataStore store, NetworkData networkData, KeyPair keyPair)
             throws GeneralSecurityException {
-        byte[] hash = DigestUtil.sha256(networkData.serialize());
+        byte[] hash = DigestUtil.hash(networkData.serialize());
         byte[] signature = SignatureUtil.sign(hash, keyPair.getPrivate());
         int newSequenceNumber = store.getSequenceNumber(hash) + 1;
         return new RemoveRequest(networkData.getMetaData(), hash, keyPair.getPublic(), newSequenceNumber, signature);
@@ -93,7 +93,7 @@ public class RemoveRequest implements AuthenticatedDataRequest, Serializable {
 
     public boolean isPublicKeyInvalid(AuthenticatedData entryFromMap) {
         try {
-            return !Arrays.equals(entryFromMap.getHashOfPublicKey(), DigestUtil.sha256(ownerPublicKeyBytes));
+            return !Arrays.equals(entryFromMap.getHashOfPublicKey(), DigestUtil.hash(ownerPublicKeyBytes));
         } catch (Exception e) {
             return true;
         }

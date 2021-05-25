@@ -38,8 +38,8 @@ public class AddAuthenticatedDataRequest implements AuthenticatedDataRequest, Se
 
     public static AddAuthenticatedDataRequest from(AuthenticatedDataStore store, AuthenticatedPayload payload, KeyPair keyPair)
             throws GeneralSecurityException {
-        byte[] hash = DigestUtil.sha256(payload.serialize());
-        byte[] hashOfPublicKey = DigestUtil.sha256(keyPair.getPublic().getEncoded());
+        byte[] hash = DigestUtil.hash(payload.serialize());
+        byte[] hashOfPublicKey = DigestUtil.hash(keyPair.getPublic().getEncoded());
         int newSequenceNumber = store.getSequenceNumber(hash) + 1;
         AuthenticatedData data = new AuthenticatedData(payload, newSequenceNumber, hashOfPublicKey, System.currentTimeMillis());
         byte[] serialized = data.serialize();
@@ -79,7 +79,7 @@ public class AddAuthenticatedDataRequest implements AuthenticatedDataRequest, Se
 
     public boolean isPublicKeyInvalid() {
         try {
-            return !Arrays.equals(authenticatedData.getHashOfPublicKey(), DigestUtil.sha256(ownerPublicKeyBytes));
+            return !Arrays.equals(authenticatedData.getHashOfPublicKey(), DigestUtil.hash(ownerPublicKeyBytes));
         } catch (Exception e) {
             return true;
         }

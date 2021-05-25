@@ -68,7 +68,7 @@ public class AppendOnlyDataStore extends DataStore {
             return false;
         }
 
-        byte[] hash = DigestUtil.sha256(appendOnlyData.serialize());
+        byte[] hash = DigestUtil.hash(appendOnlyData.serialize());
         MapKey mapKey = new MapKey(hash);
         if (map.containsKey(mapKey)) {
             return false;

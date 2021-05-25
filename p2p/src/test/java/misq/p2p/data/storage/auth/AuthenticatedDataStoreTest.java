@@ -118,7 +118,7 @@ public class AuthenticatedDataStoreTest {
 
         AddAuthenticatedDataRequest addRequest = AddAuthenticatedDataRequest.from(store, data, keyPair);
         int initialMapSize = store.getMap().size();
-        byte[] hash = DigestUtil.sha256(data.serialize());
+        byte[] hash = DigestUtil.hash(data.serialize());
         int initialSeqNum = store.getSequenceNumber(hash);
         Result addRequestResult = store.add(addRequest);
         assertTrue(addRequestResult.isSuccess());
@@ -206,7 +206,7 @@ public class AuthenticatedDataStoreTest {
 
             if (i == 0) {
                 first = data;
-                hashOfFirst = DigestUtil.sha256(first.serialize());
+                hashOfFirst = DigestUtil.hash(first.serialize());
                 initialSeqNumFirstItem = store.getSequenceNumber(hashOfFirst);
             }
         }

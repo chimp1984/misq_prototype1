@@ -85,7 +85,7 @@ public class AuthenticatedDataStore extends DataStore {
     public Result add(AddAuthenticatedDataRequest request) throws NoSuchAlgorithmException {
         AuthenticatedData entry = request.getAuthenticatedData();
         AuthenticatedPayload authenticatedPayload = entry.getPayload();
-        byte[] hash = DigestUtil.sha256(authenticatedPayload.serialize());
+        byte[] hash = DigestUtil.hash(authenticatedPayload.serialize());
         MapKey mapKey = new MapKey(hash);
         AuthenticatedDataRequest dataRequest = map.get(mapKey);
         int sequenceNumberFromMap = dataRequest != null ? dataRequest.getSequenceNumber() : 0;

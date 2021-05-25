@@ -49,7 +49,7 @@ public class MailboxStoreTest {
         MailboxPayload payload = MailboxPayload.createMailboxPayload(message, senderKeyPair, receiverKeyPair.getPublic());
         ConcurrentHashMap<MapKey, MailboxRequest> map = store.getMap();
         int initialMapSize = map.size();
-        byte[] hash = DigestUtil.sha256(payload.serialize());
+        byte[] hash = DigestUtil.hash(payload.serialize());
         int initialSeqNum = store.getSequenceNumber(hash);
 
         AddMailboxRequest request = AddMailboxRequest.from(store, payload, senderKeyPair, receiverKeyPair.getPublic());

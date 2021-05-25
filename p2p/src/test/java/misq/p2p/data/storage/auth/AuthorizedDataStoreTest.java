@@ -56,7 +56,7 @@ public class AuthorizedDataStoreTest {
         KeyPair keyPair = KeyPairGeneratorUtil.generateKeyPair();
         AuthenticatedDataStore store = new AuthenticatedDataStore(appDirPath, authorizedPayload.getMetaData());
         AddAuthenticatedDataRequest addRequest = AddAuthenticatedDataRequest.from(store, authorizedPayload, keyPair);
-        byte[] hash = DigestUtil.sha256(authorizedPayload.serialize());
+        byte[] hash = DigestUtil.hash(authorizedPayload.serialize());
         int initialSeqNum = store.getSequenceNumber(hash);
         Result result = store.add(addRequest);
         assertTrue(result.isSuccess());

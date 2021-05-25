@@ -76,7 +76,7 @@ public class MailboxDataStore extends DataStore {
     public Result add(AddMailboxRequest request) throws NoSuchAlgorithmException {
         MailboxData data = request.getMailboxData();
         MailboxPayload payload = data.getMailboxPayload();
-        byte[] hash = DigestUtil.sha256(payload.serialize());
+        byte[] hash = DigestUtil.hash(payload.serialize());
         MapKey mapKey = new MapKey(hash);
         MailboxRequest requestFromMap = map.get(mapKey);
         int sequenceNumberFromMap = requestFromMap != null ? requestFromMap.getSequenceNumber() : 0;
@@ -220,7 +220,7 @@ public class MailboxDataStore extends DataStore {
     }
 
     boolean canAddMailboxMessage(MailboxPayload mailboxPayload) throws NoSuchAlgorithmException {
-        byte[] hash = DigestUtil.sha256(mailboxPayload.serialize());
+        byte[] hash = DigestUtil.hash(mailboxPayload.serialize());
         return getSequenceNumber(hash) < Integer.MAX_VALUE;
     }
 

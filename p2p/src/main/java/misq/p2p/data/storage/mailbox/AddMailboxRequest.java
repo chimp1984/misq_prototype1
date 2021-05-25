@@ -39,14 +39,14 @@ public class AddMailboxRequest extends AddAuthenticatedDataRequest implements Ma
                                          PublicKey receiverPublicKey)
             throws GeneralSecurityException {
         PublicKey senderPublicKey = senderKeyPair.getPublic();
-        byte[] hash = DigestUtil.sha256(payload.serialize());
+        byte[] hash = DigestUtil.hash(payload.serialize());
         int sequenceNumberFromMap = store.getSequenceNumber(hash);
         if (sequenceNumberFromMap == Integer.MAX_VALUE) {
             throw new IllegalStateException("Item was already removed in service map as sequenceNumber is marked with Integer.MAX_VALUE");
         }
         int newSequenceNumber = sequenceNumberFromMap + 1;
-        byte[] hashOfSendersPublicKey = DigestUtil.sha256(senderPublicKey.getEncoded());
-        byte[] hashOfReceiversPublicKey = DigestUtil.sha256(receiverPublicKey.getEncoded());
+        byte[] hashOfSendersPublicKey = DigestUtil.hash(senderPublicKey.getEncoded());
+        byte[] hashOfReceiversPublicKey = DigestUtil.hash(receiverPublicKey.getEncoded());
         MailboxData entry = new MailboxData(payload, newSequenceNumber, hashOfSendersPublicKey,
                 hashOfReceiversPublicKey, receiverPublicKey);
         byte[] serialized = entry.serialize();

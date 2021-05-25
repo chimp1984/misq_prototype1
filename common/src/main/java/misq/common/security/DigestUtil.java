@@ -17,18 +17,33 @@
 
 package misq.common.security;
 
+import org.bouncycastle.crypto.digests.RIPEMD160Digest;
 import org.bouncycastle.jcajce.provider.digest.Keccak;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
 public class DigestUtil {
-    public static final String SHA_256 = "SHA-256";
-    public static final String KECCAK_256 = "Keccak-256"; // Used in Monero
+    public static byte[] hash(byte[] input) {
+        // RIPEMD160 is slow on large input, so we use fast sha256 first. Is twice as fast with 1kb data.
+        return RIPEMD160(sha256(input));
+    }
 
-    public static byte[] sha256(byte[] input) throws NoSuchAlgorithmException {
-        MessageDigest digest = MessageDigest.getInstance(SHA_256);
-        return digest.digest(input);
+    public static byte[] RIPEMD160(byte[] input) {
+        RIPEMD160Digest digest = new RIPEMD160Digest();
+        digest.update(input, 0, input.length);
+        byte[] out = new byte[digest.getDigestSize()];
+        digest.doFinal(out, 0);
+        return out;
+    }
+
+    public static byte[] sha256(byte[] input) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            return digest.digest(input);
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public static byte[] keccak(byte[] input) {

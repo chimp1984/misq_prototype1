@@ -86,14 +86,14 @@ public class I2pIntegrationTest extends BaseTest {
         }
     }
 
-    //  @Test
+    @Test
     public void testStartOfMultipleIds() throws InterruptedException {
         NetworkType networkType = NetworkType.I2P;
         Set<NetworkType> mySupportedNetworks = getMySupportedNetworks();
         startOfMultipleIds(networkType, mySupportedNetworks);
     }
 
-    @Test
+    // @Test
     public void testSendMsgWithMultipleIds() throws InterruptedException, GeneralSecurityException {
         NetworkType networkType = NetworkType.I2P;
         Set<NetworkType> mySupportedNetworks = getMySupportedNetworks();
@@ -113,7 +113,7 @@ public class I2pIntegrationTest extends BaseTest {
     // First msg 560 ms, others 15-380 ms
     // First msg 524 ms, others 20-380 ms, average 150ms
     // Total: 61077 ms / 17012 ms / 17487 ms / 5825 ms
-    // @Test
+    //  @Test
     public void repeatedSend() throws InterruptedException, GeneralSecurityException {
         long ts = System.currentTimeMillis();
         testInitializeServer(2);

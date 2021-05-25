@@ -38,7 +38,7 @@ public class RemoveMailboxRequest extends RemoveRequest implements MailboxReques
 
     public static RemoveMailboxRequest from(MailboxPayload mailboxPayload, KeyPair receiverKeyPair)
             throws GeneralSecurityException {
-        byte[] hash = DigestUtil.sha256(mailboxPayload.serialize());
+        byte[] hash = DigestUtil.hash(mailboxPayload.serialize());
         byte[] signature = SignatureUtil.sign(hash, receiverKeyPair.getPrivate());
         int newSequenceNumber = Integer.MAX_VALUE; // Use max value for sequence number so that no other addData call is permitted.
         return new RemoveMailboxRequest(mailboxPayload.getMetaData(), hash, receiverKeyPair.getPublic(), newSequenceNumber, signature);
@@ -63,7 +63,7 @@ public class RemoveMailboxRequest extends RemoveRequest implements MailboxReques
     public boolean isPublicKeyInvalid(AuthenticatedData entryFromMap) {
         try {
             MailboxData mailboxData = (MailboxData) entryFromMap;
-            return !Arrays.equals(mailboxData.getHashOfReceiversPublicKey(), DigestUtil.sha256(ownerPublicKeyBytes));
+            return !Arrays.equals(mailboxData.getHashOfReceiversPublicKey(), DigestUtil.hash(ownerPublicKeyBytes));
         } catch (Exception e) {
             return true;
         }
