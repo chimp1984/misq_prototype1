@@ -56,10 +56,10 @@ public class AllNetworksIntegrationTest {
         Set<NetworkConfig> netNetworkConfigsBob1 = getNetNetworkConfigs(Config.Role.Bob, "bob1", 2222);
         Set<NetworkConfig> netNetworkConfigsBob2 = getNetNetworkConfigs(Config.Role.Bob, "bob2", 2223);
 
-        alice1 = new P2pService(netNetworkConfigsAlice1, Config.alicePrivateKeySupplier1);
-        alice2 = new P2pService(netNetworkConfigsAlice2, Config.alicePrivateKeySupplier2);
-        bob1 = new P2pService(netNetworkConfigsBob1, Config.bobPrivateKeySupplier1);
-        bob2 = new P2pService(netNetworkConfigsBob2, Config.bobPrivateKeySupplier2);
+        alice1 = new P2pService(netNetworkConfigsAlice1, Config.aliceKeyPairSupplier1);
+        alice2 = new P2pService(netNetworkConfigsAlice2, Config.aliceKeyPairSupplier2);
+        bob1 = new P2pService(netNetworkConfigsBob1, Config.bobKeyPairSupplier1);
+        bob2 = new P2pService(netNetworkConfigsBob2, Config.bobKeyPairSupplier2);
 
         CountDownLatch serversReadyLatch = new CountDownLatch(4);
         alice1.initializeServer((res, error) -> {

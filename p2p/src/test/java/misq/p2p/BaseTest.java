@@ -43,7 +43,7 @@ public abstract class BaseTest {
     protected abstract Address getPeerAddress(Config.Role role);
 
     protected void testBootstrapSolo(int count) throws InterruptedException {
-        alice = new P2pNode(getNetworkConfig(Config.Role.Alice), storage, Config.alicePrivateKeySupplier1);
+        alice = new P2pNode(getNetworkConfig(Config.Role.Alice), storage, Config.aliceKeyPairSupplier1);
         CountDownLatch bootstrappedLatch = new CountDownLatch(count);
         alice.bootstrap().whenComplete((success, t) -> {
             if (success && t == null) {
@@ -64,8 +64,8 @@ public abstract class BaseTest {
     protected void testInitializeServer(int serversReadyLatchCount,
                                         NetworkConfig networkConfigAlice,
                                         NetworkConfig networkConfigBob) throws InterruptedException {
-        alice = new P2pNode(networkConfigAlice, storage, Config.alicePrivateKeySupplier1);
-        bob = new P2pNode(networkConfigBob, storage, Config.bobPrivateKeySupplier1);
+        alice = new P2pNode(networkConfigAlice, storage, Config.aliceKeyPairSupplier1);
+        bob = new P2pNode(networkConfigBob, storage, Config.bobKeyPairSupplier1);
         CountDownLatch serversReadyLatch = new CountDownLatch(serversReadyLatchCount);
         alice.initializeServer().whenComplete((result, throwable) -> {
             assertNotNull(result);
@@ -110,14 +110,14 @@ public abstract class BaseTest {
     protected void startOfMultipleIds(NetworkType networkType, Set<NetworkType> networkTypes) throws InterruptedException {
         String baseDirNameAlice = OsUtils.getUserDataDir().getAbsolutePath() + "/misq_test_Alice";
         NodeId nodeIdAlice1 = new NodeId("id_alice_1", 1111, networkTypes);
-        alice = new P2pNode(new NetworkConfig(baseDirNameAlice, nodeIdAlice1, networkType), storage, Config.alicePrivateKeySupplier1);
+        alice = new P2pNode(new NetworkConfig(baseDirNameAlice, nodeIdAlice1, networkType), storage, Config.aliceKeyPairSupplier1);
 
         NodeId nodeIdAlice2 = new NodeId("id_alice_2", 1112, networkTypes);
-        P2pNode alice2 = new P2pNode(new NetworkConfig(baseDirNameAlice, nodeIdAlice2, networkType), storage, Config.alicePrivateKeySupplier1);
+        P2pNode alice2 = new P2pNode(new NetworkConfig(baseDirNameAlice, nodeIdAlice2, networkType), storage, Config.aliceKeyPairSupplier1);
 
         String baseDirNameBob = OsUtils.getUserDataDir().getAbsolutePath() + "/misq_test_Bob";
         NodeId nodeIdBob1 = new NodeId("id_bob_1", 2222, networkTypes);
-        bob = new P2pNode(new NetworkConfig(baseDirNameBob, nodeIdBob1, networkType), storage, Config.bobPrivateKeySupplier1);
+        bob = new P2pNode(new NetworkConfig(baseDirNameBob, nodeIdBob1, networkType), storage, Config.bobKeyPairSupplier1);
 
         CountDownLatch serversReadyLatch = new CountDownLatch(3);
         alice.initializeServer().whenComplete((result, throwable) -> {
@@ -142,17 +142,17 @@ public abstract class BaseTest {
             throws InterruptedException, GeneralSecurityException {
         String baseDirNameAlice = OsUtils.getUserDataDir().getAbsolutePath() + "/misq_test_Alice";
         NodeId nodeIdAlice1 = new NodeId("id_alice_1", 1111, networkTypes);
-        P2pNode alice1 = new P2pNode(new NetworkConfig(baseDirNameAlice, nodeIdAlice1, networkType), storage, Config.alicePrivateKeySupplier1);
+        P2pNode alice1 = new P2pNode(new NetworkConfig(baseDirNameAlice, nodeIdAlice1, networkType), storage, Config.aliceKeyPairSupplier1);
 
         NodeId nodeIdAlice2 = new NodeId("id_alice_2", 1112, networkTypes);
-        P2pNode alice2 = new P2pNode(new NetworkConfig(baseDirNameAlice, nodeIdAlice2, networkType), storage, Config.alicePrivateKeySupplier2);
+        P2pNode alice2 = new P2pNode(new NetworkConfig(baseDirNameAlice, nodeIdAlice2, networkType), storage, Config.aliceKeyPairSupplier2);
 
         String baseDirNameBob = OsUtils.getUserDataDir().getAbsolutePath() + "/misq_test_Bob";
         NodeId nodeIdBob1 = new NodeId("id_bob_1", 2222, networkTypes);
-        P2pNode bob1 = new P2pNode(new NetworkConfig(baseDirNameBob, nodeIdBob1, networkType), storage, Config.bobPrivateKeySupplier1);
+        P2pNode bob1 = new P2pNode(new NetworkConfig(baseDirNameBob, nodeIdBob1, networkType), storage, Config.bobKeyPairSupplier1);
 
         NodeId nodeIdBob2 = new NodeId("id_bob_2", 2223, networkTypes);
-        P2pNode bob2 = new P2pNode(new NetworkConfig(baseDirNameAlice, nodeIdBob2, networkType), storage, Config.bobPrivateKeySupplier2);
+        P2pNode bob2 = new P2pNode(new NetworkConfig(baseDirNameAlice, nodeIdBob2, networkType), storage, Config.bobKeyPairSupplier2);
 
         CountDownLatch serversReadyLatch = new CountDownLatch(4);
         alice1.initializeServer().whenComplete((result, throwable) -> {

@@ -32,7 +32,6 @@ import org.slf4j.LoggerFactory;
 
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
-import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
@@ -51,11 +50,11 @@ public class P2pService {
 
     private final Map<NetworkType, P2pNode> p2pNodes = new ConcurrentHashMap<>();
 
-    public P2pService(Set<NetworkConfig> networkConfigs, Function<PublicKey, PrivateKey> keyRepository) {
+    public P2pService(Set<NetworkConfig> networkConfigs, Function<PublicKey, KeyPair> keyPairSupplier) {
         Storage storage = new Storage("");//todo
         networkConfigs.forEach(networkConfig -> {
             NetworkType networkType = networkConfig.getNetworkType();
-            P2pNode p2pNode = new P2pNode(networkConfig, storage, keyRepository);
+            P2pNode p2pNode = new P2pNode(networkConfig, storage, keyPairSupplier);
             p2pNodes.put(networkType, p2pNode);
         });
     }

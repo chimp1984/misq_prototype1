@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package misq.common.security;
+package misq.common.security.legacy;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -26,28 +26,44 @@ import java.io.Serializable;
 @EqualsAndHashCode
 @Getter
 public class Sealed implements Serializable {
+    private final byte[] encryptedHmacSessionKey; // 256 bytes
+    private final byte[] encryptedSessionKey;// 256 bytes
     private final byte[] hmac;// 32 bytes
-    private final byte[] iv;
-    private final byte[] cypherText;
+    private final byte[] iv;// 16 bytes
+    private final byte[] encryptedMessage;
     private final byte[] signature;// 256 bytes
+    private final byte[] senderPublicKey;// 294 bytes
 
-    public Sealed(byte[] hmac,
+    public Sealed(byte[] encryptedHmacSessionKey,
+                  byte[] encryptedSessionKey,
+                  byte[] hmac,
                   byte[] iv,
-                  byte[] cypherText,
-                  byte[] signature) {
+                  byte[] encryptedMessage,
+                  byte[] signature,
+                  byte[] senderPublicKey) {
+        this.encryptedHmacSessionKey = encryptedHmacSessionKey;
+        this.encryptedSessionKey = encryptedSessionKey;
         this.hmac = hmac;
         this.iv = iv;
-        this.cypherText = cypherText;
+        this.encryptedMessage = encryptedMessage;
         this.signature = signature;
+        this.senderPublicKey = senderPublicKey;
     }
+
+  /*  public byte[] serialize() {
+        return ObjectSerializer.serialize(this);
+    }*/
 
     @Override
     public String toString() {
         return "Sealed{" +
+                "\n     encryptedHmacSessionKey=" + Hex.encode(encryptedHmacSessionKey) +
+                ",\n     encryptedSessionKey=" + Hex.encode(encryptedSessionKey) +
                 ",\n     hmac=" + Hex.encode(hmac) +
                 ",\n     iv=" + Hex.encode(iv) +
-                ",\n     cypherText=" + Hex.encode(cypherText) +
+                ",\n     encryptedMessage=" + Hex.encode(encryptedMessage) +
                 ",\n     signature=" + Hex.encode(signature) +
+                ",\n     senderPublicKey=" + Hex.encode(senderPublicKey) +
                 "\n}";
     }
 }

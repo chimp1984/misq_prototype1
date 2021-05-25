@@ -39,7 +39,6 @@ import org.slf4j.LoggerFactory;
 
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
-import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
@@ -53,16 +52,16 @@ public class P2pNode {
 
     private final NetworkConfig networkConfig;
     private final Storage storage;
-    private final Function<PublicKey, PrivateKey> privateKeySupplier;
+    private final Function<PublicKey, KeyPair> keyPairSupplier;
     private final PeerManager peerManager;
     private final Node node;
     private final ConfidentialMessageService confidentialMessageService;
     private final DataService dataService;
 
-    public P2pNode(NetworkConfig networkConfig, Storage storage, Function<PublicKey, PrivateKey> privateKeySupplier) {
+    public P2pNode(NetworkConfig networkConfig, Storage storage, Function<PublicKey, KeyPair> keyPairSupplier) {
         this.networkConfig = networkConfig;
         this.storage = storage;
-        this.privateKeySupplier = privateKeySupplier;
+        this.keyPairSupplier = keyPairSupplier;
 
         node = new Node(networkConfig);
 
@@ -72,7 +71,7 @@ public class P2pNode {
         DefaultPeerExchangeStrategy peerExchangeStrategy = new DefaultPeerExchangeStrategy(peerGroup, peerConfig);
         peerManager = new PeerManager(node, peerGroup, peerExchangeStrategy, peerConfig);
 
-        confidentialMessageService = new ConfidentialMessageService(node, peerGroup, privateKeySupplier);
+        confidentialMessageService = new ConfidentialMessageService(node, peerGroup, keyPairSupplier);
 
         dataService = new DataService(node, peerGroup, storage);
     }

@@ -17,87 +17,98 @@
 
 package misq.common.security;
 
+import lombok.extern.slf4j.Slf4j;
+import misq.common.util.Tuple2;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
+
 import javax.crypto.SecretKey;
 import javax.crypto.spec.IvParameterSpec;
-import java.nio.ByteBuffer;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
-import java.security.PrivateKey;
 import java.security.PublicKey;
+import java.security.Security;
+import java.util.Arrays;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static misq.common.util.ByteArrayUtils.concat;
 
+/**
+ * Using Elliptic Curve Integrated Encryption Scheme for hybrid encryption.
+ * <p>
+ * Follows the roughly schemes described here:
+ * https://cryptobook.nakov.com/asymmetric-key-ciphers/ecies-public-key-encryption
+ * https://www.nominet.uk/how-elliptic-curve-cryptography-encryption-works/
+ */
+@Slf4j
 public class HybridEncryption {
-    public static Sealed encrypt(byte[] message, PublicKey receiverPublicKey, KeyPair senderKeyPair) throws GeneralSecurityException {
-        // Symmetric key setup
-        SecretKey sessionKey = SymEncryptionUtil.generateAESKey();
+    static {
+        if (Security.getProvider(BouncyCastleProvider.PROVIDER_NAME) == null) {
+            Security.addProvider(new BouncyCastleProvider());
+        }
+    }
 
-        // Encrypt sessionKey
-        byte[] encryptedSessionKey = AsymEncryptionUtil.encryptSecretKey(sessionKey, receiverPublicKey);
+    public static Sealed encrypt(byte[] message, PublicKey receiverPublicKey, KeyPair senderKeyPair)
+            throws GeneralSecurityException {
+        // Create shared secret with our private key and receivers public key
+        byte[] sharedSecret = SymEncryptionUtil.generateSharedSecret(senderKeyPair.getPrivate(), receiverPublicKey);
 
-        // Encrypt message
+        // Use that shared secret to derive the hmacKey and the sessionKey
+        Tuple2<byte[], byte[]> tuple = deriveKeyMaterial(sharedSecret);
+        SecretKey hmacKey = SymEncryptionUtil.generateAESKey(tuple.first);
+        SecretKey sessionKey = SymEncryptionUtil.generateAESKey(tuple.second);
+
         IvParameterSpec ivSpec = SymEncryptionUtil.generateIv();
         byte[] encryptedMessage = SymEncryptionUtil.encrypt(message, sessionKey, ivSpec);
 
-        // Hmac of encryptedMessage
-        SecretKey hmacSessionKey = SymEncryptionUtil.generateAESKey();
-        byte[] hmac = Hmac.createHmac(encryptedMessage, hmacSessionKey);
-        byte[] encryptedHmacSessionKey = AsymEncryptionUtil.encryptSecretKey(hmacSessionKey, receiverPublicKey);
-
-        // Combine bitStream of all data
         byte[] iv = ivSpec.getIV();
-        byte[] bitStream = getBitStream(encryptedHmacSessionKey, encryptedSessionKey, hmac, iv, encryptedMessage);
+        byte[] hmacInput = concat(concat(iv, receiverPublicKey.getEncoded()), encryptedMessage);
+        byte[] hmac = Hmac.createHmac(hmacInput, hmacKey);
 
-        // Create signature over bitstream
-        byte[] signature = SignatureUtil.sign(bitStream, senderKeyPair.getPrivate());
+        byte[] messageToSign = concat(hmac, encryptedMessage);
 
-        return new Sealed(encryptedHmacSessionKey, encryptedSessionKey, hmac, iv, encryptedMessage, signature,
-                senderKeyPair.getPublic().getEncoded());
+        byte[] signature = SignatureUtil.sign(messageToSign, senderKeyPair.getPrivate());
+        return new Sealed(hmac, iv, encryptedMessage, signature);
     }
 
-    public static byte[] decrypt(Sealed sealed, PrivateKey privateKey) throws GeneralSecurityException {
-        byte[] encryptedHmacSessionKey = sealed.getEncryptedHmacSessionKey();
-        byte[] encryptedSessionKey = sealed.getEncryptedSessionKey();
+    public static byte[] decrypt(Sealed sealed, KeyPair receiversKeyPair, PublicKey senderPublicKey) throws GeneralSecurityException {
         byte[] hmac = sealed.getHmac();
         byte[] iv = sealed.getIv();
-        byte[] encryptedMessage = sealed.getEncryptedMessage();
+        byte[] cypherText = sealed.getCypherText();
         byte[] signature = sealed.getSignature();
-        PublicKey senderPublicKey = KeyPairGeneratorUtil.generatePublic(sealed.getSenderPublicKey());
 
-        // Create bitstream
-        byte[] bitStream = getBitStream(encryptedHmacSessionKey, encryptedSessionKey, hmac, iv, encryptedMessage);
+        byte[] messageToVerify = concat(hmac, cypherText);
+        checkArgument(SignatureUtil.verify(messageToVerify, signature, senderPublicKey), "Invalid signature");
 
-        // Verify signature
-        checkArgument(SignatureUtil.verify(bitStream, signature, senderPublicKey), "Invalid signature");
+        // Create shared secret with our private key and senders public key
+        byte[] sharedSecret = SymEncryptionUtil.generateSharedSecret(receiversKeyPair.getPrivate(), senderPublicKey);
 
-        // Decrypt encryptedHmacSessionKey
-        SecretKey hmacSessionKey = AsymEncryptionUtil.decryptSecretKey(encryptedHmacSessionKey, privateKey);
+        Tuple2<byte[], byte[]> tuple = deriveKeyMaterial(sharedSecret);
+        SecretKey hmacKey = SymEncryptionUtil.generateAESKey(tuple.first);
+        SecretKey sessionKey = SymEncryptionUtil.generateAESKey(tuple.second);
 
-        // Verify hmac
-        checkArgument(Hmac.verifyHmac(encryptedMessage, hmac, hmacSessionKey), "Invalid Hmac");
+        byte[] hmacInput = concat(concat(iv, receiversKeyPair.getPublic().getEncoded()), cypherText);
+        checkArgument(Hmac.verifyHmac(hmacInput, hmac, hmacKey), "Invalid Hmac");
 
-        // Decrypt encryptedSessionKey
-        SecretKey sessionKey = AsymEncryptionUtil.decryptSecretKey(encryptedSessionKey, privateKey);
-
-        // Decrypt encryptedMessage
-        return SymEncryptionUtil.decrypt(encryptedMessage, sessionKey, new IvParameterSpec(iv));
+        return SymEncryptionUtil.decrypt(cypherText, sessionKey, new IvParameterSpec(iv));
     }
 
-    public static byte[] getBitStream(byte[] encryptedHmacSessionKey,
-                                      byte[] encryptedSessionKey,
-                                      byte[] hmac,
-                                      byte[] iv,
-                                      byte[] encryptedMessage) {
-        ByteBuffer byteBuffer = ByteBuffer.allocate(encryptedHmacSessionKey.length +
-                encryptedSessionKey.length +
-                hmac.length +
-                iv.length +
-                encryptedMessage.length);
-        byteBuffer.put(encryptedHmacSessionKey);
-        byteBuffer.put(encryptedSessionKey);
-        byteBuffer.put(hmac);
-        byteBuffer.put(iv);
-        byteBuffer.put(encryptedMessage);
-        return byteBuffer.array();
+
+    private static Tuple2<byte[], byte[]> deriveKeyMaterial(byte[] input) {
+        // todo causes exceptions as encryption... not clear why
+      /*  KDF2BytesGenerator kdf = new KDF2BytesGenerator(new SHA512Digest());
+        kdf.init(new KDFParameters(keyInput, iv));
+        byte[] out = new byte[512];
+        kdf.generateBytes(out, 0, out.length);*/
+
+        byte[] hash = DigestUtil.sha512(input);
+        int length = hash.length;
+        int from = 0;
+        int to = length / 2;
+        byte[] macKeyBytes = Arrays.copyOfRange(hash, from, to);
+        from = to;
+        to = length;
+        byte[] sessionKeyBytes = Arrays.copyOfRange(hash, from, to);
+
+        return new Tuple2<>(macKeyBytes, sessionKeyBytes);
     }
 }

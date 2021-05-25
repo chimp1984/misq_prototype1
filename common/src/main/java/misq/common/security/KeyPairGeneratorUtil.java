@@ -17,64 +17,42 @@
 
 package misq.common.security;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.nio.file.Files;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
+
 import java.security.*;
-import java.security.interfaces.RSAPrivateCrtKey;
+import java.security.spec.ECGenParameterSpec;
 import java.security.spec.EncodedKeySpec;
 import java.security.spec.PKCS8EncodedKeySpec;
-import java.security.spec.RSAPublicKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 
 public class KeyPairGeneratorUtil {
-    public static final String RSA = "RSA";
-    public static final int KEY_SIZE = 2048;
+    private static final String ALGO = "ECDH";
+    private static final String CURVE = "secp256k1";
 
-    private static KeyFactory getKeyFactory() throws NoSuchAlgorithmException {
-        return KeyFactory.getInstance(RSA);
-    }
-
-    public static KeyPair generateKeyPair() throws GeneralSecurityException {
-        return generateKeyPair(KEY_SIZE);
-    }
-
-    public static KeyPair generateKeyPair(int keySize) throws GeneralSecurityException {
-        KeyPairGenerator generator = KeyPairGenerator.getInstance(RSA);
-        generator.initialize(keySize);
-        KeyPair pair = generator.generateKeyPair();
-        PrivateKey privateKey = pair.getPrivate();
-        PublicKey publicKey = pair.getPublic();
-        return new KeyPair(publicKey, privateKey);
-    }
-
-    public static PublicKey generatePublic(PrivateKey privateKey) throws GeneralSecurityException {
-        KeyFactory keyFactory = getKeyFactory();
-        RSAPrivateCrtKey rsaPrivateKey = (RSAPrivateCrtKey) privateKey;
-        RSAPublicKeySpec publicKeySpec = new RSAPublicKeySpec(rsaPrivateKey.getModulus(), rsaPrivateKey.getPublicExponent());
-        return keyFactory.generatePublic(publicKeySpec);
-    }
-
-    public static PublicKey generatePublic(byte[] encodedKey) throws GeneralSecurityException {
-        KeyFactory keyFactory = getKeyFactory();
-        EncodedKeySpec publicKeySpec = new X509EncodedKeySpec(encodedKey);
-        return keyFactory.generatePublic(publicKeySpec);
-    }
-
-    public static PrivateKey generatePrivate(byte[] encodedKey) throws GeneralSecurityException {
-        KeyFactory keyFactory = getKeyFactory();
-        EncodedKeySpec publicKeySpec = new PKCS8EncodedKeySpec(encodedKey);
-        return keyFactory.generatePrivate(publicKeySpec);
-    }
-
-    public static void write(byte[] encodedKey, String fileName) throws IOException {
-        try (FileOutputStream fos = new FileOutputStream(fileName)) {
-            fos.write(encodedKey);
+    static {
+        if (Security.getProvider(BouncyCastleProvider.PROVIDER_NAME) == null) {
+            Security.addProvider(new BouncyCastleProvider());
         }
     }
 
-    public static byte[] readKey(String fileName) throws IOException {
-        return Files.readAllBytes(new File(fileName).toPath());
+    private static KeyFactory getKeyFactory() throws NoSuchAlgorithmException {
+        return KeyFactory.getInstance(ALGO);
+    }
+
+    public static KeyPair generateKeyPair() throws GeneralSecurityException {
+        ECGenParameterSpec ecSpec = new ECGenParameterSpec(CURVE);
+        KeyPairGenerator generator = KeyPairGenerator.getInstance(ALGO, "BC");
+        generator.initialize(ecSpec, new SecureRandom());
+        return generator.generateKeyPair();
+    }
+
+    public static PublicKey generatePublic(byte[] encodedKey) throws GeneralSecurityException {
+        EncodedKeySpec keySpec = new X509EncodedKeySpec(encodedKey);
+        return getKeyFactory().generatePublic(keySpec);
+    }
+
+    public static PrivateKey generatePrivate(byte[] encodedKey) throws GeneralSecurityException {
+        EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(encodedKey);
+        return getKeyFactory().generatePrivate(keySpec);
     }
 }

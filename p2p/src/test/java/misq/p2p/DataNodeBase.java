@@ -19,20 +19,16 @@ package misq.p2p;
 
 import lombok.extern.slf4j.Slf4j;
 
-import java.security.PrivateKey;
-import java.security.PublicKey;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Function;
 
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 @Slf4j
 public class DataNodeBase {
-    protected final static Function<PublicKey, PrivateKey> mockPrivateKeySupplier = publicKey -> null;
     protected P2pService p2pServiceSeed, p2pService1, p2pService2;
 
     protected void bootstrap(Set<NetworkConfig> networkConfigsSeed,
@@ -60,7 +56,7 @@ public class DataNodeBase {
 
 
     protected CompletableFuture<P2pService> getP2pServiceFuture(Set<NetworkConfig> networkConfigs) {
-        P2pService p2pService = new P2pService(networkConfigs, mockPrivateKeySupplier);
+        P2pService p2pService = new P2pService(networkConfigs, k -> null);
         return p2pService.bootstrap().thenApply(result -> p2pService);
     }
 }

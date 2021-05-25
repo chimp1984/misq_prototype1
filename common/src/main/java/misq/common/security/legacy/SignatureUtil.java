@@ -15,30 +15,25 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package misq.common.security;
+package misq.common.security.legacy;
 
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
-
-import java.security.*;
+import java.security.GeneralSecurityException;
+import java.security.PrivateKey;
+import java.security.PublicKey;
+import java.security.Signature;
 
 public class SignatureUtil {
-    public static final String ALGO = "SHA256withECDSA";
-
-    static {
-        if (Security.getProvider(BouncyCastleProvider.PROVIDER_NAME) == null) {
-            Security.addProvider(new BouncyCastleProvider());
-        }
-    }
+    public static final String SHA_256_WITH_RSA = "SHA256withRSA";
 
     public static byte[] sign(byte[] message, PrivateKey privateKey) throws GeneralSecurityException {
-        Signature signature = Signature.getInstance(ALGO, "BC");
+        Signature signature = Signature.getInstance(SHA_256_WITH_RSA);
         signature.initSign(privateKey);
         signature.update(message);
         return signature.sign();
     }
 
     public static boolean verify(byte[] message, byte[] signature, PublicKey publicKey) throws GeneralSecurityException {
-        Signature sig = Signature.getInstance(ALGO, "BC");
+        Signature sig = Signature.getInstance(SHA_256_WITH_RSA);
         sig.initVerify(publicKey);
         sig.update(message);
         return sig.verify(signature);

@@ -15,10 +15,9 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package misq.common.security;
+package misq.common.security.legacy;
 
 import lombok.extern.slf4j.Slf4j;
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
 import javax.crypto.Cipher;
 import javax.crypto.SecretKey;
@@ -27,17 +26,10 @@ import javax.crypto.spec.PSource;
 import java.security.GeneralSecurityException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
-import java.security.Security;
 import java.security.spec.MGF1ParameterSpec;
 
 @Slf4j
 public class AsymEncryptionUtil {
-    static {
-        if (Security.getProvider(BouncyCastleProvider.PROVIDER_NAME) == null) {
-            Security.addProvider(new BouncyCastleProvider());
-        }
-    }
-
     public static final String RSA = "RSA/ECB/OAEPWithSHA-256AndMGF1PADDING";
 
     public static byte[] encryptSecretKey(SecretKey secretKey, PublicKey publicKey) throws GeneralSecurityException {

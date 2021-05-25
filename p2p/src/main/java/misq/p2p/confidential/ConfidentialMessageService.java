@@ -32,7 +32,6 @@ import misq.p2p.peers.PeerGroup;
 
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
-import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -45,12 +44,12 @@ public class ConfidentialMessageService implements MessageListener {
     private final Node node;
     private final PeerGroup peerGroup;
     private final Set<MessageListener> messageListeners = new CopyOnWriteArraySet<>();
-    private final Function<PublicKey, PrivateKey> privateKeySupplier;
+    private final Function<PublicKey, KeyPair> keyPairSupplier;
 
-    public ConfidentialMessageService(Node node, PeerGroup peerGroup, Function<PublicKey, PrivateKey> privateKeySupplier) {
+    public ConfidentialMessageService(Node node, PeerGroup peerGroup, Function<PublicKey, KeyPair> keyPairSupplier) {
         this.node = node;
         this.peerGroup = peerGroup;
-        this.privateKeySupplier = privateKeySupplier;
+        this.keyPairSupplier = keyPairSupplier;
 
         node.addMessageListener(this);
     }
@@ -71,8 +70,8 @@ public class ConfidentialMessageService implements MessageListener {
                 try {
                     Sealed sealed = confidentialMessage.getSealed();
                     PublicKey receiversPublicKey = confidentialMessage.getReceiversPublicKey();
-                    PrivateKey privateKey = privateKeySupplier.apply(receiversPublicKey);
-                    byte[] decrypted = HybridEncryption.decrypt(sealed, privateKey);
+                    KeyPair keyPair = keyPairSupplier.apply(receiversPublicKey);
+                    byte[] decrypted = HybridEncryption.decrypt(sealed, keyPair, receiversPublicKey);
                     Message decryptedMessage = (Message) ObjectSerializer.deserialize(decrypted);
                     messageListeners.forEach(listener -> listener.onMessage(decryptedMessage, connection));
                 } catch (GeneralSecurityException e) {

@@ -24,7 +24,6 @@ import misq.common.util.OsUtils;
 
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
-import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.util.function.Function;
 
@@ -52,32 +51,32 @@ public abstract class Config {
     }
 
 
-    final static Function<PublicKey, PrivateKey> alicePrivateKeySupplier1 = new Function<>() {
+    final static Function<PublicKey, KeyPair> aliceKeyPairSupplier1 = new Function<>() {
         @Override
-        public PrivateKey apply(PublicKey publicKey) {
+        public KeyPair apply(PublicKey publicKey) {
             checkArgument(publicKey.equals(keyPairAlice1.getPublic()));
-            return keyPairAlice1.getPrivate();
+            return keyPairAlice1;
         }
     };
-    final static Function<PublicKey, PrivateKey> bobPrivateKeySupplier1 = new Function<>() {
+    final static Function<PublicKey, KeyPair> bobKeyPairSupplier1 = new Function<>() {
         @Override
-        public PrivateKey apply(PublicKey publicKey) {
+        public KeyPair apply(PublicKey publicKey) {
             checkArgument(publicKey.equals(keyPairBob1.getPublic()));
-            return keyPairBob1.getPrivate();
+            return keyPairBob1;
         }
     };
-    final static Function<PublicKey, PrivateKey> alicePrivateKeySupplier2 = new Function<>() {
+    final static Function<PublicKey, KeyPair> aliceKeyPairSupplier2 = new Function<>() {
         @Override
-        public PrivateKey apply(PublicKey publicKey) {
+        public KeyPair apply(PublicKey publicKey) {
             checkArgument(publicKey.equals(keyPairAlice2.getPublic()));
-            return keyPairAlice2.getPrivate();
+            return keyPairAlice2;
         }
     };
-    final static Function<PublicKey, PrivateKey> bobPrivateKeySupplier2 = new Function<>() {
+    final static Function<PublicKey, KeyPair> bobKeyPairSupplier2 = new Function<>() {
         @Override
-        public PrivateKey apply(PublicKey publicKey) {
+        public KeyPair apply(PublicKey publicKey) {
             checkArgument(publicKey.equals(keyPairBob2.getPublic()));
-            return keyPairBob2.getPrivate();
+            return keyPairBob2;
         }
     };
 

@@ -46,6 +46,15 @@ public class DigestUtil {
         }
     }
 
+    public static byte[] sha512(byte[] input) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-512");
+            return digest.digest(input);
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     public static byte[] keccak(byte[] input) {
         Keccak.Digest256 digest256 = new Keccak.Digest256();
         return digest256.digest(input);
