@@ -17,6 +17,7 @@
 
 package misq.common.security;
 
+import lombok.extern.slf4j.Slf4j;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
 import javax.crypto.Cipher;
@@ -28,6 +29,7 @@ import java.security.interfaces.ECPublicKey;
 import java.security.spec.ECPrivateKeySpec;
 import java.security.spec.ECPublicKeySpec;
 
+@Slf4j
 public class AsymEncryption {
     static final String CIPHER_ALGO = "ECIESwithAES-CBC";
 
@@ -39,6 +41,8 @@ public class AsymEncryption {
 
     static byte[] encrypt(byte[] message, ECPublicKey publicKey) throws GeneralSecurityException {
         ECPublicKeySpec spec = new ECPublicKeySpec(publicKey.getW(), publicKey.getParams());
+        // todo find cipher which is supported. "EC" oe "ECDH" are not found. ECIES would require IES params
+        // NullCipher is just a dummy doing nothing...
         Cipher cipher = new NullCipher();
         cipher.init(Cipher.ENCRYPT_MODE, publicKey, spec.getParams());
         return cipher.doFinal(message);
@@ -46,7 +50,7 @@ public class AsymEncryption {
 
     static byte[] decrypt(byte[] encrypted, ECPrivateKey privateKey) throws GeneralSecurityException {
         ECPrivateKeySpec spec = new ECPrivateKeySpec(privateKey.getS(), privateKey.getParams());
-        Cipher cipher = new NullCipher();
+        Cipher cipher = new NullCipher(); //todo
         cipher.init(Cipher.DECRYPT_MODE, privateKey, spec.getParams());
         return cipher.doFinal(encrypted);
     }

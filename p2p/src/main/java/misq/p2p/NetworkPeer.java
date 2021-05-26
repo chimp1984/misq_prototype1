@@ -31,6 +31,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class NetworkPeer {
     private final Map<NetworkType, Address> addressByNetworkType = new ConcurrentHashMap<>();
     private final PublicKey publicKey;
+    // The tag is used as key in the map in the keypair repository. For decrypting messages it is used to select the correct key.
     private final String tag;
 
     public NetworkPeer(Address address, PublicKey publicKey, String tag) {
@@ -49,5 +50,14 @@ public class NetworkPeer {
 
     public Optional<Address> findAddress(NetworkType networkType) {
         return Optional.ofNullable(addressByNetworkType.get(networkType));
+    }
+
+    @Override
+    public String toString() {
+        return "NetworkPeer{" +
+                "\n     addressByNetworkType=" + addressByNetworkType +
+                ",\n     publicKey=" + publicKey +
+                ",\n     tag='" + tag + '\'' +
+                "\n}";
     }
 }

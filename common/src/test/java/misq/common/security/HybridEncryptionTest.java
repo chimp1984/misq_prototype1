@@ -18,16 +18,15 @@
 package misq.common.security;
 
 import lombok.extern.slf4j.Slf4j;
+import misq.common.util.ByteArrayUtils;
 import org.junit.Test;
 
-import java.security.GeneralSecurityException;
-import java.security.KeyPair;
-import java.security.PublicKey;
+import java.security.*;
 
-import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.*;
 
 @Slf4j
-public class TestHybridEncryption {
+public class HybridEncryptionTest {
 
     @Test
     public void testHybridEncryption() throws GeneralSecurityException {
@@ -41,15 +40,18 @@ public class TestHybridEncryption {
         assertArrayEquals(message, decrypted);
 
         // failure cases
-     /*   byte[] hmac = confidentialData.getHmac();
+        byte[] encryptedSessionKey = confidentialData.getEncryptedSessionKey();
+        byte[] encryptedHmacKey = confidentialData.getEncryptedHmacKey();
+        byte[] encryptedSenderPubKey = confidentialData.getEncryptedSenderPubKey();
+        byte[] hmac = confidentialData.getHmac();
         byte[] iv = confidentialData.getIv();
-        byte[] encryptedMessage = confidentialData.getCypherText();
+        byte[] cypherText = confidentialData.getCypherText();
         byte[] signature = confidentialData.getSignature();
 
         KeyPair fakeKeyPair = KeyGeneration.generateKeyPair();
-        byte[] bitStream = ByteArrayUtils.concat(hmac, encryptedMessage);
+        byte[] bitStream = ByteArrayUtils.concat(hmac, cypherText);
         byte[] fakeSignature = SignatureUtil.sign(bitStream, fakeKeyPair.getPrivate());
-        ConfidentialData withFakeSigAndPubKey = new ConfidentialData(senderPublicKey.getEncoded(), hmac, iv, encryptedMessage, fakeSignature);
+        ConfidentialData withFakeSigAndPubKey = new ConfidentialData(encryptedSessionKey, encryptedHmacKey, encryptedSenderPubKey, hmac, iv, cypherText, fakeSignature);
         try {
             // Expect to fail as pub key in method call not matching the one in sealed data
             HybridEncryption.decryptAndVerify(withFakeSigAndPubKey, keyPairReceiver);
@@ -60,7 +62,7 @@ public class TestHybridEncryption {
 
         // fake sig or fake signed message throw SignatureException
         try {
-            ConfidentialData withFakeSig = new ConfidentialData(senderPublicKey.getEncoded(), hmac, iv, encryptedMessage, "signature".getBytes());
+            ConfidentialData withFakeSig = new ConfidentialData(encryptedSessionKey, encryptedHmacKey, encryptedSenderPubKey, hmac, iv, cypherText, "signature".getBytes());
             HybridEncryption.decryptAndVerify(withFakeSig, keyPairReceiver);
             fail();
         } catch (Throwable e) {
@@ -69,20 +71,20 @@ public class TestHybridEncryption {
 
         // fake iv
         try {
-            ConfidentialData withFakeSig = new ConfidentialData(senderPublicKey.getEncoded(), hmac, "iv".getBytes(), encryptedMessage, signature);
-            HybridEncryption.decryptAndVerify(withFakeSig, keyPairReceiver);
+            ConfidentialData withFakeIv = new ConfidentialData(encryptedSessionKey, encryptedHmacKey, encryptedSenderPubKey, hmac, "iv".getBytes(), cypherText, signature);
+            HybridEncryption.decryptAndVerify(withFakeIv, keyPairReceiver);
             fail();
         } catch (Throwable e) {
-            assertTrue(e instanceof IllegalArgumentException);
+            assertTrue(e instanceof InvalidAlgorithmParameterException);
         }
 
         // fake hmac
         try {
-            ConfidentialData withFakeSig = new ConfidentialData(senderPublicKey.getEncoded(), "hmac".getBytes(), iv, encryptedMessage, signature);
-            HybridEncryption.decryptAndVerify(withFakeSig, keyPairReceiver);
+            ConfidentialData withFakeHmac = new ConfidentialData(encryptedSessionKey, encryptedHmacKey, encryptedSenderPubKey, "hmac".getBytes(), iv, cypherText, signature);
+            HybridEncryption.decryptAndVerify(withFakeHmac, keyPairReceiver);
             fail();
         } catch (Throwable e) {
             assertTrue(e instanceof IllegalArgumentException);
-        }*/
+        }
     }
 }
