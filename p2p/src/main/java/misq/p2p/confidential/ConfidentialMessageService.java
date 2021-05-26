@@ -19,10 +19,12 @@ package misq.p2p.confidential;
 
 import lombok.extern.slf4j.Slf4j;
 import misq.common.security.ConfidentialData;
+import misq.common.security.DigestUtil;
 import misq.common.security.HybridEncryption;
 import misq.common.util.CollectionUtil;
 import misq.common.util.ObjectSerializer;
 import misq.p2p.Address;
+import misq.p2p.KeyPairRepository;
 import misq.p2p.NetworkType;
 import misq.p2p.message.Message;
 import misq.p2p.node.Connection;
@@ -36,7 +38,6 @@ import java.security.PublicKey;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CopyOnWriteArraySet;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -44,12 +45,12 @@ public class ConfidentialMessageService implements MessageListener {
     private final Node node;
     private final PeerGroup peerGroup;
     private final Set<MessageListener> messageListeners = new CopyOnWriteArraySet<>();
-    private final Function<PublicKey, KeyPair> keyPairSupplier;
+    private final KeyPairRepository keyPairRepository;
 
-    public ConfidentialMessageService(Node node, PeerGroup peerGroup, Function<PublicKey, KeyPair> keyPairSupplier) {
+    public ConfidentialMessageService(Node node, PeerGroup peerGroup, KeyPairRepository keyPairRepository) {
         this.node = node;
         this.peerGroup = peerGroup;
-        this.keyPairSupplier = keyPairSupplier;
+        this.keyPairRepository = keyPairRepository;
 
         node.addMessageListener(this);
     }
@@ -67,16 +68,17 @@ public class ConfidentialMessageService implements MessageListener {
                 Address targetAddress = relayMessage.getTargetAddress();
                 // send(message, targetAddress);
             } else {
-                try {
-                    ConfidentialData confidentialData = confidentialMessage.getConfidentialData();
-                    KeyPair receiversKeyPair = keyPairSupplier.apply(confidentialMessage.getReceiversPublicKey());
-                    PublicKey sendersPublicKey = confidentialMessage.getSendersPublicKey();
-                    byte[] decrypted = HybridEncryption.decrypt(confidentialData, receiversKeyPair, sendersPublicKey);
-                    Message decryptedMessage = (Message) ObjectSerializer.deserialize(decrypted);
-                    messageListeners.forEach(listener -> listener.onMessage(decryptedMessage, connection));
-                } catch (GeneralSecurityException e) {
-                    e.printStackTrace();
-                }
+                ConfidentialData confidentialData = confidentialMessage.getConfidentialData();
+                byte[] hashOfReceiversPublicKey = confidentialMessage.getHashOfReceiversPublicKey();
+                keyPairRepository.findKeyPair(hashOfReceiversPublicKey).ifPresent(receiversKeyPair -> {
+                    try {
+                        byte[] decrypted = HybridEncryption.decryptAndVerify(confidentialData, receiversKeyPair);
+                        Message decryptedMessage = (Message) ObjectSerializer.deserialize(decrypted);
+                        messageListeners.forEach(listener -> listener.onMessage(decryptedMessage, connection));
+                    } catch (GeneralSecurityException e) {
+                        e.printStackTrace();
+                    }
+                });
             }
         }
     }
@@ -84,16 +86,16 @@ public class ConfidentialMessageService implements MessageListener {
     public CompletableFuture<Connection> send(Message message, Address peerAddress,
                                               PublicKey peersPublicKey, KeyPair myKeyPair)
             throws GeneralSecurityException {
-        ConfidentialData confidentialData = HybridEncryption.encrypt(message.serialize(), peersPublicKey, myKeyPair);
-        ConfidentialMessage confidentialMessage = new ConfidentialMessage(confidentialData, myKeyPair.getPublic(), peersPublicKey);
+        ConfidentialData confidentialData = HybridEncryption.encryptAndSign(message.serialize(), peersPublicKey, myKeyPair);
+        ConfidentialMessage confidentialMessage = new ConfidentialMessage(confidentialData, DigestUtil.hash(peersPublicKey.getEncoded()));
         return node.send(confidentialMessage, peerAddress);
     }
 
     public CompletableFuture<Connection> send(Message message, Connection connection,
                                               PublicKey peersPublicKey, KeyPair myKeyPair)
             throws GeneralSecurityException {
-        ConfidentialData confidentialData = HybridEncryption.encrypt(message.serialize(), peersPublicKey, myKeyPair);
-        ConfidentialMessage confidentialMessage = new ConfidentialMessage(confidentialData, myKeyPair.getPublic(), peersPublicKey);
+        ConfidentialData confidentialData = HybridEncryption.encryptAndSign(message.serialize(), peersPublicKey, myKeyPair);
+        ConfidentialMessage confidentialMessage = new ConfidentialMessage(confidentialData, DigestUtil.hash(peersPublicKey.getEncoded()));
         return node.send(confidentialMessage, connection);
     }
 

@@ -26,15 +26,24 @@ import java.io.Serializable;
 @EqualsAndHashCode
 @Getter
 public class ConfidentialData implements Serializable {
+    private final byte[] encryptedSessionKey;
+    private final byte[] encryptedHmacKey;
+    private final byte[] encryptedSenderPubKey;
     private final byte[] hmac;// 32 bytes
     private final byte[] iv; //16 bytes
     private final byte[] cypherText;
     private final byte[] signature;// 71-73 bytes
 
-    ConfidentialData(byte[] hmac,
+    ConfidentialData(byte[] encryptedSessionKey,
+                     byte[] encryptedHmacKey,
+                     byte[] encryptedSenderPubKey,
+                     byte[] hmac,
                      byte[] iv,
                      byte[] cypherText,
                      byte[] signature) {
+        this.encryptedSessionKey = encryptedSessionKey;
+        this.encryptedHmacKey = encryptedHmacKey;
+        this.encryptedSenderPubKey = encryptedSenderPubKey;
         this.hmac = hmac;
         this.iv = iv;
         this.cypherText = cypherText;

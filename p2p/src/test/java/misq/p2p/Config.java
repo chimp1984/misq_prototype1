@@ -24,10 +24,6 @@ import misq.common.util.OsUtils;
 
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
-import java.security.PublicKey;
-import java.util.function.Function;
-
-import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 public abstract class Config {
@@ -50,35 +46,10 @@ public abstract class Config {
         Carol
     }
 
-
-    final static Function<PublicKey, KeyPair> aliceKeyPairSupplier1 = new Function<>() {
-        @Override
-        public KeyPair apply(PublicKey publicKey) {
-            checkArgument(publicKey.equals(keyPairAlice1.getPublic()));
-            return keyPairAlice1;
-        }
-    };
-    final static Function<PublicKey, KeyPair> bobKeyPairSupplier1 = new Function<>() {
-        @Override
-        public KeyPair apply(PublicKey publicKey) {
-            checkArgument(publicKey.equals(keyPairBob1.getPublic()));
-            return keyPairBob1;
-        }
-    };
-    final static Function<PublicKey, KeyPair> aliceKeyPairSupplier2 = new Function<>() {
-        @Override
-        public KeyPair apply(PublicKey publicKey) {
-            checkArgument(publicKey.equals(keyPairAlice2.getPublic()));
-            return keyPairAlice2;
-        }
-    };
-    final static Function<PublicKey, KeyPair> bobKeyPairSupplier2 = new Function<>() {
-        @Override
-        public KeyPair apply(PublicKey publicKey) {
-            checkArgument(publicKey.equals(keyPairBob2.getPublic()));
-            return keyPairBob2;
-        }
-    };
+    final static KeyPairRepository aliceKeyPairSupplier1 = new KeyPairRepository(keyPairAlice1);
+    final static KeyPairRepository aliceKeyPairSupplier2 = new KeyPairRepository(keyPairAlice2);
+    final static KeyPairRepository bobKeyPairSupplier1 = new KeyPairRepository(keyPairBob1);
+    final static KeyPairRepository bobKeyPairSupplier2 = new KeyPairRepository(keyPairBob2);
 
     static NetworkConfig getI2pNetworkConfig(Role role) {
         // Session in I2P need to be unique even if we use 2 diff SAM instances. So we add role name to default server id.

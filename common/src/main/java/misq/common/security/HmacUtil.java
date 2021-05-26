@@ -28,14 +28,14 @@ import java.util.Arrays;
 class HmacUtil {
     public static final String HMAC = "HmacSHA256";
 
-    static boolean verifyHmac(byte[] message, byte[] hmac, SecretKey secretKey) throws GeneralSecurityException {
-        byte[] hmacTest = createHmac(message, secretKey);
+    static boolean verifyHmac(byte[] input, SecretKey secretKey, byte[] hmac) throws GeneralSecurityException {
+        byte[] hmacTest = createHmac(input, secretKey);
         return Arrays.equals(hmacTest, hmac);
     }
 
-    static byte[] createHmac(byte[] data, SecretKey secretKey) throws GeneralSecurityException {
+    static byte[] createHmac(byte[] input, SecretKey secretKey) throws GeneralSecurityException {
         Mac mac = Mac.getInstance(HMAC);
         mac.init(secretKey);
-        return mac.doFinal(data);
+        return mac.doFinal(input);
     }
 }

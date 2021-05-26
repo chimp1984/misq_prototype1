@@ -42,8 +42,6 @@ import java.security.KeyPair;
 import java.security.PublicKey;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
-import java.util.function.Function;
-
 /**
  * High level API for the p2p network.
  */
@@ -52,16 +50,16 @@ public class P2pNode {
 
     private final NetworkConfig networkConfig;
     private final Storage storage;
-    private final Function<PublicKey, KeyPair> keyPairSupplier;
+    private final KeyPairRepository keyPairRepository;
     private final PeerManager peerManager;
     private final Node node;
     private final ConfidentialMessageService confidentialMessageService;
     private final DataService dataService;
 
-    public P2pNode(NetworkConfig networkConfig, Storage storage, Function<PublicKey, KeyPair> keyPairSupplier) {
+    public P2pNode(NetworkConfig networkConfig, Storage storage, KeyPairRepository keyPairRepository) {
         this.networkConfig = networkConfig;
         this.storage = storage;
-        this.keyPairSupplier = keyPairSupplier;
+        this.keyPairRepository = keyPairRepository;
 
         node = new Node(networkConfig);
 
@@ -71,7 +69,7 @@ public class P2pNode {
         DefaultPeerExchangeStrategy peerExchangeStrategy = new DefaultPeerExchangeStrategy(peerGroup, peerConfig);
         peerManager = new PeerManager(node, peerGroup, peerExchangeStrategy, peerConfig);
 
-        confidentialMessageService = new ConfidentialMessageService(node, peerGroup, keyPairSupplier);
+        confidentialMessageService = new ConfidentialMessageService(node, peerGroup, keyPairRepository);
 
         dataService = new DataService(node, peerGroup, storage);
     }

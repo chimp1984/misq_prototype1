@@ -57,10 +57,9 @@ public class MailboxData extends AuthenticatedData {
         this.receiversPubKey = receiversPubKey;
     }
 
-
     @Override
     public String toString() {
-        return "MailboxEntry{" +
+        return "MailboxData{" +
                 "\n     receiversPubKeyBytes=" + Hex.encode(receiversPubKeyBytes) +
                 ",\n     hashOfReceiversPublicKey=" + Hex.encode(hashOfReceiversPublicKey) +
                 "\n} " + super.toString();

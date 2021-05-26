@@ -19,7 +19,9 @@ package misq.p2p.data.storage.mailbox;
 
 import lombok.extern.slf4j.Slf4j;
 import misq.common.security.DigestUtil;
+import misq.common.security.HybridEncryption;
 import misq.common.security.KeyGeneration;
+import misq.common.util.ObjectSerializer;
 import misq.common.util.OsUtils;
 import misq.p2p.data.filter.FilterItem;
 import misq.p2p.data.filter.ProtectedDataFilter;
@@ -37,6 +39,8 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.*;
 
@@ -45,7 +49,7 @@ public class MailboxStoreTest {
     private String appDirPath = OsUtils.getUserDataDir() + File.separator + "misq_StorageTest";
 
     @Test
-    public void testAddAndRemoveMailboxMsg() throws GeneralSecurityException, IOException {
+    public void testAddAndRemoveMailboxMsg() throws GeneralSecurityException, IOException, InterruptedException {
         MockMailboxMessage message = new MockMailboxMessage("test" + UUID.randomUUID().toString());
         MailboxDataStore store = new MailboxDataStore(appDirPath, message.getMetaData());
         KeyPair senderKeyPair = KeyGeneration.generateKeyPair();
@@ -57,9 +61,46 @@ public class MailboxStoreTest {
         byte[] hash = DigestUtil.hash(payload.serialize());
         int initialSeqNum = store.getSequenceNumber(hash);
 
+        CountDownLatch addLatch = new CountDownLatch(1);
+        CountDownLatch removeLatch = new CountDownLatch(1);
+        store.addListener(new MailboxDataStore.Listener() {
+            @Override
+            public void onAdded(MailboxPayload mailboxPayload) {
+                assertEquals(payload, mailboxPayload);
+                try {
+                    byte[] decrypted = HybridEncryption.decryptAndVerify(mailboxPayload.getConfidentialData(), receiverKeyPair);
+                    Object decryptedMessage = ObjectSerializer.deserialize(decrypted);
+                    MockMailboxMessage message2 = (MockMailboxMessage) decryptedMessage;
+                    assertEquals(message, message2);
+                    assertEquals(message, message2);
+                } catch (GeneralSecurityException e) {
+                    e.printStackTrace();
+                    fail();
+                }
+                addLatch.countDown();
+            }
+
+            @Override
+            public void onRemoved(MailboxPayload mailboxPayload) {
+                assertEquals(payload, mailboxPayload);
+                try {
+                    byte[] decrypted = HybridEncryption.decryptAndVerify(mailboxPayload.getConfidentialData(), receiverKeyPair);
+                    Object decryptedMessage = ObjectSerializer.deserialize(decrypted);
+                    MockMailboxMessage message2 = (MockMailboxMessage) decryptedMessage;
+                    assertEquals(message, message2);
+                    assertEquals(message, message2);
+                } catch (GeneralSecurityException e) {
+                    e.printStackTrace();
+                    fail();
+                }
+                removeLatch.countDown();
+            }
+        });
+
         AddMailboxRequest request = AddMailboxRequest.from(store, payload, senderKeyPair, receiverKeyPair.getPublic());
         Result result = store.add(request);
         assertTrue(result.isSuccess());
+        addLatch.await(1, TimeUnit.SECONDS);
 
         MapKey mapKey = new MapKey(hash);
         AddMailboxRequest addRequestFromMap = (AddMailboxRequest) map.get(mapKey);
@@ -82,6 +123,8 @@ public class MailboxStoreTest {
         RemoveMailboxRequest removeMailboxRequest = RemoveMailboxRequest.from(payload, receiverKeyPair);
 
         Result removeDataResult = store.remove(removeMailboxRequest);
+        removeLatch.await(1, TimeUnit.SECONDS);
+
         log.error(removeDataResult.toString());
         assertTrue(removeDataResult.isSuccess());
 

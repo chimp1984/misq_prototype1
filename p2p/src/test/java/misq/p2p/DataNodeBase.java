@@ -56,7 +56,7 @@ public class DataNodeBase {
 
 
     protected CompletableFuture<P2pService> getP2pServiceFuture(Set<NetworkConfig> networkConfigs) {
-        P2pService p2pService = new P2pService(networkConfigs, k -> null);
+        P2pService p2pService = new P2pService(networkConfigs, null);
         return p2pService.bootstrap().thenApply(result -> p2pService);
     }
 }

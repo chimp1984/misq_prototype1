@@ -38,7 +38,7 @@ public class MailboxPayload implements AuthenticatedPayload {
                                                       KeyPair senderKeyPair,
                                                       PublicKey receiverPublicKey)
             throws GeneralSecurityException {
-        ConfidentialData confidentialData = HybridEncryption.encrypt(mailboxMessage.serialize(), receiverPublicKey, senderKeyPair);
+        ConfidentialData confidentialData = HybridEncryption.encryptAndSign(mailboxMessage.serialize(), receiverPublicKey, senderKeyPair);
         return new MailboxPayload(confidentialData, mailboxMessage.getMetaData());
     }
 
@@ -63,8 +63,8 @@ public class MailboxPayload implements AuthenticatedPayload {
 
     @Override
     public String toString() {
-        return "SealedData{" +
-                "\n     sealed=" + confidentialData +
+        return "MailboxPayload{" +
+                "\n     confidentialData=" + confidentialData +
                 ",\n     metaData='" + metaData + '\'' +
                 "\n}";
     }

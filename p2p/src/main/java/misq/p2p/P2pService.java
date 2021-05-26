@@ -39,7 +39,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -50,11 +49,11 @@ public class P2pService {
 
     private final Map<NetworkType, P2pNode> p2pNodes = new ConcurrentHashMap<>();
 
-    public P2pService(Set<NetworkConfig> networkConfigs, Function<PublicKey, KeyPair> keyPairSupplier) {
+    public P2pService(Set<NetworkConfig> networkConfigs, KeyPairRepository keyPairRepository) {
         Storage storage = new Storage("");//todo
         networkConfigs.forEach(networkConfig -> {
             NetworkType networkType = networkConfig.getNetworkType();
-            P2pNode p2pNode = new P2pNode(networkConfig, storage, keyPairSupplier);
+            P2pNode p2pNode = new P2pNode(networkConfig, storage, keyPairRepository);
             p2pNodes.put(networkType, p2pNode);
         });
     }

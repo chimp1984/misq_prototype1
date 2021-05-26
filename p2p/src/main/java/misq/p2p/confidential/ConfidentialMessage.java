@@ -22,22 +22,17 @@ import lombok.Getter;
 import misq.common.security.ConfidentialData;
 import misq.p2p.message.Message;
 
-import java.security.PublicKey;
-
 @EqualsAndHashCode
 @Getter
 public class ConfidentialMessage implements Message {
     private final ConfidentialData confidentialData;
-    private final PublicKey sendersPublicKey;
     // We support multiple key pairs, so receiver need to know which key is associated to message
-    private final PublicKey receiversPublicKey;
+    private final byte[] hashOfReceiversPublicKey;
 
-    public ConfidentialMessage(ConfidentialData confidentialData, PublicKey sendersPublicKey, PublicKey receiversPublicKey) {
+    public ConfidentialMessage(ConfidentialData confidentialData, byte[] hashOfReceiversPublicKey) {
         this.confidentialData = confidentialData;
-        this.sendersPublicKey = sendersPublicKey;
-        this.receiversPublicKey = receiversPublicKey;
+        this.hashOfReceiversPublicKey = hashOfReceiversPublicKey;
     }
-
 
     @Override
     public String toString() {
