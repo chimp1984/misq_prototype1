@@ -21,7 +21,10 @@ import lombok.extern.slf4j.Slf4j;
 import misq.common.util.ByteArrayUtils;
 import org.junit.Test;
 
-import java.security.*;
+import java.security.GeneralSecurityException;
+import java.security.KeyPair;
+import java.security.PublicKey;
+import java.security.SignatureException;
 
 import static org.junit.Assert.*;
 
@@ -40,9 +43,7 @@ public class HybridEncryptionTest {
         assertArrayEquals(message, decrypted);
 
         // failure cases
-        byte[] encryptedSessionKey = confidentialData.getEncryptedSessionKey();
-        byte[] encryptedHmacKey = confidentialData.getEncryptedHmacKey();
-        byte[] encryptedSenderPubKey = confidentialData.getEncryptedSenderPubKey();
+        byte[] encodedSenderPublicKey = confidentialData.getEncodedSenderPublicKey();
         byte[] hmac = confidentialData.getHmac();
         byte[] iv = confidentialData.getIv();
         byte[] cypherText = confidentialData.getCypherText();
@@ -51,7 +52,7 @@ public class HybridEncryptionTest {
         KeyPair fakeKeyPair = KeyGeneration.generateKeyPair();
         byte[] bitStream = ByteArrayUtils.concat(hmac, cypherText);
         byte[] fakeSignature = SignatureUtil.sign(bitStream, fakeKeyPair.getPrivate());
-        ConfidentialData withFakeSigAndPubKey = new ConfidentialData(encryptedSessionKey, encryptedHmacKey, encryptedSenderPubKey, hmac, iv, cypherText, fakeSignature);
+        ConfidentialData withFakeSigAndPubKey = new ConfidentialData(encodedSenderPublicKey, hmac, iv, cypherText, fakeSignature);
         try {
             // Expect to fail as pub key in method call not matching the one in sealed data
             HybridEncryption.decryptAndVerify(withFakeSigAndPubKey, keyPairReceiver);
@@ -62,7 +63,7 @@ public class HybridEncryptionTest {
 
         // fake sig or fake signed message throw SignatureException
         try {
-            ConfidentialData withFakeSig = new ConfidentialData(encryptedSessionKey, encryptedHmacKey, encryptedSenderPubKey, hmac, iv, cypherText, "signature".getBytes());
+            ConfidentialData withFakeSig = new ConfidentialData(encodedSenderPublicKey, hmac, iv, cypherText, "signature".getBytes());
             HybridEncryption.decryptAndVerify(withFakeSig, keyPairReceiver);
             fail();
         } catch (Throwable e) {
@@ -71,16 +72,16 @@ public class HybridEncryptionTest {
 
         // fake iv
         try {
-            ConfidentialData withFakeIv = new ConfidentialData(encryptedSessionKey, encryptedHmacKey, encryptedSenderPubKey, hmac, "iv".getBytes(), cypherText, signature);
+            ConfidentialData withFakeIv = new ConfidentialData(encodedSenderPublicKey, hmac, "iv".getBytes(), cypherText, signature);
             HybridEncryption.decryptAndVerify(withFakeIv, keyPairReceiver);
             fail();
         } catch (Throwable e) {
-            assertTrue(e instanceof InvalidAlgorithmParameterException);
+            assertTrue(e instanceof IllegalArgumentException);
         }
 
         // fake hmac
         try {
-            ConfidentialData withFakeHmac = new ConfidentialData(encryptedSessionKey, encryptedHmacKey, encryptedSenderPubKey, "hmac".getBytes(), iv, cypherText, signature);
+            ConfidentialData withFakeHmac = new ConfidentialData(encodedSenderPublicKey, "hmac".getBytes(), iv, cypherText, signature);
             HybridEncryption.decryptAndVerify(withFakeHmac, keyPairReceiver);
             fail();
         } catch (Throwable e) {

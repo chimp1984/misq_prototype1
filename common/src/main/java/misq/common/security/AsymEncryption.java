@@ -43,7 +43,10 @@ public class AsymEncryption {
         ECPublicKeySpec spec = new ECPublicKeySpec(publicKey.getW(), publicKey.getParams());
         // todo find cipher which is supported. "EC" oe "ECDH" are not found. ECIES would require IES params
         // NullCipher is just a dummy doing nothing...
-        Cipher cipher = new NullCipher();
+        // Cipher cipher = new NullCipher();
+        Cipher cipher = Cipher.getInstance("ECDHE-RSA-AES256-GCM-SHA384");
+        // Cipher cipher = Cipher.getInstance("ECDHE");
+
         cipher.init(Cipher.ENCRYPT_MODE, publicKey, spec.getParams());
         return cipher.doFinal(message);
     }
