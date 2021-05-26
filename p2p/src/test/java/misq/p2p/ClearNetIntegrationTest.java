@@ -60,7 +60,7 @@ public class ClearNetIntegrationTest extends BaseTest {
         bob.shutdown();
     }
 
-    @Test
+   @Test
     public void testStartOfMultipleIds() throws InterruptedException {
         NetworkType networkType = NetworkType.CLEAR;
         Set<NetworkType> mySupportedNetworks = getMySupportedNetworks();

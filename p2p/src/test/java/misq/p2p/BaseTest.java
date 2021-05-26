@@ -92,7 +92,8 @@ public abstract class BaseTest {
         CountDownLatch sentLatch = new CountDownLatch(1);
 
         Address peerAddress = getPeerAddress(Config.Role.Bob);
-        alice.confidentialSend(new MockMessage(msg), peerAddress, Config.keyPairBob1.getPublic(), Config.keyPairAlice1)
+        NetworkPeer networkPeer = new NetworkPeer(peerAddress, Config.keyPairBob1.getPublic(), "default");
+        alice.confidentialSend(new MockMessage(msg), networkPeer, Config.keyPairAlice1)
                 .whenComplete((connection, throwable) -> {
                     if (connection != null) {
                         sentLatch.countDown();
@@ -241,31 +242,8 @@ public abstract class BaseTest {
         });
 
         CountDownLatch sentLatch = new CountDownLatch(8);
-        alice1.confidentialSend(new MockMessage(alice1ToBob1Msg), bob1Address, Config.keyPairBob1.getPublic(), Config.keyPairAlice1)
-                .whenComplete((connection, throwable) -> {
-                    if (connection != null) {
-                        sentLatch.countDown();
-                    } else {
-                        fail();
-                    }
-                });
-        alice1.confidentialSend(new MockMessage(alice1ToBob2Msg), bob2Address, Config.keyPairBob2.getPublic(), Config.keyPairAlice1)
-                .whenComplete((connection, throwable) -> {
-                    if (connection != null) {
-                        sentLatch.countDown();
-                    } else {
-                        fail();
-                    }
-                });
-        alice2.confidentialSend(new MockMessage(alice2ToBob1Msg), bob1Address, Config.keyPairBob1.getPublic(), Config.keyPairAlice2)
-                .whenComplete((connection, throwable) -> {
-                    if (connection != null) {
-                        sentLatch.countDown();
-                    } else {
-                        fail();
-                    }
-                });
-        alice2.confidentialSend(new MockMessage(alice2ToBob2Msg), bob2Address, Config.keyPairBob2.getPublic(), Config.keyPairAlice2)
+        NetworkPeer bob1NetworkPeer = new NetworkPeer(bob1Address, Config.keyPairBob1.getPublic(), "default");
+        alice1.confidentialSend(new MockMessage(alice1ToBob1Msg), bob1NetworkPeer, Config.keyPairAlice1)
                 .whenComplete((connection, throwable) -> {
                     if (connection != null) {
                         sentLatch.countDown();
@@ -274,7 +252,8 @@ public abstract class BaseTest {
                     }
                 });
 
-        bob1.confidentialSend(new MockMessage(bob1ToAlice1Msg), alive1Address, Config.keyPairAlice1.getPublic(), Config.keyPairBob1)
+        NetworkPeer bob2NetworkPeer = new NetworkPeer(bob2Address, Config.keyPairBob2.getPublic(), "default");
+        alice1.confidentialSend(new MockMessage(alice1ToBob2Msg), bob2NetworkPeer, Config.keyPairAlice1)
                 .whenComplete((connection, throwable) -> {
                     if (connection != null) {
                         sentLatch.countDown();
@@ -282,7 +261,8 @@ public abstract class BaseTest {
                         fail();
                     }
                 });
-        bob1.confidentialSend(new MockMessage(bob1ToAlice2Msg), alive2Address, Config.keyPairAlice2.getPublic(), Config.keyPairBob1)
+
+        alice2.confidentialSend(new MockMessage(alice2ToBob1Msg), bob1NetworkPeer, Config.keyPairAlice2)
                 .whenComplete((connection, throwable) -> {
                     if (connection != null) {
                         sentLatch.countDown();
@@ -290,7 +270,7 @@ public abstract class BaseTest {
                         fail();
                     }
                 });
-        bob2.confidentialSend(new MockMessage(bob2ToAlice1Msg), alive1Address, Config.keyPairAlice1.getPublic(), Config.keyPairBob2)
+        alice2.confidentialSend(new MockMessage(alice2ToBob2Msg), bob2NetworkPeer, Config.keyPairAlice2)
                 .whenComplete((connection, throwable) -> {
                     if (connection != null) {
                         sentLatch.countDown();
@@ -298,7 +278,34 @@ public abstract class BaseTest {
                         fail();
                     }
                 });
-        bob2.confidentialSend(new MockMessage(bob2ToAlice2Msg), alive2Address, Config.keyPairAlice2.getPublic(), Config.keyPairBob2)
+
+        NetworkPeer alive1NetworkPeer = new NetworkPeer(alive1Address, Config.keyPairAlice1.getPublic(), "default");
+        bob1.confidentialSend(new MockMessage(bob1ToAlice1Msg), alive1NetworkPeer, Config.keyPairBob1)
+                .whenComplete((connection, throwable) -> {
+                    if (connection != null) {
+                        sentLatch.countDown();
+                    } else {
+                        fail();
+                    }
+                });
+        NetworkPeer alive2NetworkPeer = new NetworkPeer(alive2Address, Config.keyPairAlice2.getPublic(), "default");
+        bob1.confidentialSend(new MockMessage(bob1ToAlice2Msg), alive2NetworkPeer, Config.keyPairBob1)
+                .whenComplete((connection, throwable) -> {
+                    if (connection != null) {
+                        sentLatch.countDown();
+                    } else {
+                        fail();
+                    }
+                });
+        bob2.confidentialSend(new MockMessage(bob2ToAlice1Msg), alive1NetworkPeer, Config.keyPairBob2)
+                .whenComplete((connection, throwable) -> {
+                    if (connection != null) {
+                        sentLatch.countDown();
+                    } else {
+                        fail();
+                    }
+                });
+        bob2.confidentialSend(new MockMessage(bob2ToAlice2Msg), alive2NetworkPeer, Config.keyPairBob2)
                 .whenComplete((connection, throwable) -> {
                     if (connection != null) {
                         sentLatch.countDown();

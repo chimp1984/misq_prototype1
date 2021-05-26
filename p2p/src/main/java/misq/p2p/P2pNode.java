@@ -39,9 +39,9 @@ import org.slf4j.LoggerFactory;
 
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
-import java.security.PublicKey;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+
 /**
  * High level API for the p2p network.
  */
@@ -62,7 +62,6 @@ public class P2pNode {
         this.keyPairRepository = keyPairRepository;
 
         node = new Node(networkConfig);
-
 
         PeerConfig peerConfig = networkConfig.getPeerConfig();
         PeerGroup peerGroup = new PeerGroup(node, peerConfig, networkConfig.getNodeId().getServerPort());
@@ -87,14 +86,13 @@ public class P2pNode {
         return peerManager.bootstrap(networkConfig.getNodeId().getId(), networkConfig.getNodeId().getServerPort());
     }
 
-    public CompletableFuture<Connection> confidentialSend(Message message, Address peerAddress,
-                                                          PublicKey peersPublicKey, KeyPair myKeyPair)
+    public CompletableFuture<Connection> confidentialSend(Message message, NetworkPeer networkPeer, KeyPair myKeyPair)
             throws GeneralSecurityException {
-        return confidentialMessageService.send(message, peerAddress, peersPublicKey, myKeyPair);
+        return confidentialMessageService.send(message, networkPeer, myKeyPair);
     }
 
-    public CompletableFuture<Connection> relay(Message message, Address peerAddress) {
-        return confidentialMessageService.relay(message, peerAddress);
+    public CompletableFuture<Connection> relay(Message message, NetworkPeer networkPeer, KeyPair myKeyPair) {
+        return confidentialMessageService.relay(message, networkPeer, myKeyPair);
     }
 
     public CompletableFuture<GossipResult> requestAddData(Message message) {
@@ -133,5 +131,9 @@ public class P2pNode {
     @VisibleForTesting
     public PeerManager getPeerManager() {
         return peerManager;
+    }
+
+    public NetworkType getNetworkType() {
+        return networkConfig.getNetworkType();
     }
 }

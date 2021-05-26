@@ -20,6 +20,7 @@ package misq.p2p.node;
 
 import misq.p2p.Address;
 import misq.p2p.NetworkConfig;
+import misq.p2p.NetworkType;
 import misq.p2p.message.Message;
 import misq.p2p.node.protection.GuardedMessage;
 import misq.p2p.node.protection.NoRestriction;
@@ -51,11 +52,13 @@ public class Node implements MessageListener, ConnectionListener {
     private final Set<MessageListener> messageListeners = new CopyOnWriteArraySet<>();
     private final Set<ConnectionListener> connectionListeners = new CopyOnWriteArraySet<>();
     private final BaseNode baseNode;
+    private final NetworkConfig networkConfig;
     private final Object isStoppedLock = new Object();
     private volatile boolean isStopped;
 
     public Node(NetworkConfig networkConfig) {
         baseNode = new BaseNode(networkConfig, this);
+        this.networkConfig = networkConfig;
         permissionControl = new NoRestriction();
 
         baseNode.addConnectionListener(this);
@@ -164,5 +167,9 @@ public class Node implements MessageListener, ConnectionListener {
 
     public Optional<Connection> findConnection(Address peerAddress) {
         return baseNode.findConnection(peerAddress);
+    }
+
+    public NetworkType getNetworkType() {
+        return networkConfig.getNetworkType();
     }
 }

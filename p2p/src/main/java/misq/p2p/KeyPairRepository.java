@@ -17,9 +17,6 @@
 
 package misq.p2p;
 
-import misq.common.security.DigestUtil;
-import misq.p2p.data.storage.MapKey;
-
 import java.security.KeyPair;
 import java.util.Map;
 import java.util.Optional;
@@ -28,22 +25,20 @@ import java.util.concurrent.ConcurrentHashMap;
 import static com.google.common.base.Preconditions.checkArgument;
 
 public class KeyPairRepository {
-    private final Map<MapKey, KeyPair> keyPairsByPubKeyHash = new ConcurrentHashMap<>();
+    private final Map<String, KeyPair> keyPairsByPubKeyHash = new ConcurrentHashMap<>();
 
     public KeyPairRepository(KeyPair keyPair) {
-        add(keyPair);
+        add(keyPair, "default");
     }
 
-    public void add(KeyPair keyPair) {
-        MapKey key = new MapKey(DigestUtil.hash(keyPair.getPublic().getEncoded()));
-        checkArgument(!keyPairsByPubKeyHash.containsKey(key));
-        keyPairsByPubKeyHash.put(key, keyPair);
+    public void add(KeyPair keyPair, String tag) {
+        checkArgument(!keyPairsByPubKeyHash.containsKey(tag));
+        keyPairsByPubKeyHash.put(tag, keyPair);
     }
 
-    public Optional<KeyPair> findKeyPair(byte[] hashOfPublicKey) {
-        MapKey key = new MapKey(hashOfPublicKey);
-        if (keyPairsByPubKeyHash.containsKey(key)) {
-            return Optional.of(keyPairsByPubKeyHash.get(key));
+    public Optional<KeyPair> findKeyPair(String tag) {
+        if (keyPairsByPubKeyHash.containsKey(tag)) {
+            return Optional.of(keyPairsByPubKeyHash.get(tag));
         } else {
             return Optional.empty();
         }

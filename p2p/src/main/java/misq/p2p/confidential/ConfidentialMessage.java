@@ -26,18 +26,18 @@ import misq.p2p.message.Message;
 @Getter
 public class ConfidentialMessage implements Message {
     private final ConfidentialData confidentialData;
-    // We support multiple key pairs, so receiver need to know which key is associated to message
-    private final byte[] hashOfReceiversPublicKey;
+    private final String tag;
 
-    public ConfidentialMessage(ConfidentialData confidentialData, byte[] hashOfReceiversPublicKey) {
+    public ConfidentialMessage(ConfidentialData confidentialData, String tag) {
         this.confidentialData = confidentialData;
-        this.hashOfReceiversPublicKey = hashOfReceiversPublicKey;
+        this.tag = tag;
     }
 
     @Override
     public String toString() {
         return "ConfidentialMessage{" +
                 "\n     sealed=" + confidentialData +
+                "\n     tag=" + tag +
                 "\n}";
     }
 }

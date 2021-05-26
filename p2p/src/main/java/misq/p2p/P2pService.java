@@ -32,7 +32,6 @@ import org.slf4j.LoggerFactory;
 
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
-import java.security.PublicKey;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
@@ -60,6 +59,7 @@ public class P2pService {
 
     public P2pService() {
     }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // API
@@ -110,15 +110,16 @@ public class P2pService {
                 .thenCompose(CompletableFuture::completedFuture);               // If at least one was successful we report a success
     }
 
-    public CompletableFuture<Connection> confidentialSend(Message message, Set<Address> peerAddresses,
-                                                          PublicKey peersPublicKey, KeyPair myKeyPair) {
+    public CompletableFuture<Connection> confidentialSend(Message message, NetworkPeer networkPeer, KeyPair myKeyPair) {
         CompletableFuture<Connection> future = new CompletableFuture<>();
-        peerAddresses.forEach(peerAddress -> {
+        Map<NetworkType, Address> addressByNetworkType = networkPeer.getAddressByNetworkType();
+        networkPeer.getAddressByNetworkType().entrySet().forEach(entry -> {
             try {
-                NetworkType networkType = peerAddress.getNetworkType();
+                NetworkType networkType = entry.getKey();
+                Address address = entry.getValue();
                 if (p2pNodes.containsKey(networkType)) {
                     p2pNodes.get(networkType)
-                            .confidentialSend(message, peerAddress, peersPublicKey, myKeyPair)
+                            .confidentialSend(message, networkPeer, myKeyPair)
                             .whenComplete((connection, throwable) -> {
                                 if (connection != null) {
                                     future.complete(connection);
@@ -129,7 +130,7 @@ public class P2pService {
                             });
                 } else {
                     p2pNodes.values().forEach(p2pNode -> {
-                        p2pNode.relay(message, peerAddress)
+                        p2pNode.relay(message, networkPeer, myKeyPair)
                                 .whenComplete((connection, throwable) -> {
                                     if (connection != null) {
                                         future.complete(connection);
