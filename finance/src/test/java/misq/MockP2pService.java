@@ -19,6 +19,7 @@ package misq;
 
 
 import misq.p2p.Address;
+import misq.p2p.NetworkPeer;
 import misq.p2p.NetworkType;
 import misq.p2p.P2pService;
 import misq.p2p.data.filter.DataFilter;
@@ -32,7 +33,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.security.KeyPair;
-import java.security.PublicKey;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -59,7 +59,7 @@ public class MockP2pService extends P2pService {
     }
 
     @Override
-    public CompletableFuture<Connection> confidentialSend(Message message, Set<Address> peerAddresses, PublicKey peersPublicKey, KeyPair myKeyPair) {
+    public CompletableFuture<Connection> confidentialSend(Message message, NetworkPeer networkPeer, KeyPair myKeyPair) {
         CompletableFuture<Connection> future = new CompletableFuture<>();
         new Thread(() -> {
             try {

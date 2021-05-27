@@ -1,6 +1,7 @@
 buildscript {
     repositories {
         jcenter()
+        mavenCentral()
     }
     dependencies {
         classpath 'com.google.protobuf:protobuf-gradle-plugin:0.8.10'
@@ -87,9 +88,12 @@ configure([project(':common'),
            project(':p2p'),
            project(':listing'),
            project(':finance'),
+           project(':i18n'),
+           project(':presentation'),
+           project(':jfx'),
+           project(':desktop'),
            project(':daemon'),
            project(':cli'),
-           project(':jfx'),
            project(':web'),
            project(':scripts')]) {
 
@@ -224,6 +228,66 @@ configure(project(':finance')) {
     }
 }
 
+configure(project(':i18n')) {
+    dependencies {
+    }
+}
+
+configure(project(':presentation')) {
+    dependencies {
+        implementation project(':common')
+        implementation project(':i18n')
+        implementation project(':i2p')
+        implementation project(':listing')
+        implementation project(':finance')
+        implementation group: 'io.reactivex.rxjava3', name: 'rxjava', version: '3.0.12'
+    }
+    test {
+        exclude '**/**Integration*'
+    }
+}
+
+configure(project(':jfx')) {
+    dependencies {
+        implementation project(':i18n')
+
+        implementation "org.openjfx:javafx-base:$javafxVersion:$os"
+        implementation "org.openjfx:javafx-graphics:$javafxVersion:$os"
+        implementation "org.openjfx:javafx-controls:$javafxVersion:$os"
+        implementation group: 'io.reactivex.rxjava3', name: 'rxjava', version: '3.0.12'
+    }
+}
+
+configure(project(':desktop')) {
+    apply plugin: 'com.github.johnrengelman.shadow'
+    //  apply from: 'package/package.gradle'
+
+    version = '0.0.1-SNAPSHOT'
+
+    jar.manifest.attributes(
+        "Implementation-Title": project.name,
+        "Implementation-Version": version)
+
+    mainClassName = 'misq.desktop.DesktopMain'
+
+    tasks.withType(AbstractArchiveTask) {
+        preserveFileTimestamps = false
+        reproducibleFileOrder = true
+    }
+
+    sourceSets.main.resources.srcDirs += ['src/main/java'] // to copy css files
+
+    dependencies {
+        implementation project(':common')
+        implementation project(':p2p')
+        implementation project(':finance')
+        implementation project(':i18n')
+        implementation project(':presentation')
+        implementation project(':jfx')
+        implementation group: 'io.reactivex.rxjava3', name: 'rxjava', version: '3.0.12'
+    }
+}
+
 configure(project(':daemon')) {
     mainClassName = 'misq.daemon.DaemonMain'
 
@@ -266,35 +330,6 @@ configure(project(':cli')) {
             exclude(module: 'guava')
             exclude(module: 'animal-sniffer-annotations')
         }
-    }
-}
-
-configure(project(':jfx')) {
-    apply plugin: 'com.github.johnrengelman.shadow'
-    //  apply from: 'package/package.gradle'
-
-    version = '0.0.1-SNAPSHOT'
-
-    jar.manifest.attributes(
-        "Implementation-Title": project.name,
-        "Implementation-Version": version)
-
-    mainClassName = 'misq.jfx.JfxMain'
-
-    tasks.withType(AbstractArchiveTask) {
-        preserveFileTimestamps = false
-        reproducibleFileOrder = true
-    }
-
-    sourceSets.main.resources.srcDirs += ['src/main/java'] // to copy fxml and css files
-
-    dependencies {
-        implementation project(':common')
-        implementation project(':p2p')
-
-        implementation "org.openjfx:javafx-base:$javafxVersion:$os"
-        implementation "org.openjfx:javafx-graphics:$javafxVersion:$os"
-        implementation "org.openjfx:javafx-controls:$javafxVersion:$os"
     }
 }
 

@@ -15,9 +15,30 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package misq.jfx;
+package misq.desktop;
 
-public class JfxMain {
-    public static void main(String[] args) {
+import lombok.extern.slf4j.Slf4j;
+import misq.jfx.JfxApplication;
+import misq.jfx.JfxLauncher;
+
+@Slf4j
+public class Desktop {
+    private JfxApplication application;
+
+    public Desktop() {
+        launchApplication();
+    }
+
+    private void launchApplication() {
+        JfxLauncher.launchApplication()
+                .whenComplete((application, throwable) -> {
+                    log.error("App launched {}", application);
+                    this.application = application;
+                    init();
+                });
+    }
+
+    private void init() {
+        new MarketPriceConfig(application.balancesView.model);
     }
 }

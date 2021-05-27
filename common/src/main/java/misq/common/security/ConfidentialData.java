@@ -26,7 +26,7 @@ import java.io.Serializable;
 @EqualsAndHashCode
 @Getter
 public class ConfidentialData implements Serializable {
-    private final byte[] encodedSenderPublicKey;
+    private final byte[] encodedSenderPublicKey; // 88 bytes
     private final byte[] hmac;// 32 bytes
     private final byte[] iv; //16 bytes
     private final byte[] cypherText;

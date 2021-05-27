@@ -25,6 +25,7 @@ import misq.finance.swap.contract.bsqBond.BsqBond;
 import misq.finance.swap.contract.bsqBond.BsqBondProtocol;
 import misq.finance.swap.contract.bsqBond.maker.MakerCommitmentMessage;
 import misq.finance.swap.contract.bsqBond.maker.MakerFundsSentMessage;
+import misq.p2p.NetworkPeer;
 import misq.p2p.P2pService;
 import misq.p2p.message.Message;
 import misq.p2p.node.Connection;
@@ -45,7 +46,9 @@ public class TakerBsqBondProtocol extends BsqBondProtocol {
             security.verifyBondCommitmentMessage(bondCommitmentMessage)
                     .whenComplete((success, t) -> setState(State.COMMITMENT_RECEIVED))
                     .thenCompose(isValid -> security.getCommitment(contract))
-                    .thenCompose(commitment -> p2pService.confidentialSend(new TakerCommitmentMessage(commitment), Set.of(counterParty.getAddress()), null, null))
+                    .thenCompose(commitment -> p2pService.confidentialSend(new TakerCommitmentMessage(commitment),
+                            new NetworkPeer(Set.of(counterParty.getAddress()), null, "default"),
+                            null))
                     .whenComplete((success, t) -> setState(State.COMMITMENT_SENT));
         }
         if (message instanceof MakerFundsSentMessage) {
@@ -53,7 +56,9 @@ public class TakerBsqBondProtocol extends BsqBondProtocol {
             security.verifyFundsSentMessage(fundsSentMessage)
                     .whenComplete((success, t) -> setState(State.FUNDS_RECEIVED))
                     .thenCompose(isValid -> transport.sendFunds(contract))
-                    .thenCompose(isSent -> p2pService.confidentialSend(new TakerFundsSentMessage(), Set.of(counterParty.getAddress()), null, null))
+                    .thenCompose(isSent -> p2pService.confidentialSend(new TakerFundsSentMessage(),
+                            new NetworkPeer(Set.of(counterParty.getAddress()), null, "default"),
+                            null))
                     .whenComplete((success, t) -> setState(State.FUNDS_SENT));
         }
     }

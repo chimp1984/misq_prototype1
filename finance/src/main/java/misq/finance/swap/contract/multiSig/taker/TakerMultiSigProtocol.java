@@ -26,6 +26,7 @@ import misq.finance.swap.contract.multiSig.MultiSig;
 import misq.finance.swap.contract.multiSig.MultiSigProtocol;
 import misq.finance.swap.contract.multiSig.maker.FundsSentMessage;
 import misq.finance.swap.contract.multiSig.maker.TxInputsMessage;
+import misq.p2p.NetworkPeer;
 import misq.p2p.P2pService;
 import misq.p2p.message.Message;
 import misq.p2p.node.Connection;
@@ -48,7 +49,9 @@ public class TakerMultiSigProtocol extends MultiSigProtocol implements MultiSig.
                     .whenComplete((txInput, t) -> setState(State.TX_INPUTS_RECEIVED))
                     .thenCompose(multiSig::broadcastDepositTx)
                     .whenComplete((depositTx, t) -> setState(State.DEPOSIT_TX_BROADCAST))
-                    .thenCompose(depositTx -> p2pService.confidentialSend(new DepositTxBroadcastMessage(depositTx), Set.of(counterParty.getAddress()), null, null))
+                    .thenCompose(depositTx -> p2pService.confidentialSend(new DepositTxBroadcastMessage(depositTx),
+                            new NetworkPeer(Set.of(counterParty.getAddress()), null, "default"),
+                            null))
                     .whenComplete((connection1, t) -> setState(State.DEPOSIT_TX_BROADCAST_MSG_SENT));
         } else if (message instanceof FundsSentMessage) {
             FundsSentMessage fundsSentMessage = (FundsSentMessage) message;
@@ -77,7 +80,9 @@ public class TakerMultiSigProtocol extends MultiSigProtocol implements MultiSig.
         setState(State.FUNDS_RECEIVED);
         multiSig.broadcastPayoutTx()
                 .whenComplete((payoutTx, t) -> setState(State.PAYOUT_TX_BROADCAST))
-                .thenCompose(payoutTx -> p2pService.confidentialSend(new PayoutTxBroadcastMessage(payoutTx), Set.of(counterParty.getAddress()), null, null))
+                .thenCompose(payoutTx -> p2pService.confidentialSend(new PayoutTxBroadcastMessage(payoutTx),
+                        new NetworkPeer(Set.of(counterParty.getAddress()), null, "default"),
+                        null))
                 .whenComplete((isValid, t) -> setState(State.PAYOUT_TX_BROADCAST_MSG_SENT));
     }
 }
