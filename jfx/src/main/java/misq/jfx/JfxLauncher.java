@@ -25,16 +25,16 @@ import java.util.concurrent.CompletableFuture;
 @Slf4j
 public class JfxLauncher {
     public static void main(String[] args) {
-        JfxLauncher.launchApplication().whenComplete((application, throwable) -> {
+        JfxLauncher.launch().whenComplete((application, throwable) -> {
             log.error("App launched {}", application);
         });
     }
 
-    public static CompletableFuture<JfxApplication> launchApplication() {
+    public static CompletableFuture<ApplicationRepo> launch() {
         new Thread(() -> {
             Thread.currentThread().setName("JfxLauncher");
             Application.launch(JfxApplication.class);
         }).start();
-        return JfxApplication.appLaunchedFuture;
+        return JfxApplication.APP_LAUNCHED_FUTURE;
     }
 }

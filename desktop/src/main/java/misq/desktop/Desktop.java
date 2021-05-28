@@ -18,27 +18,30 @@
 package misq.desktop;
 
 import lombok.extern.slf4j.Slf4j;
-import misq.jfx.JfxApplication;
+import misq.jfx.ApplicationRepo;
 import misq.jfx.JfxLauncher;
+import misq.jfx.main.content.offerbook.OfferbookViewModel;
 
 @Slf4j
 public class Desktop {
-    private JfxApplication application;
+    private ApplicationRepo applicationRepo;
+    private MarketPriceConfig marketPriceConfig;
 
     public Desktop() {
         launchApplication();
     }
 
     private void launchApplication() {
-        JfxLauncher.launchApplication()
-                .whenComplete((application, throwable) -> {
-                    log.error("App launched {}", application);
-                    this.application = application;
+        JfxLauncher.launch()
+                .whenComplete((applicationRepo, throwable) -> {
+                    this.applicationRepo = applicationRepo;
                     init();
                 });
     }
 
     private void init() {
-        new MarketPriceConfig(application.balancesView.model);
+        // OfferbookConfig.setup();
+        OfferbookConfig offerbookConfig = new OfferbookConfig();
+        applicationRepo.addLifeCycleListener(OfferbookViewModel.class, offerbookConfig);
     }
 }

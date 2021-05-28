@@ -18,23 +18,80 @@
 package misq.desktop;
 
 import lombok.extern.slf4j.Slf4j;
-import misq.jfx.main.MarketPriceViewModel;
+import misq.jfx.common.AViewModel;
+import misq.jfx.common.LifeCycle;
+import misq.jfx.common.ViewModel;
+import misq.jfx.main.top.marketprice.MarketPriceViewModel;
 import misq.presentation.MarketsPresentation;
 
 @Slf4j
-public class MarketPriceConfig {
+public class MarketPriceConfig implements LifeCycle {
+    private static MarketPriceConfig marketPriceConfig;
+
+    static void setup() {
+        MarketPriceViewModel.setListener(new AViewModel.Listener() {
+            @Override
+            public void onConstructed(ViewModel viewModel) {
+                marketPriceConfig = new MarketPriceConfig((MarketPriceViewModel) viewModel);
+            }
+
+            @Override
+            public void onInitialized() {
+                marketPriceConfig.onInitialized();
+            }
+
+            @Override
+            public void onActivated() {
+                marketPriceConfig.onActivated();
+            }
+
+            @Override
+            public void onDeactivated() {
+                marketPriceConfig.onDeactivated();
+            }
+
+            @Override
+            public void onDestructed() {
+                marketPriceConfig.onDestructed();
+                marketPriceConfig = null;
+            }
+        });
+    }
+
+    private final MarketsPresentation presentation;
+    private final MarketPriceViewModel viewModel;
 
     public MarketPriceConfig(MarketPriceViewModel viewModel) {
-        MarketsPresentation presentation = new MarketsPresentation();
+        this.viewModel = viewModel;
+        presentation = new MarketsPresentation();
 
-        // rx version
-        presentation.marketPricePublisher.subscribe(viewModel.marketPriceObserver);
-        viewModel.refreshMarketPriceEvent.subscribe(presentation.refreshMarketPriceHandler);
-
-        // plain version with consumer/runnable
         viewModel.setRefreshMarketPriceHandler(presentation::onRefreshMarketPrice);
         presentation.setMarketPriceConsumer(viewModel::onMarketPriceChange);
 
         viewModel.setMarkets(presentation.getMarkets());
+    }
+
+    @Override
+    public void onConstructed(ViewModel viewModel) {
+    }
+
+    @Override
+    public void onInitialized() {
+
+    }
+
+    @Override
+    public void onActivated() {
+
+    }
+
+    @Override
+    public void onDeactivated() {
+
+    }
+
+    @Override
+    public void onDestructed() {
+
     }
 }

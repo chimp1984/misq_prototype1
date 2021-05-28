@@ -30,8 +30,8 @@ import java.util.function.Consumer;
 public class MarketsPresentation {
     public Map<String, Integer> map = new HashMap<>();
     public PublishSubject<Map<String, Integer>> marketPricePublisher = PublishSubject.create();
-    public DisposableObserver<Boolean> refreshMarketPriceHandler;
 
+    public DisposableObserver<Boolean> refreshMarketPriceHandler;
     @Setter
     public Consumer<Map<String, Integer>> marketPriceConsumer;
 
@@ -60,7 +60,6 @@ public class MarketsPresentation {
         new Timer().scheduleAtFixedRate(timerTask, 0, 2000);
         updateMarketPrice();
     }
-
     private void updateMarketPrice() {
         map.put("BTC/USD", new Random().nextInt(100000000));
         map.put("BTC/EUR", new Random().nextInt(1000000));

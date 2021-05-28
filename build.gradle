@@ -28,6 +28,9 @@ configure(subprojects) {
     ext { // in alphabetical order
         bcVersion = '1.63'
         findbugsVersion = '3.0.2'
+        fontawesomefxVersion = '8.0.0'
+        fontawesomefxCommonsVersion = '9.1.2'
+        fontawesomefxMaterialdesignfontVersion = '2.0.26-9.1.2'
         grpcVersion = '1.25.0'
         gsonVersion = '2.8.5'
         guavaVersion = '28.2-jre'
@@ -237,7 +240,7 @@ configure(project(':presentation')) {
     dependencies {
         implementation project(':common')
         implementation project(':i18n')
-        implementation project(':i2p')
+        implementation project(':p2p')
         implementation project(':listing')
         implementation project(':finance')
         implementation group: 'io.reactivex.rxjava3', name: 'rxjava', version: '3.0.12'
@@ -248,13 +251,20 @@ configure(project(':presentation')) {
 }
 
 configure(project(':jfx')) {
+
+    sourceSets.main.resources.srcDirs += ['src/main/java'] // to copy css files
+
     dependencies {
         implementation project(':i18n')
 
         implementation "org.openjfx:javafx-base:$javafxVersion:$os"
         implementation "org.openjfx:javafx-graphics:$javafxVersion:$os"
         implementation "org.openjfx:javafx-controls:$javafxVersion:$os"
-        implementation group: 'io.reactivex.rxjava3', name: 'rxjava', version: '3.0.12'
+       // implementation group: 'io.reactivex.rxjava3', name: 'rxjava', version: '3.0.12'
+
+        compile "de.jensd:fontawesomefx:$fontawesomefxVersion"
+        compile "de.jensd:fontawesomefx-commons:$fontawesomefxCommonsVersion"
+        compile "de.jensd:fontawesomefx-materialdesignfont:$fontawesomefxMaterialdesignfontVersion"
     }
 }
 
@@ -284,6 +294,8 @@ configure(project(':desktop')) {
         implementation project(':i18n')
         implementation project(':presentation')
         implementation project(':jfx')
+
+        implementation "org.openjfx:javafx-base:$javafxVersion:$os"
         implementation group: 'io.reactivex.rxjava3', name: 'rxjava', version: '3.0.12'
     }
 }
