@@ -26,19 +26,19 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 
-public class ApplicationRepo {
-    private static ApplicationRepo INSTANCE;
+public class ApplicationModel {
+    private static ApplicationModel INSTANCE;
     public final Thread javaFXApplicationThread;
 
     private final Map<Class<? extends ViewModel>, Set<LifeCycleChangeListener>> lifeCycleListeners = new ConcurrentHashMap<>();
 
 
-    public ApplicationRepo(Thread javaFXApplicationThread) {
+    public ApplicationModel(Thread javaFXApplicationThread) {
         INSTANCE = this;
         this.javaFXApplicationThread = javaFXApplicationThread;
     }
 
-    public static ApplicationRepo getInstance() {
+    public static ApplicationModel getInstance() {
         return INSTANCE;
     }
 

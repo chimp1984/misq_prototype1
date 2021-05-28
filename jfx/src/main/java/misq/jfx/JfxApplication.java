@@ -30,19 +30,19 @@ import java.util.concurrent.CompletableFuture;
 
 @Slf4j
 public class JfxApplication extends Application {
-    public static final CompletableFuture<ApplicationRepo> APP_LAUNCHED_FUTURE = new CompletableFuture<>();
+    public static final CompletableFuture<ApplicationModel> LAUNCH_APP_FUTURE = new CompletableFuture<>();
 
-    private final ApplicationRepo applicationRepo;
+    private final ApplicationModel applicationModel;
 
     private MainView mainView;
 
     public JfxApplication() {
-        applicationRepo = new ApplicationRepo(Thread.currentThread());
+        applicationModel = new ApplicationModel(Thread.currentThread());
     }
 
     @Override
     public void start(Stage stage) {
-        APP_LAUNCHED_FUTURE.complete(applicationRepo);
+        LAUNCH_APP_FUTURE.complete(applicationModel);
         mainView = new MainView();
 
         Scene scene = new Scene(mainView.getRoot());

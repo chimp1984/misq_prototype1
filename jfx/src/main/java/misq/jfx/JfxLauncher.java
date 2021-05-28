@@ -30,11 +30,11 @@ public class JfxLauncher {
         });
     }
 
-    public static CompletableFuture<ApplicationRepo> launch() {
+    public static CompletableFuture<ApplicationModel> launch() {
         new Thread(() -> {
             Thread.currentThread().setName("JfxLauncher");
             Application.launch(JfxApplication.class);
         }).start();
-        return JfxApplication.APP_LAUNCHED_FUTURE;
+        return JfxApplication.LAUNCH_APP_FUTURE;
     }
 }

@@ -18,7 +18,7 @@
 package misq.jfx.common;
 
 import lombok.extern.slf4j.Slf4j;
-import misq.jfx.ApplicationRepo;
+import misq.jfx.ApplicationModel;
 
 @Slf4j
 public abstract class AViewModel implements ViewModel {
@@ -28,16 +28,16 @@ public abstract class AViewModel implements ViewModel {
 
     @Override
     public void onConstructView(ViewModel viewModel) {
-        ApplicationRepo.getInstance().onConstructView(this);
+        ApplicationModel.getInstance().onConstructView(this);
     }
 
     @Override
     public void onViewAdded() {
-        ApplicationRepo.getInstance().onViewAdded(this.getClass());
+        ApplicationModel.getInstance().onViewAdded(this.getClass());
     }
 
     @Override
     public void onViewRemoved() {
-        ApplicationRepo.getInstance().onViewRemoved(this.getClass());
+        ApplicationModel.getInstance().onViewRemoved(this.getClass());
     }
 }

@@ -17,32 +17,29 @@
 
 package misq.jfx.common;
 
-import javafx.beans.value.ChangeListener;
 import javafx.scene.Node;
-import javafx.scene.Scene;
 import lombok.Getter;
 
 public abstract class ViewWithModel<T extends Node, M extends ViewModel> extends View<T> implements LifeCycle {
     @Getter
     protected final M model;
-    private ChangeListener<Scene> sceneChangeListener;
 
 
     public ViewWithModel(T root, M model) {
         super(root);
         this.model = model;
 
-        sceneChangeListener = (observable, oldValue, newValue) -> {
-            if (oldValue == null && newValue != null) {
-                model.onViewAdded();
-                onViewAdded();
-            } else if (oldValue != null && newValue == null) {
-                model.onViewRemoved();
-                onViewRemoved();
-                root.sceneProperty().removeListener(sceneChangeListener);
-            }
-        };
-        root.sceneProperty().addListener(sceneChangeListener);
+        if (root != null) {
+            root.sceneProperty().addListener((ov, oldValue, newValue) -> {
+                if (oldValue == null && newValue != null) {
+                    model.onViewAdded();
+                    onViewAdded();
+                } else if (oldValue != null && newValue == null) {
+                    model.onViewRemoved();
+                    onViewRemoved();
+                }
+            });
+        }
     }
 
     @Override
