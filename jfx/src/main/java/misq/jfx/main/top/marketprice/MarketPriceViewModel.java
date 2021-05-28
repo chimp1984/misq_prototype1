@@ -29,21 +29,10 @@ import misq.jfx.common.ViewModel;
 
 import java.util.ArrayList;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 
 @Slf4j
 public class MarketPriceViewModel extends AViewModel {
-    public static void setListener(Listener listener) {
-        MarketPriceViewModel.listener.of(listener);
-    }
-
-    private static Optional<Listener> listener = Optional.empty();
-
-    @Override
-    public Optional<Listener> getListener() {
-        return listener;
-    }
 
     @Setter
     public Runnable refreshMarketPriceHandler;

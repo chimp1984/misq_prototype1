@@ -18,6 +18,7 @@
 package misq.jfx;
 
 import misq.jfx.common.AViewModel;
+import misq.jfx.common.LifeCycleChangeListener;
 import misq.jfx.common.ViewModel;
 
 import java.util.Map;
@@ -28,7 +29,7 @@ import java.util.concurrent.CopyOnWriteArraySet;
 public class ApplicationRepo {
     private static ApplicationRepo INSTANCE;
     public final Thread javaFXApplicationThread;
-    private final Map<Class<? extends ViewModel>, Set<AViewModel.Listener>> lifeCycleListeners = new ConcurrentHashMap<>();
+    private final Map<Class<? extends ViewModel>, Set<LifeCycleChangeListener>> lifeCycleListeners = new ConcurrentHashMap<>();
 
 
     public ApplicationRepo(Thread javaFXApplicationThread) {
@@ -40,11 +41,11 @@ public class ApplicationRepo {
         return INSTANCE;
     }
 
-    public void addLifeCycleListener(Class<? extends ViewModel> clazz, AViewModel.Listener listener) {
+    public void addLifeCycleListener(Class<? extends ViewModel> clazz, LifeCycleChangeListener lifeCycleChangeListener) {
         if (!lifeCycleListeners.containsKey(clazz)) {
             lifeCycleListeners.put(clazz, new CopyOnWriteArraySet<>());
         }
-        lifeCycleListeners.get(clazz).add(listener);
+        lifeCycleListeners.get(clazz).add(lifeCycleChangeListener);
     }
 
     public void onConstructed(AViewModel viewModel) {
@@ -53,9 +54,9 @@ public class ApplicationRepo {
         }
     }
 
-    public void onInitialized(AViewModel viewModel) {
-        if (lifeCycleListeners.containsKey(viewModel.getClass())) {
-            lifeCycleListeners.get(viewModel.getClass()).forEach(AViewModel.Listener::onInitialized);
+    public void onInitialized(Class<? extends AViewModel> clazz) {
+        if (lifeCycleListeners.containsKey(clazz)) {
+            lifeCycleListeners.get(clazz).forEach(LifeCycleChangeListener::onInitialized);
         }
     }
 }

@@ -40,7 +40,6 @@ public class Desktop {
     }
 
     private void init() {
-        // OfferbookConfig.setup();
         OfferbookConfig offerbookConfig = new OfferbookConfig();
         applicationRepo.addLifeCycleListener(OfferbookViewModel.class, offerbookConfig);
     }

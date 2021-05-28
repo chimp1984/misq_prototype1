@@ -29,7 +29,7 @@ import java.util.*;
 import java.util.function.Consumer;
 
 @Slf4j
-public class OfferbookModel {
+public class OfferbookPresentation {
     public List<Offer> offers = new ArrayList<>();
 
     public void setOffersConsumer(Consumer<List<Offer>> offersConsumer) {
@@ -38,7 +38,7 @@ public class OfferbookModel {
 
     public Consumer<List<Offer>> offersConsumer;
 
-    public OfferbookModel() {
+    public OfferbookPresentation() {
     }
 
     public void onInitialized() {

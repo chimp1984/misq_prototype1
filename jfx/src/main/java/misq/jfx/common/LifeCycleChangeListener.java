@@ -17,39 +17,15 @@
 
 package misq.jfx.common;
 
-import javafx.application.Platform;
-import lombok.extern.slf4j.Slf4j;
-import misq.jfx.ApplicationRepo;
+public interface LifeCycleChangeListener {
+    void onConstructed(ViewModel viewModel);
 
-@Slf4j
-public abstract class AViewModel implements ViewModel, LifeCycle {
+    void onInitialized();
 
+    void onActivated();
 
-    public AViewModel() {
-        onConstructed(this);
-        Platform.runLater(this::onInitialized);
-    }
+    void onDeactivated();
 
-    @Override
-    public void onConstructed(ViewModel viewModel) {
-        ApplicationRepo.getInstance().onConstructed(this);
-    }
-
-    @Override
-    public void onInitialized() {
-        ApplicationRepo.getInstance().onInitialized(this.getClass());
-    }
-
-    @Override
-    public void onActivated() {
-    }
-
-    @Override
-    public void onDeactivated() {
-    }
-
-    @Override
-    public void onDestructed() {
-    }
+    void onDestructed();
 
 }

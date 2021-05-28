@@ -24,20 +24,10 @@ import misq.jfx.common.AViewModel;
 import misq.jfx.common.ViewModel;
 
 import java.util.List;
-import java.util.Optional;
 
 @Slf4j
 public class OfferbookViewModel extends AViewModel {
-    public static void setListener(Listener listener) {
-        OfferbookViewModel.listener.of(listener);
-    }
 
-    private static Optional<Listener> listener = Optional.empty();
-
-    @Override
-    public Optional<Listener> getListener() {
-        return listener;
-    }
 
     ObservableList<OfferListItem> offerListItems = FXCollections.observableArrayList();
 

@@ -22,13 +22,13 @@ import javafx.beans.property.StringProperty;
 import lombok.extern.slf4j.Slf4j;
 import misq.finance.Asset;
 import misq.finance.swap.offer.SwapOffer;
-import misq.jfx.common.AViewModel;
+import misq.jfx.common.LifeCycleChangeListener;
 import misq.jfx.common.ViewModel;
 import misq.jfx.main.content.offerbook.AssetListItem;
 import misq.jfx.main.content.offerbook.OfferListItem;
 import misq.jfx.main.content.offerbook.OfferbookViewModel;
 import misq.jfx.utils.UserThread;
-import misq.presentation.OfferbookModel;
+import misq.presentation.OfferbookPresentation;
 
 import java.text.DecimalFormat;
 import java.util.List;
@@ -36,10 +36,11 @@ import java.util.Random;
 import java.util.stream.Collectors;
 
 @Slf4j
-public class OfferbookConfig implements AViewModel.Listener {
+public class OfferbookConfig implements LifeCycleChangeListener {
     private static OfferbookConfig config;
+    private OfferbookViewModel viewModel;
 
-    static void setup() {
+   /* static void setup() {
         OfferbookViewModel.setListener(new AViewModel.Listener() {
             @Override
             public void onConstructed(ViewModel viewModel) {
@@ -68,31 +69,27 @@ public class OfferbookConfig implements AViewModel.Listener {
                 config = null;
             }
         });
-    }
+    }*/
 
-    private OfferbookModel model;
+    private OfferbookPresentation presentation;
 
     public OfferbookConfig() {
 
     }
 
-    public OfferbookConfig(OfferbookViewModel viewModel) {
-        model = new OfferbookModel();
-        model.setOffersConsumer(offers -> {
+    @Override
+    public void onConstructed(ViewModel viewModel) {
+        this.viewModel = (OfferbookViewModel) viewModel;
+        presentation = new OfferbookPresentation();
+        presentation.setOffersConsumer(offers -> {
             List<OfferListItem> offerListItems = offers.stream().map(offer -> getOfferListItem((SwapOffer) offer)).collect(Collectors.toList());
-            viewModel.onOfferListItemsChange(offerListItems);
-            log.error("offerListItems " + offerListItems);
+            this.viewModel.onOfferListItemsChange(offerListItems);
         });
     }
 
     @Override
-    public void onConstructed(ViewModel viewModel) {
-
-    }
-
-    @Override
     public void onInitialized() {
-        model.onInitialized();
+        presentation.onInitialized();
     }
 
     @Override
