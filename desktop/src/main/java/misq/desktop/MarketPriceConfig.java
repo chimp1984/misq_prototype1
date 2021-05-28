@@ -25,7 +25,6 @@ import misq.presentation.MarketsPresentation;
 
 @Slf4j
 public class MarketPriceConfig implements LifeCycleChangeListener {
-
     private final MarketsPresentation presentation;
     private final MarketPriceViewModel viewModel;
 
@@ -40,26 +39,16 @@ public class MarketPriceConfig implements LifeCycleChangeListener {
     }
 
     @Override
-    public void onConstructed(ViewModel viewModel) {
+    public void onConstructView(ViewModel viewModel) {
     }
 
     @Override
-    public void onInitialized() {
-
-    }
-
-    @Override
-    public void onActivated() {
+    public void onViewAdded() {
 
     }
 
     @Override
-    public void onDeactivated() {
-
-    }
-
-    @Override
-    public void onDestructed() {
+    public void onViewRemoved() {
 
     }
 }

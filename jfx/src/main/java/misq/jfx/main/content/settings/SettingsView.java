@@ -17,11 +17,11 @@
 
 package misq.jfx.main.content.settings;
 
-import javafx.scene.control.Label;
-import javafx.scene.layout.Pane;
+import misq.jfx.main.content.ContentChildDummy;
 
-public class SettingsView extends Pane {
+public class SettingsView extends ContentChildDummy {
+
     public SettingsView() {
-        getChildren().add(new Label("SettingsView"));
+        super("SettingsView");
     }
 }

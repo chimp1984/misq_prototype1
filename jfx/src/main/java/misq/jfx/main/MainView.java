@@ -23,15 +23,19 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
+import misq.jfx.common.View;
 import misq.jfx.main.content.ContentView;
 import misq.jfx.main.left.NavigationView;
 import misq.jfx.main.top.TopPanelView;
 import misq.jfx.navigation.Navigation;
 import misq.jfx.utils.ImageUtil;
 
-public class MainView extends StackPane {
+public class MainView extends View<StackPane> {
+
     public MainView() {
-        getStyleClass().add("content-pane");
+        super(new StackPane());
+
+        root.getStyleClass().add("content-pane");
 
         ImageView bgImage = ImageUtil.getImageView("/misq-layout.png");
         bgImage.setFitHeight(1087);
@@ -40,19 +44,19 @@ public class MainView extends StackPane {
         bgImage.setOpacity(0);
 
         VBox rootContainer = new VBox();
-        getChildren().addAll(bgImage, rootContainer);
+        root.getChildren().addAll(bgImage, rootContainer);
 
         TopPanelView topPanelView = new TopPanelView();
 
         HBox leftNavAndContentBox = new HBox();
         VBox.setVgrow(leftNavAndContentBox, Priority.ALWAYS);
-        rootContainer.getChildren().addAll(topPanelView, leftNavAndContentBox);
+        rootContainer.getChildren().addAll(topPanelView.getRoot(), leftNavAndContentBox);
 
         ContentView contentView = new ContentView();
-        HBox.setHgrow(contentView, Priority.ALWAYS);
+        HBox.setHgrow(contentView.getRoot(), Priority.ALWAYS);
         NavigationView navigationView = new NavigationView();
         //  navigationView.setStyle("-fx-background-color: blue;");
-        leftNavAndContentBox.getChildren().addAll(navigationView, contentView);
+        leftNavAndContentBox.getChildren().addAll(navigationView.getRoot(), contentView.getRoot());
 
         Navigation.navigateToPreviousVisitedView();
     }

@@ -45,7 +45,7 @@ public class JfxApplication extends Application {
         APP_LAUNCHED_FUTURE.complete(applicationRepo);
         mainView = new MainView();
 
-        Scene scene = new Scene(mainView);
+        Scene scene = new Scene(mainView.getRoot());
         scene.getStylesheets().setAll(getClass().getResource("/misq.css").toExternalForm(),
                 getClass().getResource("/bisq.css").toExternalForm(),
                 getClass().getResource("/theme-dark.css").toExternalForm());

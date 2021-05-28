@@ -17,11 +17,11 @@
 
 package misq.jfx.main.content.markets;
 
-import javafx.scene.control.Label;
-import javafx.scene.layout.Pane;
+import misq.jfx.main.content.ContentChildDummy;
 
-public class MarketsView extends Pane {
+public class MarketsView extends ContentChildDummy {
+
     public MarketsView() {
-        getChildren().add(new Label("MarketsView"));
+        super("MarketsView");
     }
 }

@@ -17,31 +17,36 @@
 
 package misq.jfx.main.content;
 
+import javafx.collections.ObservableList;
 import javafx.scene.Node;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
+import lombok.extern.slf4j.Slf4j;
+import misq.jfx.common.View;
 import misq.jfx.main.MainView;
 import misq.jfx.navigation.Navigation;
 import misq.jfx.navigation.ViewLoader;
 
-import java.lang.reflect.InvocationTargetException;
-
-public class ContentView extends HBox {
+@Slf4j
+public class ContentView extends View<HBox> {
     public ContentView() {
-        setStyle("-fx-background-color: blue;");
+        super(new HBox());
+
+        root.setStyle("-fx-background-color: blue;");
         Navigation.addListener((viewPath, data) -> {
             if (viewPath.size() != 2 || viewPath.indexOf(MainView.class) != 0)
                 return;
 
-            Class<? extends Node> viewClass = viewPath.tip();
+            Class<? extends View> viewClass = viewPath.tip();
             if (viewClass == null) {
                 return;
             }
             try {
-                Node view = ViewLoader.load(viewClass);
-                HBox.setHgrow(view, Priority.ALWAYS);
-                getChildren().setAll(view);
-            } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException | InstantiationException e) {
+                View view = ViewLoader.load(viewClass);
+                HBox.setHgrow(view.getRoot(), Priority.ALWAYS);
+                ObservableList<Node> children = root.getChildren();
+                children.setAll(view.getRoot());
+            } catch (Exception e) {
                 e.printStackTrace();
             }
         });

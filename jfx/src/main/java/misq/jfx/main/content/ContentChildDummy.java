@@ -15,17 +15,16 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package misq.jfx.navigation;
+package misq.jfx.main.content;
 
+import javafx.scene.control.Label;
+import javafx.scene.layout.StackPane;
 import misq.jfx.common.View;
 
-import java.lang.reflect.InvocationTargetException;
+public class ContentChildDummy extends View<StackPane> {
+    public ContentChildDummy(String label) {
+        super(new StackPane());
 
-public class ViewLoader {
-    public static View load(Class<? extends View> viewClass)
-            throws NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException {
-
-        return viewClass.getDeclaredConstructor().newInstance();
-
+        root.getChildren().add(new Label(label));
     }
 }

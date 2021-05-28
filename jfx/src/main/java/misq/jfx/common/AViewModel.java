@@ -17,39 +17,27 @@
 
 package misq.jfx.common;
 
-import javafx.application.Platform;
 import lombok.extern.slf4j.Slf4j;
 import misq.jfx.ApplicationRepo;
 
 @Slf4j
-public abstract class AViewModel implements ViewModel, LifeCycle {
-
-
+public abstract class AViewModel implements ViewModel {
     public AViewModel() {
-        onConstructed(this);
-        Platform.runLater(this::onInitialized);
+        onConstructView(this);
     }
 
     @Override
-    public void onConstructed(ViewModel viewModel) {
-        ApplicationRepo.getInstance().onConstructed(this);
+    public void onConstructView(ViewModel viewModel) {
+        ApplicationRepo.getInstance().onConstructView(this);
     }
 
     @Override
-    public void onInitialized() {
-        ApplicationRepo.getInstance().onInitialized(this.getClass());
+    public void onViewAdded() {
+        ApplicationRepo.getInstance().onViewAdded(this.getClass());
     }
 
     @Override
-    public void onActivated() {
+    public void onViewRemoved() {
+        ApplicationRepo.getInstance().onViewRemoved(this.getClass());
     }
-
-    @Override
-    public void onDeactivated() {
-    }
-
-    @Override
-    public void onDestructed() {
-    }
-
 }

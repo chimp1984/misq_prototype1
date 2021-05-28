@@ -17,11 +17,11 @@
 
 package misq.jfx.main.content.accounts;
 
-import javafx.scene.control.Label;
-import javafx.scene.layout.Pane;
+import misq.jfx.main.content.ContentChildDummy;
 
-public class AccountsView extends Pane {
+public class AccountsView extends ContentChildDummy {
+
     public AccountsView() {
-        getChildren().add(new Label("AccountsView"));
+        super("AccountsView");
     }
 }

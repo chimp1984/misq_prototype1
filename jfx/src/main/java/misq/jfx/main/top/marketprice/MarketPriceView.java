@@ -22,17 +22,15 @@ import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
-import lombok.Getter;
+import misq.jfx.common.ViewWithModel;
 
-public class MarketPriceView extends HBox {
-    @Getter
-    private final MarketPriceViewModel model;
+public class MarketPriceView extends ViewWithModel<HBox, MarketPriceViewModel> {
 
     public MarketPriceView() {
-        this.model = new MarketPriceViewModel();
+        super(new HBox(), new MarketPriceViewModel());
 
-        setPadding(new Insets(20, 20, 20, 20));
-        setSpacing(10);
+        root.setPadding(new Insets(20, 20, 20, 20));
+        root.setSpacing(10);
 
         ComboBox<String> comboBox = new ComboBox<>();
         comboBox.setMinWidth(100);
@@ -46,7 +44,7 @@ public class MarketPriceView extends HBox {
         label.setMinWidth(100);
         HBox.setMargin(label, new Insets(5, 0, 0, 0));
         label.textProperty().bind(model.marketPrice);
-        getChildren().addAll(comboBox, label, button);
+        root.getChildren().addAll(comboBox, label, button);
 
         model.selectedMarket.addListener((observable, oldValue, newValue) ->
                 comboBox.getSelectionModel().select(newValue));

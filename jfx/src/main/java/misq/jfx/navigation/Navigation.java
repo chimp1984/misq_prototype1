@@ -17,10 +17,10 @@
 
 package misq.jfx.navigation;
 
-import javafx.scene.Node;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import misq.jfx.common.View;
 import misq.jfx.main.MainView;
 import misq.jfx.main.content.offerbook.OfferbookView;
 
@@ -84,12 +84,12 @@ public final class Navigation {
     }*/
 
     @SafeVarargs
-    public static void navigateTo(Class<? extends Node>... viewClasses) {
+    public static void navigateTo(Class<? extends View>... viewClasses) {
         navigateTo(ViewPath.to(viewClasses), null);
     }
 
     @SafeVarargs
-    public static void navigateToWithData(Object data, Class<? extends Node>... viewClasses) {
+    public static void navigateToWithData(Object data, Class<? extends View>... viewClasses) {
         navigateTo(ViewPath.to(viewClasses), data);
     }
 
@@ -97,18 +97,18 @@ public final class Navigation {
         if (newPath == null)
             return;
 
-        ArrayList<Class<? extends Node>> temp = new ArrayList<>();
+        ArrayList<Class<? extends View>> temp = new ArrayList<>();
         for (int i = 0; i < newPath.size(); i++) {
-            Class<? extends Node> viewClass = newPath.get(i);
+            Class<? extends View> viewClass = newPath.get(i);
             temp.add(viewClass);
             if (currentPath == null ||
                     (currentPath.size() > i &&
                             viewClass != currentPath.get(i) &&
                             i != newPath.size() - 1)) {
-                ArrayList<Class<? extends Node>> temp2 = new ArrayList<>(temp);
+                ArrayList<Class<? extends View>> temp2 = new ArrayList<>(temp);
                 for (int n = i + 1; n < newPath.size(); n++) {
                     //noinspection unchecked
-                    Class<? extends Node>[] newTemp = new Class[i + 1];
+                    Class<? extends View>[] newTemp = new Class[i + 1];
                     currentPath = ViewPath.to(temp2.toArray(newTemp));
                     navigateTo(currentPath, data);
                     viewClass = newPath.get(n);

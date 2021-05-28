@@ -43,7 +43,7 @@ public class OfferbookViewModelTest {
             OfferbookView view = new OfferbookView();
 
             model = view.getModel();
-            root.getChildren().add(view);
+            root.getChildren().add(view.getRoot());
 
          /*   Platform.runLater(() -> {
                 ObservableList<OfferListItem> offerListItems = model.offerListItems;

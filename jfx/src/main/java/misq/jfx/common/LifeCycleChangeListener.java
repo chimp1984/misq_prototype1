@@ -18,14 +18,10 @@
 package misq.jfx.common;
 
 public interface LifeCycleChangeListener {
-    void onConstructed(ViewModel viewModel);
+    void onConstructView(ViewModel viewModel);
 
-    void onInitialized();
+    void onViewAdded();
 
-    void onActivated();
-
-    void onDeactivated();
-
-    void onDestructed();
+    void onViewRemoved();
 
 }

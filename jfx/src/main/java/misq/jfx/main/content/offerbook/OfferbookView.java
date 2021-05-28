@@ -19,38 +19,33 @@ package misq.jfx.main.content.offerbook;
 
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.StringProperty;
+import javafx.scene.Scene;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.layout.StackPane;
 import javafx.util.Callback;
-import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import misq.jfx.common.ViewWithModel;
 import misq.jfx.components.AutoTooltipTableColumn;
 
+import java.util.Optional;
 import java.util.function.Function;
 
 @Slf4j
-public class OfferbookView extends StackPane {
-    @Getter
-    private final OfferbookViewModel model;
+public class OfferbookView extends ViewWithModel<StackPane, OfferbookViewModel> {
     private final TableView<OfferListItem> tableView;
 
+    private Optional<Scene> scene = Optional.empty();
 
     public OfferbookView() {
-        setStyle("-fx-background-color: red;");
+        super(new StackPane(), new OfferbookViewModel());
+
+        root.setStyle("-fx-background-color: red;");
         //setPrefSize(Double.MAX_VALUE, Double.MAX_VALUE);
-        model = new OfferbookViewModel();
-        this.setStyle("-fx-background-color: blue;");
         tableView = new TableView<>();
         // tableView.setPrefWidth(Double.MAX_VALUE);
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-
-      /*  GridPane.setRowIndex(tableView, 0);
-        GridPane.setColumnIndex(tableView, 0);
-        GridPane.setColumnSpan(tableView, 2);
-        GridPane.setMargin(tableView, new Insets(10, 0, -10, 0));
-        GridPane.setVgrow(tableView, Priority.ALWAYS);*/
 
         tableView.setItems(model.offerListItems);
         addPropertyColumn("Price", OfferListItem::getPrice);
@@ -58,7 +53,7 @@ public class OfferbookView extends StackPane {
         addValueColumn("Details", OfferListItem::getDetails);
         addValueColumn("Maker", OfferListItem::getMaker);
 
-        getChildren().add(tableView);
+        root.getChildren().add(tableView);
     }
 
     // immutable value

@@ -37,48 +37,14 @@ import java.util.stream.Collectors;
 
 @Slf4j
 public class OfferbookConfig implements LifeCycleChangeListener {
-    private static OfferbookConfig config;
     private OfferbookViewModel viewModel;
-
-   /* static void setup() {
-        OfferbookViewModel.setListener(new AViewModel.Listener() {
-            @Override
-            public void onConstructed(ViewModel viewModel) {
-                config = new OfferbookConfig((OfferbookViewModel) viewModel);
-                config.onConstructed(viewModel);
-            }
-
-            @Override
-            public void onInitialized() {
-                config.onInitialized();
-            }
-
-            @Override
-            public void onActivated() {
-                config.onActivated();
-            }
-
-            @Override
-            public void onDeactivated() {
-                config.onDeactivated();
-            }
-
-            @Override
-            public void onDestructed() {
-                config.onDestructed();
-                config = null;
-            }
-        });
-    }*/
-
     private OfferbookPresentation presentation;
 
     public OfferbookConfig() {
-
     }
 
     @Override
-    public void onConstructed(ViewModel viewModel) {
+    public void onConstructView(ViewModel viewModel) {
         this.viewModel = (OfferbookViewModel) viewModel;
         presentation = new OfferbookPresentation();
         presentation.setOffersConsumer(offers -> {
@@ -88,20 +54,13 @@ public class OfferbookConfig implements LifeCycleChangeListener {
     }
 
     @Override
-    public void onInitialized() {
-        presentation.onInitialized();
+    public void onViewAdded() {
+        presentation.onViewAdded();
     }
 
     @Override
-    public void onActivated() {
-    }
-
-    @Override
-    public void onDeactivated() {
-    }
-
-    @Override
-    public void onDestructed() {
+    public void onViewRemoved() {
+        presentation.stop();
     }
 
     private OfferListItem getOfferListItem(SwapOffer offer) {

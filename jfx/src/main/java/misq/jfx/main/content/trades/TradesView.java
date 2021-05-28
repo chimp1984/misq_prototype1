@@ -17,11 +17,11 @@
 
 package misq.jfx.main.content.trades;
 
-import javafx.scene.control.Label;
-import javafx.scene.layout.Pane;
+import misq.jfx.main.content.ContentChildDummy;
 
-public class TradesView extends Pane {
+public class TradesView extends ContentChildDummy {
+
     public TradesView() {
-        getChildren().add(new Label("TradesView"));
+        super("TradesView");
     }
 }

@@ -17,5 +17,14 @@
 
 package misq.jfx.common;
 
-public interface View {
+import javafx.scene.Node;
+import lombok.Getter;
+
+public abstract class View<T extends Node> {
+    @Getter
+    protected final T root;
+
+    public View(T root) {
+        this.root = root;
+    }
 }

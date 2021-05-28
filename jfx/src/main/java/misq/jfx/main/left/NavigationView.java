@@ -18,9 +18,9 @@
 package misq.jfx.main.left;
 
 import javafx.geometry.Insets;
-import javafx.scene.Node;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.layout.VBox;
+import misq.jfx.common.View;
 import misq.jfx.components.AutoTooltipToggleButton;
 import misq.jfx.main.MainView;
 import misq.jfx.main.content.accounts.AccountsView;
@@ -31,13 +31,15 @@ import misq.jfx.main.content.settings.SettingsView;
 import misq.jfx.main.content.trades.TradesView;
 import misq.jfx.navigation.Navigation;
 
-public class NavigationView extends VBox {
+public class NavigationView extends View<VBox> {
     private final ToggleGroup navButtons = new ToggleGroup();
 
     public NavigationView() {
-        setMaxWidth(337);
-        setMinWidth(337);
-        setPadding(new Insets(0, 0, 0, 20));
+        super(new VBox());
+
+        root.setMaxWidth(337);
+        root.setMinWidth(337);
+        root.setPadding(new Insets(0, 0, 0, 20));
 
         NavButton markets = new NavButton(MarketsView.class, "Markets");
         NavButton offerBook = new NavButton(OfferbookView.class, "Offerbook");
@@ -46,14 +48,14 @@ public class NavigationView extends VBox {
         NavButton accounts = new NavButton(AccountsView.class, "Accounts");
         NavButton settings = new NavButton(SettingsView.class, "SettingsView");
 
-        getChildren().addAll(markets, offerBook, trades, funds, accounts, settings);
+        root.getChildren().addAll(markets, offerBook, trades, funds, accounts, settings);
 
         Navigation.addListener((viewPath, data) -> {
             if (viewPath.size() != 2 || viewPath.indexOf(MainView.class) != 0) {
                 return;
             }
 
-            Class<? extends Node> tip = viewPath.tip();
+            Class<? extends View> tip = viewPath.tip();
             navButtons.getToggles().stream()
                     .filter(toggle -> tip == ((NavButton) toggle).target)
                     .forEach(toggle -> toggle.setSelected(true));
@@ -64,9 +66,9 @@ public class NavigationView extends VBox {
 
 
     private class NavButton extends AutoTooltipToggleButton {
-        final Class<? extends Node> target;
+        final Class<? extends View> target;
 
-        NavButton(Class<? extends Node> target, String title) {
+        NavButton(Class<? extends View> target, String title) {
             super(title);
             this.target = target;
             this.setToggleGroup(navButtons);

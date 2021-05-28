@@ -19,17 +19,11 @@ package misq.jfx.common;
 
 public interface LifeCycle {
 
-    void onConstructed(ViewModel viewModel);
+    void onConstructView(ViewModel viewModel);
 
-    default void onInitialized() {
+    default void onViewAdded() {
     }
 
-    default void onActivated() {
-    }
-
-    default void onDeactivated() {
-    }
-
-    default void onDestructed() {
+    default void onViewRemoved() {
     }
 }

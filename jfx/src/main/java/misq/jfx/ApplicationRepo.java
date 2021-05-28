@@ -29,6 +29,7 @@ import java.util.concurrent.CopyOnWriteArraySet;
 public class ApplicationRepo {
     private static ApplicationRepo INSTANCE;
     public final Thread javaFXApplicationThread;
+
     private final Map<Class<? extends ViewModel>, Set<LifeCycleChangeListener>> lifeCycleListeners = new ConcurrentHashMap<>();
 
 
@@ -48,15 +49,21 @@ public class ApplicationRepo {
         lifeCycleListeners.get(clazz).add(lifeCycleChangeListener);
     }
 
-    public void onConstructed(AViewModel viewModel) {
+    public void onConstructView(AViewModel viewModel) {
         if (lifeCycleListeners.containsKey(viewModel.getClass())) {
-            lifeCycleListeners.get(viewModel.getClass()).forEach(e -> e.onConstructed(viewModel));
+            lifeCycleListeners.get(viewModel.getClass()).forEach(e -> e.onConstructView(viewModel));
         }
     }
 
-    public void onInitialized(Class<? extends AViewModel> clazz) {
+    public void onViewAdded(Class<? extends AViewModel> clazz) {
         if (lifeCycleListeners.containsKey(clazz)) {
-            lifeCycleListeners.get(clazz).forEach(LifeCycleChangeListener::onInitialized);
+            lifeCycleListeners.get(clazz).forEach(LifeCycleChangeListener::onViewAdded);
+        }
+    }
+
+    public void onViewRemoved(Class<? extends AViewModel> clazz) {
+        if (lifeCycleListeners.containsKey(clazz)) {
+            lifeCycleListeners.get(clazz).forEach(LifeCycleChangeListener::onViewRemoved);
         }
     }
 }

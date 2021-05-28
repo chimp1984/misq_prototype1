@@ -27,8 +27,6 @@ import java.util.List;
 
 @Slf4j
 public class OfferbookViewModel extends AViewModel {
-
-
     ObservableList<OfferListItem> offerListItems = FXCollections.observableArrayList();
 
     public OfferbookViewModel() {
@@ -41,26 +39,17 @@ public class OfferbookViewModel extends AViewModel {
     }
 
     @Override
-    public void onConstructed(ViewModel viewModel) {
-        super.onConstructed(viewModel);
+    public void onConstructView(ViewModel viewModel) {
+        super.onConstructView(viewModel);
     }
 
     @Override
-    public void onInitialized() {
-        super.onInitialized();
+    public void onViewAdded() {
+        super.onViewAdded();
     }
 
     @Override
-    public void onActivated() {
+    public void onViewRemoved() {
+        super.onViewRemoved();
     }
-
-    @Override
-    public void onDeactivated() {
-    }
-
-    @Override
-    public void onDestructed() {
-    }
-
-
 }

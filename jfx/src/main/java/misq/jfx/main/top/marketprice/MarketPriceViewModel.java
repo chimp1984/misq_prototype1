@@ -47,24 +47,16 @@ public class MarketPriceViewModel extends AViewModel {
     }
 
     @Override
-    public void onConstructed(ViewModel viewModel) {
-        super.onConstructed(viewModel);
+    public void onConstructView(ViewModel viewModel) {
+        super.onConstructView(viewModel);
     }
 
     @Override
-    public void onInitialized() {
+    public void onViewAdded() {
     }
 
     @Override
-    public void onActivated() {
-    }
-
-    @Override
-    public void onDeactivated() {
-    }
-
-    @Override
-    public void onDestructed() {
+    public void onViewRemoved() {
     }
 
     public void onMarketPriceChange(Map<String, Integer> map) {

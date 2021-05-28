@@ -31,6 +31,15 @@ import java.util.function.Consumer;
 @Slf4j
 public class OfferbookPresentation {
     public List<Offer> offers = new ArrayList<>();
+    private final TimerTask timerTask = new TimerTask() {
+        @Override
+        public void run() {
+            log.error("timerTask run");
+            // update();
+        }
+    };
+    private final Timer timer = new Timer();
+    ;
 
     public void setOffersConsumer(Consumer<List<Offer>> offersConsumer) {
         this.offersConsumer = offersConsumer;
@@ -41,17 +50,12 @@ public class OfferbookPresentation {
     public OfferbookPresentation() {
     }
 
-    public void onInitialized() {
+    public void onViewAdded() {
         for (int i = 0; i < 5; i++) {
             offers.add(getRandomOffer());
         }
-        TimerTask timerTask = new TimerTask() {
-            @Override
-            public void run() {
-                // update();
-            }
-        };
-        new Timer().scheduleAtFixedRate(timerTask, 0, 2000);
+
+        timer.scheduleAtFixedRate(timerTask, 0, 2000);
         update();
     }
 
@@ -69,5 +73,11 @@ public class OfferbookPresentation {
         Asset bidAsset = new Asset("BTC", false, new Random().nextInt(100000000) + 1000000, List.of());
         return new SwapOffer(List.of(SwapProtocolType.MULTISIG),
                 makerAddress, bidAsset, askAsset, Optional.empty());
+    }
+
+    public void stop() {
+        log.error("onDestructed");
+        timer.cancel();
+        // timerTask.cancel();
     }
 }

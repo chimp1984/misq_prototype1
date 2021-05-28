@@ -17,5 +17,5 @@
 
 package misq.jfx.common;
 
-public interface ViewModel {
+public interface ViewModel extends LifeCycle {
 }
