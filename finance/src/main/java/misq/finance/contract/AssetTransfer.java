@@ -15,11 +15,10 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package misq.account;
+package misq.finance.contract;
 
 import com.google.common.util.concurrent.Uninterruptibles;
 import lombok.extern.slf4j.Slf4j;
-import misq.finance.contract.Contract;
 
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -32,7 +31,7 @@ public abstract class AssetTransfer implements Transfer {
 
     public abstract CompletableFuture<Boolean> sendFunds(Contract contract);
 
-    enum Type {
+    public enum Type {
         AUTOMATIC, MANUAL
     }
 

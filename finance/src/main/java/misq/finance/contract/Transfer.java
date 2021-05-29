@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package misq.account;
+package misq.finance.contract;
 
 /**
  * Provides the transfer related aspects for the protocol.

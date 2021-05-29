@@ -19,6 +19,7 @@ package misq.finance;
 
 import lombok.Getter;
 import misq.account.TransferType;
+import misq.finance.contract.AssetTransfer;
 
 import java.util.List;
 
@@ -27,12 +28,18 @@ public class Asset {
     private final String code;
     private final boolean isBase; // True if base currency for price representation
     private final long amount;
-    private final List<TransferType> transferTypes; // If not required for protocol its empty
+    private final List<TransferType> transferTypes; // E.g. Native chain, host chain, fiat method (zelle, sepa)
+    private final AssetTransfer.Type assetTransferType; // In case of crypto it can be automatic or manual. Fiat usually is always manual.
 
     public Asset(String code, boolean isBase, long amount, List<TransferType> transferTypes) {
+        this(code, isBase, amount, transferTypes, AssetTransfer.Type.MANUAL);
+    }
+
+    public Asset(String code, boolean isBase, long amount, List<TransferType> transferTypes, AssetTransfer.Type assetTransferType) {
         this.code = code;
         this.isBase = isBase;
         this.amount = amount;
         this.transferTypes = transferTypes;
+        this.assetTransferType = assetTransferType;
     }
 }

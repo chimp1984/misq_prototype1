@@ -23,18 +23,39 @@ import misq.finance.ProtocolType;
 import misq.p2p.NetworkId;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @EqualsAndHashCode
 @Getter
 public class Offer {
     private final String id;
-    private final NetworkId makerNetworkId;
+    private final long date;
     private final List<? extends ProtocolType> protocolTypes;
+    private final NetworkId makerNetworkId;
+    private final Optional<DisputeResolutionOptions> disputeResolutionOptions;
+    private final Optional<FeeOptions> feeOptions;
+    private final Optional<ReputationOptions> reputationOptions;
+    private final Optional<TransferOptions> transferOptions;
+
 
     public Offer(List<? extends ProtocolType> protocolTypes, NetworkId makerNetworkId) {
+        this(protocolTypes, makerNetworkId, Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty());
+    }
+
+    public Offer(List<? extends ProtocolType> protocolTypes,
+                 NetworkId makerNetworkId,
+                 Optional<DisputeResolutionOptions> disputeResolutionOptions,
+                 Optional<FeeOptions> feeOptions,
+                 Optional<ReputationOptions> reputationOptions,
+                 Optional<TransferOptions> transferOptions) {
+        id = UUID.randomUUID().toString();
+        date = System.currentTimeMillis();
         this.protocolTypes = protocolTypes;
         this.makerNetworkId = makerNetworkId;
-        id = UUID.randomUUID().toString();
+        this.disputeResolutionOptions = disputeResolutionOptions;
+        this.feeOptions = feeOptions;
+        this.reputationOptions = reputationOptions;
+        this.transferOptions = transferOptions;
     }
 }
