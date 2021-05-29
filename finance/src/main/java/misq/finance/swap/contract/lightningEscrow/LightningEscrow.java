@@ -12,7 +12,7 @@ public class LightningEscrow implements SecurityProvider {
     }
 
     @State(parties = {"maker", "taker", "escrowAgent"})
-    public interface SharedState {
+    public interface SharedState extends SecurityProvider.SharedState {
         // STARTING SECRETS...
 
         @Access("escrowAgentReceivesMakerPendingPayment & escrowAgentReceivesTakerPendingPayment")
@@ -125,7 +125,8 @@ public class LightningEscrow implements SecurityProvider {
 
         @Action(by = "escrowAgent")
         @DependsOn("escrowAgentPaymentHash")
-        void escrowAgentMakesPendingPayments();
+        default void escrowAgentMakesPendingPayments() {
+        }
 
         @Event(seenBy = "maker")
         String makerReceivesEscrowAgentPendingPayment();
@@ -135,11 +136,13 @@ public class LightningEscrow implements SecurityProvider {
 
         @Action(by = "maker")
         @DependsOn({"escrowAgentNonce1Hash", "escrowAgentNonce2Hash", "escrowAgentNonce2", "makerReceivesEscrowAgentPendingPayment"})
-        void makerMakesPendingPayment();
+        default void makerMakesPendingPayment() {
+        }
 
         @Action(by = "taker")
         @DependsOn({"escrowAgentNonce1Hash", "escrowAgentNonce2Hash", "takerReceivesEscrowAgentPendingPayment"})
-        void takerMakesPendingPayment();
+        default void takerMakesPendingPayment() {
+        }
 
         @Event(seenBy = "escrowAgent")
         String escrowAgentReceivesMakerPendingPayment();
@@ -149,7 +152,8 @@ public class LightningEscrow implements SecurityProvider {
 
         @Action(by = "escrowAgent")
         @DependsOn({"escrowAgentReceivesMakerPendingPayment", "escrowAgentReceivesTakerPendingPayment"})
-        void escrowAgentFinalizesMakerAndTakerPayments();
+        default void escrowAgentFinalizesMakerAndTakerPayments() {
+        }
 
         @Event(seenBy = "maker")
         String makerReceivesMakerPaymentReceipt();
@@ -158,14 +162,15 @@ public class LightningEscrow implements SecurityProvider {
         String takerReceivesTakerPaymentReceipt();
 
         @Event(seenBy = "maker")
-        Void makerStartsCountercurrencyPayment();
+        Unit makerStartsCountercurrencyPayment();
 
         @Event(seenBy = "taker")
-        Void takerConfirmsCountercurrencyPayment();
+        Unit takerConfirmsCountercurrencyPayment();
 
         @Action(by = "taker")
-        @DependsOn("escrowAgentPaymentPreimage")
-        void takerFinalizesEscrowAgentPayment();
+        @DependsOn({"takerConfirmsCountercurrencyPayment", "escrowAgentPaymentPreimage"})
+        default void takerFinalizesEscrowAgentPayment() {
+        }
 
         @Event(seenBy = "escrowAgent")
         String escrowAgentReceivesEscrowAgentPaymentReceipt();

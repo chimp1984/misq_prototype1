@@ -17,6 +17,8 @@
 
 package misq.finance.contract;
 
+import java.util.Map;
+
 /**
  * Provides the security related aspects for the protocol.
  */
@@ -41,5 +43,17 @@ public interface SecurityProvider {
          * For reputation secured contracts.
          */
         REPUTATION
+    }
+
+    /**
+     * A unit type. This is a workaround for the fact that all initialized {@link SharedState} properties must be
+     * non-null, so {@link Void} cannot be used as a return type. TODO: Consider allowing null return values.
+     */
+    enum Unit {UNIT}
+
+    interface SharedState {
+        Map<String, ?> sendMessage(String recipient);
+
+        void receiveMessage(String sender, Map<String, ?> message);
     }
 }
