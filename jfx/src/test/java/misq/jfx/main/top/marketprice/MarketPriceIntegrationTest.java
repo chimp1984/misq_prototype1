@@ -44,7 +44,7 @@ public class MarketPriceIntegrationTest {
             model = view.getModel();
             config = new MockMarketPriceConfig(model);
             config.presentation.period = 100;
-            root.getChildren().add(view);
+            root.getChildren().add(view.getRoot());
 
             Platform.runLater(() -> assertFalse(model.markets.isEmpty()));
             latch.countDown();

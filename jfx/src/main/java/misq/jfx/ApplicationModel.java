@@ -30,7 +30,8 @@ public class ApplicationModel {
     private static ApplicationModel INSTANCE;
     public final Thread javaFXApplicationThread;
 
-    private final Map<Class<? extends ViewModel>, Set<LifeCycleChangeListener>> lifeCycleListeners = new ConcurrentHashMap<>();
+
+    private final Map<Class<? extends ViewModel>, Set<LifeCycleChangeListener<? extends ViewModel>>> lifeCycleListeners = new ConcurrentHashMap<>();
 
 
     public ApplicationModel(Thread javaFXApplicationThread) {
@@ -42,16 +43,16 @@ public class ApplicationModel {
         return INSTANCE;
     }
 
-    public void addLifeCycleListener(Class<? extends ViewModel> clazz, LifeCycleChangeListener lifeCycleChangeListener) {
+    public <T extends ViewModel> void addLifeCycleListener(Class<? extends ViewModel> clazz, LifeCycleChangeListener<T> lifeCycleChangeListener) {
         if (!lifeCycleListeners.containsKey(clazz)) {
             lifeCycleListeners.put(clazz, new CopyOnWriteArraySet<>());
         }
         lifeCycleListeners.get(clazz).add(lifeCycleChangeListener);
     }
 
-    public void onConstructView(AViewModel viewModel) {
+    public <T extends ViewModel> void onConstructView(T viewModel) {
         if (lifeCycleListeners.containsKey(viewModel.getClass())) {
-            lifeCycleListeners.get(viewModel.getClass()).forEach(e -> e.onConstructView(viewModel));
+            lifeCycleListeners.get(viewModel.getClass()).forEach(listener -> ((T) listener).onConstructView(viewModel));
         }
     }
 

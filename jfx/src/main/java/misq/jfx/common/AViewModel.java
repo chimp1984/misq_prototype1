@@ -28,16 +28,25 @@ public abstract class AViewModel implements ViewModel {
 
     @Override
     public void onConstructView(ViewModel viewModel) {
-        ApplicationModel.getInstance().onConstructView(this);
+        ApplicationModel applicationModel = ApplicationModel.getInstance();
+        if (applicationModel != null) {
+            applicationModel.onConstructView(this);
+        }
     }
 
     @Override
     public void onViewAdded() {
-        ApplicationModel.getInstance().onViewAdded(this.getClass());
+        ApplicationModel applicationModel = ApplicationModel.getInstance();
+        if (applicationModel != null) {
+            applicationModel.onViewAdded(this.getClass());
+        }
     }
 
     @Override
     public void onViewRemoved() {
-        ApplicationModel.getInstance().onViewRemoved(this.getClass());
+        ApplicationModel applicationModel = ApplicationModel.getInstance();
+        if (applicationModel != null) {
+            applicationModel.onViewRemoved(this.getClass());
+        }
     }
 }

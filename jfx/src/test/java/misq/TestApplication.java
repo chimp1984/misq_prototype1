@@ -49,7 +49,7 @@ public class TestApplication extends Application {
 
         stage.setScene(scene);
         stage.setMinWidth(1000);
-        stage.setMinHeight(1000);
+        stage.setMinHeight(300);
         stage.setTitle("Misq");
         stage.show();
 

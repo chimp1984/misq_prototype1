@@ -19,6 +19,7 @@ package misq.jfx.main.content.offerbook;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import misq.jfx.common.AViewModel;
 import misq.jfx.common.ViewModel;
@@ -27,6 +28,7 @@ import java.util.List;
 
 @Slf4j
 public class OfferbookViewModel extends AViewModel {
+    @Getter
     ObservableList<OfferListItem> offerListItems = FXCollections.observableArrayList();
 
     public OfferbookViewModel() {
@@ -51,5 +53,9 @@ public class OfferbookViewModel extends AViewModel {
     @Override
     public void onViewRemoved() {
         super.onViewRemoved();
+    }
+
+    public void onMarketPriceChange() {
+
     }
 }

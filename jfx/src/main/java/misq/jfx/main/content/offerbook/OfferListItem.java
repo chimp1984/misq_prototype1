@@ -17,18 +17,24 @@
 
 package misq.jfx.main.content.offerbook;
 
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.StringProperty;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Getter
 public class OfferListItem {
-
+    private final BooleanProperty isVisible = new SimpleBooleanProperty(false);
     private final String amount;
+    private final double premium;
     private final StringProperty price;
     private final String maker;
     private final String details;
 
-    public OfferListItem(String amount, StringProperty price, String maker, String details) {
+    public OfferListItem(double premium, String amount, StringProperty price, String maker, String details) {
+        this.premium = premium;
         this.amount = amount;
         this.price = price;
         this.maker = maker;

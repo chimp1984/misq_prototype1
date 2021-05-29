@@ -23,7 +23,6 @@ import lombok.extern.slf4j.Slf4j;
 import misq.finance.Asset;
 import misq.finance.swap.offer.SwapOffer;
 import misq.jfx.common.LifeCycleChangeListener;
-import misq.jfx.common.ViewModel;
 import misq.jfx.main.content.offerbook.AssetListItem;
 import misq.jfx.main.content.offerbook.OfferListItem;
 import misq.jfx.main.content.offerbook.OfferbookViewModel;
@@ -36,7 +35,7 @@ import java.util.Random;
 import java.util.stream.Collectors;
 
 @Slf4j
-public class OfferbookConfig implements LifeCycleChangeListener {
+public class OfferbookConfig implements LifeCycleChangeListener<OfferbookViewModel> {
     private OfferbookViewModel viewModel;
     private OfferbookPresentation presentation;
 
@@ -44,8 +43,8 @@ public class OfferbookConfig implements LifeCycleChangeListener {
     }
 
     @Override
-    public void onConstructView(ViewModel viewModel) {
-        this.viewModel = (OfferbookViewModel) viewModel;
+    public void onConstructView(OfferbookViewModel viewModel) {
+        this.viewModel = viewModel;
         presentation = new OfferbookPresentation();
         presentation.setOffersConsumer(offers -> {
             List<OfferListItem> offerListItems = offers.stream().map(offer -> getOfferListItem((SwapOffer) offer)).collect(Collectors.toList());
@@ -81,7 +80,7 @@ public class OfferbookConfig implements LifeCycleChangeListener {
             price.set(formatted);
         }, 1000);
 
-        return new OfferListItem(amount, price, maker, details);
+        return new OfferListItem(0.02, amount, price, maker, details);
     }
 
     private AssetListItem toAssetListItem(Asset bidAsset) {

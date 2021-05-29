@@ -41,10 +41,10 @@ public class OfferbookView extends ViewWithModel<StackPane, OfferbookViewModel> 
     public OfferbookView() {
         super(new StackPane(), new OfferbookViewModel());
 
-        root.setStyle("-fx-background-color: red;");
-        //setPrefSize(Double.MAX_VALUE, Double.MAX_VALUE);
+        // root.setStyle("-fx-background-color: red;");
+        // root.setPrefSize(Double.MAX_VALUE, Double.MAX_VALUE);
         tableView = new TableView<>();
-        // tableView.setPrefWidth(Double.MAX_VALUE);
+        tableView.setPrefWidth(Double.MAX_VALUE);
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
 
         tableView.setItems(model.offerListItems);
@@ -56,7 +56,6 @@ public class OfferbookView extends ViewWithModel<StackPane, OfferbookViewModel> 
         root.getChildren().add(tableView);
     }
 
-    // immutable value
     private void addValueColumn(String header, Function<OfferListItem, String> valueSupplier) {
         AutoTooltipTableColumn<OfferListItem, OfferListItem> column = new AutoTooltipTableColumn<>(header) {
             {
@@ -85,7 +84,6 @@ public class OfferbookView extends ViewWithModel<StackPane, OfferbookViewModel> 
         tableView.getColumns().add(column);
     }
 
-    // dynamic value as bindable property
     private void addPropertyColumn(String header, Function<OfferListItem, StringProperty> valueSupplier) {
         AutoTooltipTableColumn<OfferListItem, OfferListItem> column = new AutoTooltipTableColumn<>(header) {
             {
@@ -99,12 +97,24 @@ public class OfferbookView extends ViewWithModel<StackPane, OfferbookViewModel> 
                     public TableCell<OfferListItem, OfferListItem> call(
                             TableColumn<OfferListItem, OfferListItem> column) {
                         return new TableCell<>() {
+                            OfferListItem previousItem;
+
                             @Override
                             public void updateItem(final OfferListItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null && !empty) {
+                                    if (previousItem != null) {
+                                        previousItem.getIsVisible().set(false);
+                                    }
+                                    previousItem = item;
+
+                                    item.getIsVisible().set(true);
                                     textProperty().bind(valueSupplier.apply(item));
                                 } else {
+                                    if (previousItem != null) {
+                                        previousItem.getIsVisible().set(false);
+                                        previousItem = null;
+                                    }
                                     textProperty().unbind();
                                     setText("");
                                 }
