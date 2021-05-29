@@ -42,9 +42,7 @@ public class OfferbookView extends ViewWithModel<StackPane, OfferbookViewModel> 
         super(new StackPane(), new OfferbookViewModel());
 
         // root.setStyle("-fx-background-color: red;");
-        // root.setPrefSize(Double.MAX_VALUE, Double.MAX_VALUE);
         tableView = new TableView<>();
-        tableView.setPrefWidth(Double.MAX_VALUE);
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
 
         tableView.setItems(model.offerListItems);
@@ -104,15 +102,15 @@ public class OfferbookView extends ViewWithModel<StackPane, OfferbookViewModel> 
                                 super.updateItem(item, empty);
                                 if (item != null && !empty) {
                                     if (previousItem != null) {
-                                        previousItem.getIsVisible().set(false);
+                                        previousItem.isVisible(false);
                                     }
                                     previousItem = item;
 
-                                    item.getIsVisible().set(true);
+                                    item.isVisible(true);
                                     textProperty().bind(valueSupplier.apply(item));
                                 } else {
                                     if (previousItem != null) {
-                                        previousItem.getIsVisible().set(false);
+                                        previousItem.isVisible(false);
                                         previousItem = null;
                                     }
                                     textProperty().unbind();

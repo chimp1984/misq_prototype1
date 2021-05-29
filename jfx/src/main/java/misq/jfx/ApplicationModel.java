@@ -17,6 +17,7 @@
 
 package misq.jfx;
 
+import lombok.extern.slf4j.Slf4j;
 import misq.jfx.common.AViewModel;
 import misq.jfx.common.LifeCycleChangeListener;
 import misq.jfx.common.ViewModel;
@@ -26,12 +27,13 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 
+@Slf4j
 public class ApplicationModel {
     private static ApplicationModel INSTANCE;
     public final Thread javaFXApplicationThread;
 
 
-    private final Map<Class<? extends ViewModel>, Set<LifeCycleChangeListener<? extends ViewModel>>> lifeCycleListeners = new ConcurrentHashMap<>();
+    private final Map<Class<? extends ViewModel>, Set<LifeCycleChangeListener>> lifeCycleListeners = new ConcurrentHashMap<>();
 
 
     public ApplicationModel(Thread javaFXApplicationThread) {
@@ -43,16 +45,18 @@ public class ApplicationModel {
         return INSTANCE;
     }
 
-    public <T extends ViewModel> void addLifeCycleListener(Class<? extends ViewModel> clazz, LifeCycleChangeListener<T> lifeCycleChangeListener) {
+    public void connect(Class<? extends ViewModel> clazz, LifeCycleChangeListener lifeCycleChangeListener) {
         if (!lifeCycleListeners.containsKey(clazz)) {
             lifeCycleListeners.put(clazz, new CopyOnWriteArraySet<>());
         }
         lifeCycleListeners.get(clazz).add(lifeCycleChangeListener);
     }
 
-    public <T extends ViewModel> void onConstructView(T viewModel) {
+    public void onConstructView(ViewModel viewModel) {
         if (lifeCycleListeners.containsKey(viewModel.getClass())) {
-            lifeCycleListeners.get(viewModel.getClass()).forEach(listener -> ((T) listener).onConstructView(viewModel));
+            lifeCycleListeners.get(viewModel.getClass()).forEach(listener -> {
+                listener.onConstructView(viewModel);
+            });
         }
     }
 

@@ -21,8 +21,6 @@ import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.scene.layout.Pane;
 import misq.TestApplicationLauncher;
 import misq.jfx.utils.UserThread;
@@ -32,6 +30,7 @@ import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -54,22 +53,14 @@ public class OfferbookViewModelIntegrationTest {
         latch.await(500, TimeUnit.SECONDS);
         Thread.sleep(100);
         List<OfferListItem> offerListItems = new ArrayList<>();
-        for (int i = 0; i < 200; i++) {
+        for (int i = 0; i < 20; i++) {
             OfferListItem offerListItem = getRandomOffer(i);
             offerListItems.add(offerListItem);
         }
 
-        marketPrice.addListener(new ChangeListener<>() {
-            @Override
-            public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
-                model.getOfferListItems().stream()
-                        .filter(e -> e.getIsVisible().get()) // without that filter and which lot of items ui gets slow as each item gets update and not only the visible
-                        .forEach(e -> e.getPrice().set(getPrice(e.getPremium(), marketPrice.get())));
-            }
-        });
         updateMarketPrice();
         UserThread.runPeriodically(this::updateMarketPrice, 1000);
-        model.onOfferListItemsChange(offerListItems);
+        model.setOfferListItems(offerListItems);
         Thread.sleep(100000);
     }
 
@@ -78,21 +69,24 @@ public class OfferbookViewModelIntegrationTest {
         marketPrice.set(50000 + 1000 * rand);
     }
 
-    private String getPrice(double premium, double marketPrice) {
+    private String getFormattedMarketBasedPrice(double premium, double marketPrice) {
         double percentagePrice = marketPrice * (1 + premium);
         DecimalFormat df = new DecimalFormat("#.##");
-        try {
-            Thread.sleep(10); // simulate slow calculation
-        } catch (InterruptedException e) {
-        }
         return df.format(percentagePrice);
     }
 
     private OfferListItem getRandomOffer(int i) {
         double rand = new Random().nextInt(10000) / 10000d;
         double premium = 0.02 * rand;
-        StringProperty price = new SimpleStringProperty(getPrice(premium, marketPrice.get()));
-        OfferListItem offerListItem = new OfferListItem(premium, "3213.22", price, "maker " + i, "Zelle/Multisig");
+        StringProperty price = new SimpleStringProperty(getFormattedMarketBasedPrice(premium, marketPrice.get()));
+        OfferListItem offerListItem = new OfferListItem(UUID.randomUUID().toString(),
+                premium,
+                "3213.22",
+                price,
+                "maker " + i,
+                "Zelle/Multisig",
+                marketPrice,
+                this::getFormattedMarketBasedPrice);
         return offerListItem;
     }
 }

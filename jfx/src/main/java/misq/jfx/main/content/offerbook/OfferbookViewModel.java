@@ -35,9 +35,20 @@ public class OfferbookViewModel extends AViewModel {
         super();
     }
 
-    public void onOfferListItemsChange(List<OfferListItem> list) {
+    public void setOfferListItems(List<OfferListItem> list) {
         this.offerListItems.clear();
         this.offerListItems.addAll(list);
+    }
+
+    public void onOfferListItemAdded(OfferListItem item) {
+        this.offerListItems.add(item);
+    }
+
+    public void onOfferListItemRemoved(String offerId) {
+        offerListItems.stream()
+                .filter(e -> e.getId().equals(offerId))
+                .findAny()
+                .ifPresent(o -> offerListItems.remove(o));
     }
 
     @Override

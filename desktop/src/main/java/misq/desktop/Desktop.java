@@ -21,11 +21,11 @@ import lombok.extern.slf4j.Slf4j;
 import misq.jfx.ApplicationModel;
 import misq.jfx.JfxLauncher;
 import misq.jfx.main.content.offerbook.OfferbookViewModel;
+import misq.presentation.Offerbook;
 
 @Slf4j
 public class Desktop {
     private ApplicationModel applicationModel;
-    private MarketPriceConfig marketPriceConfig;
 
     public Desktop() {
         launchApplication();
@@ -40,6 +40,7 @@ public class Desktop {
     }
 
     private void init() {
-        applicationModel.addLifeCycleListener(OfferbookViewModel.class, new OfferbookConfig());
+        Offerbook offerbook = new Offerbook();
+        applicationModel.connect(OfferbookViewModel.class, new OfferbookDataModel(offerbook));
     }
 }

@@ -17,27 +17,61 @@
 
 package misq.jfx.main.content.offerbook;
 
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.SimpleBooleanProperty;
+import javafx.application.Platform;
+import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.StringProperty;
+import javafx.beans.value.ChangeListener;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+
+import java.util.function.BiFunction;
 
 @Slf4j
 @Getter
 public class OfferListItem {
-    private final BooleanProperty isVisible = new SimpleBooleanProperty(false);
+
     private final String amount;
+    private final String id;
     private final double premium;
     private final StringProperty price;
+    private final DoubleProperty marketPrice;
     private final String maker;
     private final String details;
+    private final ChangeListener<Number> listener;
+    private final BiFunction<Double, Double, String> marketPriceFormatter;
 
-    public OfferListItem(double premium, String amount, StringProperty price, String maker, String details) {
+    public OfferListItem(String id,
+                         double premium,
+                         String amount,
+                         StringProperty price,
+                         String maker,
+                         String details,
+                         DoubleProperty marketPrice,
+                         BiFunction<Double, Double, String> marketPriceFormatter) {
+        this.id = id;
         this.premium = premium;
         this.amount = amount;
         this.price = price;
-        this.maker = maker;
+        this.maker = id.substring(0, 5);
         this.details = details;
+        this.marketPrice = marketPrice;
+
+        // We get called from a non UI thread so we need to wrap it into Platform.runLater
+        listener = (observable, oldValue, newValue) -> Platform.runLater(this::applyPrice);
+        this.marketPriceFormatter = marketPriceFormatter;
+        applyPrice();
+    }
+
+    private void applyPrice() {
+        price.set(marketPriceFormatter.apply(premium, marketPrice.get()));
+    }
+
+    public void isVisible(boolean visible) {
+        if (visible) {
+            applyPrice();
+            marketPrice.addListener(listener);
+        } else {
+            marketPrice.removeListener(listener);
+        }
     }
 }

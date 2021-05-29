@@ -295,7 +295,10 @@ configure(project(':desktop')) {
         implementation project(':presentation')
         implementation project(':jfx')
 
+        // We do some mapping from domain to jfx so we need javaFx classes like properties
         implementation "org.openjfx:javafx-base:$javafxVersion:$os"
+        implementation "org.openjfx:javafx-graphics:$javafxVersion:$os"
+
         implementation group: 'io.reactivex.rxjava3', name: 'rxjava', version: '3.0.12'
     }
 }

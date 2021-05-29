@@ -22,14 +22,17 @@ import misq.finance.ProtocolType;
 import misq.p2p.Address;
 
 import java.util.List;
+import java.util.UUID;
 
 @Getter
 public class Offer {
+    private final String id;
     private final Address makerAddress;
     private final List<? extends ProtocolType> protocolTypes;
 
     public Offer(List<? extends ProtocolType> protocolTypes, Address makerAddress) {
         this.protocolTypes = protocolTypes;
         this.makerAddress = makerAddress;
+        id = UUID.randomUUID().toString();
     }
 }

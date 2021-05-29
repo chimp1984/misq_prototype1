@@ -17,8 +17,8 @@
 
 package misq.jfx.common;
 
-public interface LifeCycleChangeListener<T extends ViewModel> {
-    void onConstructView(T viewModel);
+public interface LifeCycleChangeListener {
+    void onConstructView(ViewModel viewModel);
 
     void onViewAdded();
 
