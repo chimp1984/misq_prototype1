@@ -37,17 +37,27 @@ public class SwapOffer extends Offer {
     private final Asset bidAsset;
     private final Asset askAsset;
     private final Optional<Double> marketBasedPrice;
+    private final Optional<Double> minAmountAsPercentage;
+
+    public SwapOffer(List<SwapProtocolType> protocolTypes,
+                     NetworkId makerNetworkId,
+                     Asset bidAsset,
+                     Asset askAsset) {
+        this(protocolTypes, makerNetworkId, bidAsset, askAsset, Optional.empty(), Optional.empty());
+    }
 
     public SwapOffer(List<SwapProtocolType> protocolTypes,
                      NetworkId makerNetworkId,
                      Asset bidAsset,
                      Asset askAsset,
-                     Optional<Double> marketBasedPrice) {
+                     Optional<Double> marketBasedPrice,
+                     Optional<Double> minAmountAsPercentage) {
         super(protocolTypes, makerNetworkId);
 
         this.bidAsset = bidAsset;
         this.askAsset = askAsset;
         this.marketBasedPrice = marketBasedPrice;
+        this.minAmountAsPercentage = minAmountAsPercentage;
     }
 
     public double getPrice() {

@@ -20,10 +20,10 @@ package misq.finance.swap.contract.bsqBond;
 
 import lombok.extern.slf4j.Slf4j;
 import misq.MockP2pService;
+import misq.account.FiatTransferType;
 import misq.finance.Asset;
 import misq.finance.ContractMaker;
 import misq.finance.ProtocolType;
-import misq.finance.TransferType;
 import misq.finance.contract.ProtocolExecutor;
 import misq.finance.contract.TwoPartyContract;
 import misq.finance.swap.SwapProtocolType;
@@ -37,7 +37,6 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -62,10 +61,10 @@ public class BsqBondTest {
         // create offer
         NetworkId makerNetworkId = new NetworkId(Address.localHost(3333), null, "default");
 
-        Asset askAsset = new Asset("USD", true, 100, List.of(TransferType.ZELLE));
-        Asset bidAsset = new Asset("EUR", false, 90, List.of(TransferType.REVOLUT, TransferType.SEPA));
+        Asset askAsset = new Asset("USD", true, 100, List.of(FiatTransferType.ZELLE));
+        Asset bidAsset = new Asset("EUR", false, 90, List.of(FiatTransferType.REVOLUT, FiatTransferType.SEPA));
         SwapOffer offer = new SwapOffer(List.of(SwapProtocolType.MULTISIG, SwapProtocolType.REPUTATION),
-                makerNetworkId, bidAsset, askAsset, Optional.empty());
+                makerNetworkId, bidAsset, askAsset);
 
         // taker takes offer and selects first ProtocolType
         ProtocolType selectedProtocolType = offer.getProtocolTypes().get(0);

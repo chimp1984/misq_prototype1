@@ -20,12 +20,12 @@ package misq.finance.swap.contract.multiSig;
 
 import lombok.extern.slf4j.Slf4j;
 import misq.MockP2pService;
+import misq.account.FiatTransferType;
 import misq.chain.Chain;
 import misq.chain.Wallet;
 import misq.finance.Asset;
 import misq.finance.ContractMaker;
 import misq.finance.ProtocolType;
-import misq.finance.TransferType;
 import misq.finance.contract.ProtocolExecutor;
 import misq.finance.contract.TwoPartyContract;
 import misq.finance.swap.SwapProtocolType;
@@ -38,7 +38,6 @@ import misq.p2p.P2pService;
 import org.junit.Before;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.CountDownLatch;
@@ -68,10 +67,10 @@ public abstract class MultiSigTest {
         P2pService p2pService = new MockP2pService();
         // create offer
         NetworkId makerNetworkId = new NetworkId(Address.localHost(3333), null, "default");
-        Asset askAsset = new Asset("USD", true, 50000, List.of(TransferType.ZELLE));
+        Asset askAsset = new Asset("USD", true, 50000, List.of(FiatTransferType.ZELLE));
         Asset bidAsset = new Asset("BTC", false, 1, List.of());
         SwapOffer offer = new SwapOffer(List.of(SwapProtocolType.MULTISIG),
-                makerNetworkId, bidAsset, askAsset, Optional.empty());
+                makerNetworkId, bidAsset, askAsset);
 
         // taker takes offer and selects first ProtocolType
         ProtocolType selectedProtocolType = offer.getProtocolTypes().get(0);

@@ -15,24 +15,11 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package misq.finance;
+package misq.account;
 
-import lombok.Getter;
-import misq.account.TransferType;
-
-import java.util.List;
-
-@Getter
-public class Asset {
-    private final String code;
-    private final boolean isBase; // True if base currency for price representation
-    private final long amount;
-    private final List<TransferType> transferTypes; // If not required for protocol its empty
-
-    public Asset(String code, boolean isBase, long amount, List<TransferType> transferTypes) {
-        this.code = code;
-        this.isBase = isBase;
-        this.amount = amount;
-        this.transferTypes = transferTypes;
-    }
+public enum FiatTransferType implements TransferType {
+    SEPA,
+    REVOLUT,
+    ZELLE,
+    OTHER
 }

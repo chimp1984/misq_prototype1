@@ -1,6 +1,6 @@
 package misq.finance.swap.contract.lightningEscrow.taker;
 
-import misq.finance.contract.AssetTransfer;
+import misq.account.AssetTransfer;
 import misq.finance.contract.ManyPartyContract;
 import misq.finance.swap.contract.lightningEscrow.LightningEscrow;
 import misq.finance.swap.contract.lightningEscrow.LightningEscrowProtocol;

@@ -19,8 +19,8 @@ package misq.presentation;
 
 import io.reactivex.rxjava3.subjects.PublishSubject;
 import lombok.extern.slf4j.Slf4j;
+import misq.account.FiatTransferType;
 import misq.finance.Asset;
-import misq.finance.TransferType;
 import misq.finance.offer.Offer;
 import misq.finance.swap.SwapProtocolType;
 import misq.finance.swap.offer.SwapOffer;
@@ -86,10 +86,10 @@ public class Offerbook {
 
     private Offer getRandomOffer() {
         NetworkId makerNetworkId = new NetworkId(Address.localHost(1000 + new Random().nextInt(1000)), null, "default");
-        Asset askAsset = new Asset("USD", true, new Random().nextInt(50000000) + 100000, List.of(TransferType.ZELLE));
+        Asset askAsset = new Asset("USD", true, new Random().nextInt(50000000) + 100000, List.of(FiatTransferType.ZELLE));
         Asset bidAsset = new Asset("BTC", false, new Random().nextInt(100000000) + 1000000, List.of());
         return new SwapOffer(List.of(SwapProtocolType.MULTISIG),
-                makerNetworkId, bidAsset, askAsset, Optional.empty());
+                makerNetworkId, bidAsset, askAsset);
     }
 
 

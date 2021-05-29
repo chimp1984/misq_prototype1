@@ -17,7 +17,11 @@
 
 package misq.finance.swap.contract.multiSig;
 
-import misq.finance.contract.*;
+import misq.account.AssetTransfer;
+import misq.finance.contract.Protocol;
+import misq.finance.contract.SecurityProvider;
+import misq.finance.contract.TwoPartyContract;
+import misq.finance.contract.TwoPartyProtocol;
 import misq.p2p.P2pService;
 import misq.p2p.node.MessageListener;
 

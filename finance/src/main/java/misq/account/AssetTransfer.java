@@ -15,10 +15,11 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package misq.finance.contract;
+package misq.account;
 
 import com.google.common.util.concurrent.Uninterruptibles;
 import lombok.extern.slf4j.Slf4j;
+import misq.finance.contract.Contract;
 
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;

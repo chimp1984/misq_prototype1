@@ -23,6 +23,5 @@ public enum SwapProtocolType implements ProtocolType {
     ATOMIC_CROSS_CHAIN_SWAP,
     LN_SWAP,
     MULTISIG,
-    BSQ_BOND,
     REPUTATION
 }

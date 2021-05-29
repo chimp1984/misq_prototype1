@@ -15,24 +15,10 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package misq.finance;
+package misq.account;
 
-import lombok.Getter;
-import misq.account.TransferType;
-
-import java.util.List;
-
-@Getter
-public class Asset {
-    private final String code;
-    private final boolean isBase; // True if base currency for price representation
-    private final long amount;
-    private final List<TransferType> transferTypes; // If not required for protocol its empty
-
-    public Asset(String code, boolean isBase, long amount, List<TransferType> transferTypes) {
-        this.code = code;
-        this.isBase = isBase;
-        this.amount = amount;
-        this.transferTypes = transferTypes;
-    }
+public enum CryptoTransferType implements TransferType {
+    NATIVE_CHAIN, // If coin is transferred via native chain BTC over. E.g. Bitcoin network
+    HOST_CHAIN, // If coin has no native chain. E.g. USDT -? Omni, ERC20,...
+    OTHER; // If it does not fit the above
 }

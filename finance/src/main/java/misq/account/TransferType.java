@@ -15,10 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package misq.finance;
+package misq.account;
 
-public enum TransferType {
-    SEPA,
-    REVOLUT,
-    ZELLE
+public interface TransferType {
 }

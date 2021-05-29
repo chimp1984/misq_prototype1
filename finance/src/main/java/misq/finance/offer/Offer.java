@@ -17,6 +17,7 @@
 
 package misq.finance.offer;
 
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import misq.finance.ProtocolType;
 import misq.p2p.NetworkId;
@@ -24,6 +25,7 @@ import misq.p2p.NetworkId;
 import java.util.List;
 import java.util.UUID;
 
+@EqualsAndHashCode
 @Getter
 public class Offer {
     private final String id;

@@ -19,7 +19,7 @@ package misq.finance.swap.contract.bsqBond.maker;
 
 
 import lombok.extern.slf4j.Slf4j;
-import misq.finance.contract.AssetTransfer;
+import misq.account.AssetTransfer;
 import misq.finance.contract.TwoPartyContract;
 import misq.finance.swap.contract.bsqBond.BsqBond;
 import misq.finance.swap.contract.bsqBond.BsqBondProtocol;
