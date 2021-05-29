@@ -15,24 +15,14 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package misq.finance.offer;
+package misq.jfx.main.content.createoffer;
 
-import lombok.Getter;
-import misq.finance.ProtocolType;
-import misq.p2p.NetworkId;
+import javafx.scene.layout.VBox;
+import misq.jfx.common.ViewWithModel;
 
-import java.util.List;
-import java.util.UUID;
+public class CreateOfferView extends ViewWithModel<VBox, CreateOfferViewModel> {
 
-@Getter
-public class Offer {
-    private final String id;
-    private final NetworkId makerNetworkId;
-    private final List<? extends ProtocolType> protocolTypes;
-
-    public Offer(List<? extends ProtocolType> protocolTypes, NetworkId makerNetworkId) {
-        this.protocolTypes = protocolTypes;
-        this.makerNetworkId = makerNetworkId;
-        id = UUID.randomUUID().toString();
+    public CreateOfferView() {
+        super(new VBox(), new CreateOfferViewModel());
     }
 }

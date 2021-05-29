@@ -25,12 +25,10 @@ import misq.finance.swap.contract.bsqBond.BsqBond;
 import misq.finance.swap.contract.bsqBond.BsqBondProtocol;
 import misq.finance.swap.contract.bsqBond.taker.TakerCommitmentMessage;
 import misq.finance.swap.contract.bsqBond.taker.TakerFundsSentMessage;
-import misq.p2p.NetworkPeer;
 import misq.p2p.P2pService;
 import misq.p2p.message.Message;
 import misq.p2p.node.Connection;
 
-import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
 @Slf4j
@@ -47,7 +45,7 @@ public class MakerBsqBondProtocol extends BsqBondProtocol {
                     .whenComplete((success, t) -> setState(State.COMMITMENT_RECEIVED))
                     .thenCompose(isValid -> transport.sendFunds(contract))
                     .thenCompose(isSent -> p2pService.confidentialSend(new MakerFundsSentMessage(),
-                            new NetworkPeer(Set.of(counterParty.getAddress()), null, "default"),
+                            counterParty.getMakerNetworkId(),
                             null))
                     .whenComplete((connection1, t) -> setState(State.FUNDS_SENT));
         }
@@ -67,7 +65,7 @@ public class MakerBsqBondProtocol extends BsqBondProtocol {
         setState(State.START);
         security.getCommitment(contract)
                 .thenCompose(commitment -> p2pService.confidentialSend(new MakerCommitmentMessage(commitment),
-                        new NetworkPeer(Set.of(counterParty.getAddress()), null, "default"),
+                        counterParty.getMakerNetworkId(),
                         null))
                 .whenComplete((success, t) -> setState(State.COMMITMENT_SENT));
         return CompletableFuture.completedFuture(true);

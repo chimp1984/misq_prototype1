@@ -37,6 +37,7 @@ configure(subprojects) {
         guiceVersion = '4.2.2'
         jetbrainsAnnotationsVersion = '13.0'
         javafxVersion = '16'
+        jfoenixVersion = '9.0.10'
         joptVersion = '5.0.4'
         jsonsimpleVersion = '1.1.1'
         junitVersion = '4.12'
@@ -262,6 +263,7 @@ configure(project(':jfx')) {
         implementation "org.openjfx:javafx-controls:$javafxVersion:$os"
        // implementation group: 'io.reactivex.rxjava3', name: 'rxjava', version: '3.0.12'
 
+        compile "com.jfoenix:jfoenix:$jfoenixVersion"
         compile "de.jensd:fontawesomefx:$fontawesomefxVersion"
         compile "de.jensd:fontawesomefx-commons:$fontawesomefxCommonsVersion"
         compile "de.jensd:fontawesomefx-materialdesignfont:$fontawesomefxMaterialdesignfontVersion"

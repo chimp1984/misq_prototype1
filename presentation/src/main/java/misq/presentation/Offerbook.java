@@ -25,6 +25,7 @@ import misq.finance.offer.Offer;
 import misq.finance.swap.SwapProtocolType;
 import misq.finance.swap.offer.SwapOffer;
 import misq.p2p.Address;
+import misq.p2p.NetworkId;
 
 import java.text.DecimalFormat;
 import java.util.*;
@@ -84,11 +85,11 @@ public class Offerbook {
     }
 
     private Offer getRandomOffer() {
-        Address makerAddress = Address.localHost(1000 + new Random().nextInt(1000));
+        NetworkId makerNetworkId = new NetworkId(Address.localHost(1000 + new Random().nextInt(1000)), null, "default");
         Asset askAsset = new Asset("USD", true, new Random().nextInt(50000000) + 100000, List.of(TransferType.ZELLE));
         Asset bidAsset = new Asset("BTC", false, new Random().nextInt(100000000) + 1000000, List.of());
         return new SwapOffer(List.of(SwapProtocolType.MULTISIG),
-                makerAddress, bidAsset, askAsset, Optional.empty());
+                makerNetworkId, bidAsset, askAsset, Optional.empty());
     }
 
 
@@ -116,18 +117,18 @@ public class Offerbook {
                 public void run() {
                     int i1 = new Random().nextInt(2);
                     if (i1 == 1) {
-                        for (int i = 0; i < new Random().nextInt(8); i++) {
+                        for (int i = 0; i < new Random().nextInt(5); i++) {
                             addOffer();
                         }
                     } else {
-                        int i2 = new Random().nextInt(4);
+                        int i2 = new Random().nextInt(3);
                         for (int i = 0; i < i2; i++) {
                             removeOffer();
                         }
                     }
 
                 }
-            }, 0, 200);
+            }, 0, 500);
         }
     }
 }

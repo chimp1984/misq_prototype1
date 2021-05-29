@@ -98,7 +98,7 @@ public class OfferbookDataModel implements LifeCycleChangeListener {
 
     private OfferListItem toOfferListItem(Offer offer) {
         SwapOffer swapOffer = (SwapOffer) offer;
-        String maker = swapOffer.getMakerAddress().toString();
+        String maker = swapOffer.getMakerNetworkId().toString();
         Asset askAsset = swapOffer.getAskAsset();
         String amount = String.valueOf(askAsset.getAmount() / 1000000d).substring(0, 3);
         String details = "Zelle/Multisig";

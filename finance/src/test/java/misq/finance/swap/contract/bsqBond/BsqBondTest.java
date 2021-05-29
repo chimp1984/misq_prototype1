@@ -31,6 +31,7 @@ import misq.finance.swap.contract.bsqBond.maker.MakerBsqBondProtocol;
 import misq.finance.swap.contract.bsqBond.taker.TakerBsqBondProtocol;
 import misq.finance.swap.offer.SwapOffer;
 import misq.p2p.Address;
+import misq.p2p.NetworkId;
 import misq.p2p.P2pService;
 import org.junit.Before;
 import org.junit.Test;
@@ -59,11 +60,12 @@ public class BsqBondTest {
     public void testBsqBond() {
 
         // create offer
-        Address makerAddress = new Address("makerAddress");
+        NetworkId makerNetworkId = new NetworkId(Address.localHost(3333), null, "default");
+
         Asset askAsset = new Asset("USD", true, 100, List.of(TransferType.ZELLE));
         Asset bidAsset = new Asset("EUR", false, 90, List.of(TransferType.REVOLUT, TransferType.SEPA));
-        SwapOffer offer = new SwapOffer(List.of(SwapProtocolType.BSQ_BOND, SwapProtocolType.REPUTATION),
-                makerAddress, bidAsset, askAsset, Optional.empty());
+        SwapOffer offer = new SwapOffer(List.of(SwapProtocolType.MULTISIG, SwapProtocolType.REPUTATION),
+                makerNetworkId, bidAsset, askAsset, Optional.empty());
 
         // taker takes offer and selects first ProtocolType
         ProtocolType selectedProtocolType = offer.getProtocolTypes().get(0);
@@ -72,8 +74,8 @@ public class BsqBondTest {
         ProtocolExecutor takerSwapTradeProtocolExecutor = new ProtocolExecutor(takerBsqBondProtocol);
 
         // simulated take offer protocol: Taker sends to maker the selectedProtocolType
-        Address takerAddress = new Address("takerAddress");
-        TwoPartyContract makerTrade = ContractMaker.createMakerTrade(takerAddress, selectedProtocolType);
+        NetworkId takerNetworkId = new NetworkId(Address.localHost(3333), null, "default");
+        TwoPartyContract makerTrade = ContractMaker.createMakerTrade(takerNetworkId, selectedProtocolType);
         MakerBsqBondProtocol makerBsqBondProtocol = new MakerBsqBondProtocol(makerTrade, p2pService);
         ProtocolExecutor makerSwapTradeProtocolExecutor = new ProtocolExecutor(makerBsqBondProtocol);
 

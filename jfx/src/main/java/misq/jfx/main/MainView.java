@@ -55,7 +55,6 @@ public class MainView extends View<StackPane> {
         ContentView contentView = new ContentView();
         HBox.setHgrow(contentView.getRoot(), Priority.ALWAYS);
         NavigationView navigationView = new NavigationView();
-        //  navigationView.setStyle("-fx-background-color: blue;");
         leftNavAndContentBox.getChildren().addAll(navigationView.getRoot(), contentView.getRoot());
 
         Navigation.navigateToPreviousVisitedView();

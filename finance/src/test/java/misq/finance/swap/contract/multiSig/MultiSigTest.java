@@ -33,6 +33,7 @@ import misq.finance.swap.contract.multiSig.maker.MakerMultiSigProtocol;
 import misq.finance.swap.contract.multiSig.taker.TakerMultiSigProtocol;
 import misq.finance.swap.offer.SwapOffer;
 import misq.p2p.Address;
+import misq.p2p.NetworkId;
 import misq.p2p.P2pService;
 import org.junit.Before;
 
@@ -66,11 +67,11 @@ public abstract class MultiSigTest {
     protected void run() {
         P2pService p2pService = new MockP2pService();
         // create offer
-        Address makerAddress = new Address("makerAddress");
+        NetworkId makerNetworkId = new NetworkId(Address.localHost(3333), null, "default");
         Asset askAsset = new Asset("USD", true, 50000, List.of(TransferType.ZELLE));
         Asset bidAsset = new Asset("BTC", false, 1, List.of());
         SwapOffer offer = new SwapOffer(List.of(SwapProtocolType.MULTISIG),
-                makerAddress, bidAsset, askAsset, Optional.empty());
+                makerNetworkId, bidAsset, askAsset, Optional.empty());
 
         // taker takes offer and selects first ProtocolType
         ProtocolType selectedProtocolType = offer.getProtocolTypes().get(0);
@@ -80,8 +81,8 @@ public abstract class MultiSigTest {
         ProtocolExecutor takerSwapTradeProtocolExecutor = new ProtocolExecutor(takerMultiSigProtocol);
 
         // simulated take offer protocol: Taker sends to maker the selectedProtocolType
-        Address takerAddress = new Address("takerAddress");
-        TwoPartyContract makerTrade = ContractMaker.createMakerTrade(takerAddress, selectedProtocolType);
+        NetworkId takerNetworkId = new NetworkId(Address.localHost(2222), null, "default");
+        TwoPartyContract makerTrade = ContractMaker.createMakerTrade(takerNetworkId, selectedProtocolType);
         MultiSig makerMultiSig = new MultiSig(getMakerWallet(), getChain());
         MakerMultiSigProtocol makerMultiSigProtocol = new MakerMultiSigProtocol(makerTrade, p2pService, makerMultiSig);
         ProtocolExecutor makerSwapTradeProtocolExecutor = new ProtocolExecutor(makerMultiSigProtocol);

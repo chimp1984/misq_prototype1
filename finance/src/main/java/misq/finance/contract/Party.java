@@ -18,13 +18,13 @@
 package misq.finance.contract;
 
 import lombok.Getter;
-import misq.p2p.Address;
+import misq.p2p.NetworkId;
 
 @Getter
 public class Party {
-    private final Address address;
+    private final NetworkId makerNetworkId;
 
-    public Party(Address address) {
-        this.address = address;
+    public Party(NetworkId makerNetworkId) {
+        this.makerNetworkId = makerNetworkId;
     }
 }

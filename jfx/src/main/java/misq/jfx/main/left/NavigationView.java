@@ -24,6 +24,7 @@ import misq.jfx.common.View;
 import misq.jfx.components.AutoTooltipToggleButton;
 import misq.jfx.main.MainView;
 import misq.jfx.main.content.accounts.AccountsView;
+import misq.jfx.main.content.createoffer.CreateOfferView;
 import misq.jfx.main.content.funds.FundsView;
 import misq.jfx.main.content.markets.MarketsView;
 import misq.jfx.main.content.offerbook.OfferbookView;
@@ -43,12 +44,13 @@ public class NavigationView extends View<VBox> {
 
         NavButton markets = new NavButton(MarketsView.class, "Markets");
         NavButton offerBook = new NavButton(OfferbookView.class, "Offerbook");
+        NavButton createOffer = new NavButton(CreateOfferView.class, "Create offer");
         NavButton trades = new NavButton(TradesView.class, "Trades");
         NavButton funds = new NavButton(FundsView.class, "Funds");
         NavButton accounts = new NavButton(AccountsView.class, "Accounts");
         NavButton settings = new NavButton(SettingsView.class, "SettingsView");
 
-        root.getChildren().addAll(markets, offerBook, trades, funds, accounts, settings);
+        root.getChildren().addAll(markets, offerBook, createOffer, trades, funds, accounts, settings);
 
         Navigation.addListener((viewPath, data) -> {
             if (viewPath.size() != 2 || viewPath.indexOf(MainView.class) != 0) {

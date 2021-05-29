@@ -28,17 +28,17 @@ import java.util.concurrent.ConcurrentHashMap;
 
 @Getter
 @EqualsAndHashCode
-public class NetworkPeer {
+public class NetworkId {
     private final Map<NetworkType, Address> addressByNetworkType = new ConcurrentHashMap<>();
     private final PublicKey publicKey;
     // The tag is used as key in the map in the keypair repository. For decrypting messages it is used to select the correct key.
     private final String tag;
 
-    public NetworkPeer(Address address, PublicKey publicKey, String tag) {
+    public NetworkId(Address address, PublicKey publicKey, String tag) {
         this(Set.of(address), publicKey, tag);
     }
 
-    public NetworkPeer(Set<Address> addressList, PublicKey publicKey, String tag) {
+    public NetworkId(Set<Address> addressList, PublicKey publicKey, String tag) {
         addressList.forEach(e -> addressByNetworkType.put(e.getNetworkType(), e));
         this.publicKey = publicKey;
         this.tag = tag;

@@ -32,7 +32,6 @@ public class ContentView extends View<HBox> {
     public ContentView() {
         super(new HBox());
 
-        root.setStyle("-fx-background-color: blue;");
         Navigation.addListener((viewPath, data) -> {
             if (viewPath.size() != 2 || viewPath.indexOf(MainView.class) != 0)
                 return;

@@ -86,13 +86,13 @@ public class P2pNode {
         return peerManager.bootstrap(networkConfig.getNodeId().getId(), networkConfig.getNodeId().getServerPort());
     }
 
-    public CompletableFuture<Connection> confidentialSend(Message message, NetworkPeer networkPeer, KeyPair myKeyPair)
+    public CompletableFuture<Connection> confidentialSend(Message message, NetworkId networkId, KeyPair myKeyPair)
             throws GeneralSecurityException {
-        return confidentialMessageService.send(message, networkPeer, myKeyPair);
+        return confidentialMessageService.send(message, networkId, myKeyPair);
     }
 
-    public CompletableFuture<Connection> relay(Message message, NetworkPeer networkPeer, KeyPair myKeyPair) {
-        return confidentialMessageService.relay(message, networkPeer, myKeyPair);
+    public CompletableFuture<Connection> relay(Message message, NetworkId networkId, KeyPair myKeyPair) {
+        return confidentialMessageService.relay(message, networkId, myKeyPair);
     }
 
     public CompletableFuture<GossipResult> requestAddData(Message message) {

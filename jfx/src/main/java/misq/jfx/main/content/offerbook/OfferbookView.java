@@ -19,30 +19,47 @@ package misq.jfx.main.content.offerbook;
 
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.StringProperty;
-import javafx.scene.Scene;
+import javafx.geometry.Insets;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
-import javafx.scene.layout.StackPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.VBox;
 import javafx.util.Callback;
 import lombok.extern.slf4j.Slf4j;
 import misq.jfx.common.ViewWithModel;
+import misq.jfx.components.AutoTooltipButton;
 import misq.jfx.components.AutoTooltipTableColumn;
+import misq.jfx.main.MainView;
+import misq.jfx.main.content.createoffer.CreateOfferView;
+import misq.jfx.navigation.Navigation;
 
-import java.util.Optional;
 import java.util.function.Function;
 
 @Slf4j
-public class OfferbookView extends ViewWithModel<StackPane, OfferbookViewModel> {
+public class OfferbookView extends ViewWithModel<VBox, OfferbookViewModel> {
     private final TableView<OfferListItem> tableView;
-
-    private Optional<Scene> scene = Optional.empty();
+    private final HBox toolbar;
+    private final AutoTooltipButton createOfferButton;
 
     public OfferbookView() {
-        super(new StackPane(), new OfferbookViewModel());
+        super(new VBox(), new OfferbookViewModel());
+        toolbar = new HBox();
+        toolbar.setMinHeight(70);
+        toolbar.setMaxHeight(toolbar.getMinHeight());
 
-        // root.setStyle("-fx-background-color: red;");
+        createOfferButton = new AutoTooltipButton("Create offer");
+        createOfferButton.setOnAction(e -> Navigation.navigateTo(MainView.class, CreateOfferView.class));
+        HBox.setMargin(createOfferButton, new Insets(20, 20, 20, 20));
+
+        Pane spacer = new Pane();
+        HBox.setHgrow(spacer, Priority.ALWAYS);
+        toolbar.getChildren().addAll(spacer, createOfferButton);
+
         tableView = new TableView<>();
+        VBox.setVgrow(tableView, Priority.ALWAYS);
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
 
         tableView.setItems(model.offerListItems);
@@ -51,7 +68,7 @@ public class OfferbookView extends ViewWithModel<StackPane, OfferbookViewModel> 
         addValueColumn("Details", OfferListItem::getDetails);
         addValueColumn("Maker", OfferListItem::getMaker);
 
-        root.getChildren().add(tableView);
+        root.getChildren().addAll(toolbar, tableView);
     }
 
     private void addValueColumn(String header, Function<OfferListItem, String> valueSupplier) {

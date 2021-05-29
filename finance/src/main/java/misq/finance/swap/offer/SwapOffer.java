@@ -21,7 +21,7 @@ import lombok.Getter;
 import misq.finance.Asset;
 import misq.finance.offer.Offer;
 import misq.finance.swap.SwapProtocolType;
-import misq.p2p.Address;
+import misq.p2p.NetworkId;
 
 import java.util.List;
 import java.util.Optional;
@@ -39,11 +39,11 @@ public class SwapOffer extends Offer {
     private final Optional<Double> marketBasedPrice;
 
     public SwapOffer(List<SwapProtocolType> protocolTypes,
-                     Address makerAddress,
+                     NetworkId makerNetworkId,
                      Asset bidAsset,
                      Asset askAsset,
                      Optional<Double> marketBasedPrice) {
-        super(protocolTypes, makerAddress);
+        super(protocolTypes, makerNetworkId);
 
         this.bidAsset = bidAsset;
         this.askAsset = askAsset;

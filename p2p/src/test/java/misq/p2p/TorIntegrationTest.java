@@ -152,8 +152,8 @@ public class TorIntegrationTest extends BaseTest {
     private void send(CountDownLatch sentLatch, Address peerAddress, AtomicInteger i, Map<Integer, Long> tsMap) throws GeneralSecurityException {
         tsMap.put(i.get(), System.currentTimeMillis());
         log.error("Send msg {}", i.get());
-        NetworkPeer networkPeer = new NetworkPeer(peerAddress, Config.keyPairBob1.getPublic(), "default");
-        alice.confidentialSend(new MockMessage(String.valueOf(i.get())), networkPeer, Config.keyPairAlice1)
+        NetworkId networkId = new NetworkId(peerAddress, Config.keyPairBob1.getPublic(), "default");
+        alice.confidentialSend(new MockMessage(String.valueOf(i.get())), networkId, Config.keyPairAlice1)
                 .whenComplete((connection, throwable) -> {
                     if (connection != null) {
                         sentLatch.countDown();

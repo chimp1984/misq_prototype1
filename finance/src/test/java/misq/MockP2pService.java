@@ -19,7 +19,7 @@ package misq;
 
 
 import misq.p2p.Address;
-import misq.p2p.NetworkPeer;
+import misq.p2p.NetworkId;
 import misq.p2p.NetworkType;
 import misq.p2p.P2pService;
 import misq.p2p.data.filter.DataFilter;
@@ -59,7 +59,7 @@ public class MockP2pService extends P2pService {
     }
 
     @Override
-    public CompletableFuture<Connection> confidentialSend(Message message, NetworkPeer networkPeer, KeyPair myKeyPair) {
+    public CompletableFuture<Connection> confidentialSend(Message message, NetworkId networkId, KeyPair myKeyPair) {
         CompletableFuture<Connection> future = new CompletableFuture<>();
         new Thread(() -> {
             try {

@@ -25,12 +25,10 @@ import misq.finance.swap.contract.multiSig.MultiSig;
 import misq.finance.swap.contract.multiSig.MultiSigProtocol;
 import misq.finance.swap.contract.multiSig.taker.DepositTxBroadcastMessage;
 import misq.finance.swap.contract.multiSig.taker.PayoutTxBroadcastMessage;
-import misq.p2p.NetworkPeer;
 import misq.p2p.P2pService;
 import misq.p2p.message.Message;
 import misq.p2p.node.Connection;
 
-import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
 @Slf4j
@@ -70,7 +68,7 @@ public class MakerMultiSigProtocol extends MultiSigProtocol implements MultiSig.
         setState(State.START);
         multiSig.getTxInputs()
                 .thenCompose(txInputs -> p2pService.confidentialSend(new TxInputsMessage(txInputs),
-                        new NetworkPeer(Set.of(counterParty.getAddress()), null, "default"),
+                        counterParty.getMakerNetworkId(),
                         null))
                 .whenComplete((success, t) -> setState(State.TX_INPUTS_SENT));
         return CompletableFuture.completedFuture(true);
@@ -81,7 +79,7 @@ public class MakerMultiSigProtocol extends MultiSigProtocol implements MultiSig.
         return multiSig.createPartialPayoutTx()
                 .thenCompose(multiSig::getPayoutTxSignature)
                 .thenCompose(sig -> p2pService.confidentialSend(new FundsSentMessage(sig),
-                        new NetworkPeer(Set.of(counterParty.getAddress()), null, "default"),
+                        counterParty.getMakerNetworkId(),
                         null))
                 .whenComplete((isValid, t) -> setState(State.FUNDS_SENT_MSG_SENT));
     }

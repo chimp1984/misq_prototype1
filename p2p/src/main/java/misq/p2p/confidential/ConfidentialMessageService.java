@@ -23,7 +23,7 @@ import misq.common.security.HybridEncryption;
 import misq.common.util.ObjectSerializer;
 import misq.p2p.Address;
 import misq.p2p.KeyPairRepository;
-import misq.p2p.NetworkPeer;
+import misq.p2p.NetworkId;
 import misq.p2p.NetworkType;
 import misq.p2p.message.Message;
 import misq.p2p.node.Connection;
@@ -80,22 +80,22 @@ public class ConfidentialMessageService implements MessageListener {
         }
     }
 
-    public CompletableFuture<Connection> send(Message message, NetworkPeer networkPeer, KeyPair myKeyPair)
+    public CompletableFuture<Connection> send(Message message, NetworkId networkId, KeyPair myKeyPair)
             throws GeneralSecurityException {
-        ConfidentialData confidentialData = HybridEncryption.encryptAndSign(message.serialize(), networkPeer.getPublicKey(), myKeyPair);
-        ConfidentialMessage confidentialMessage = new ConfidentialMessage(confidentialData, networkPeer.getTag());
-        return node.send(confidentialMessage, networkPeer.getAddress(node.getNetworkType()));
+        ConfidentialData confidentialData = HybridEncryption.encryptAndSign(message.serialize(), networkId.getPublicKey(), myKeyPair);
+        ConfidentialMessage confidentialMessage = new ConfidentialMessage(confidentialData, networkId.getTag());
+        return node.send(confidentialMessage, networkId.getAddress(node.getNetworkType()));
     }
 
     public CompletableFuture<Connection> send(Message message, Connection connection,
-                                              NetworkPeer networkPeer, KeyPair myKeyPair)
+                                              NetworkId networkId, KeyPair myKeyPair)
             throws GeneralSecurityException {
-        ConfidentialData confidentialData = HybridEncryption.encryptAndSign(message.serialize(), networkPeer.getPublicKey(), myKeyPair);
-        ConfidentialMessage confidentialMessage = new ConfidentialMessage(confidentialData, networkPeer.getTag());
+        ConfidentialData confidentialData = HybridEncryption.encryptAndSign(message.serialize(), networkId.getPublicKey(), myKeyPair);
+        ConfidentialMessage confidentialMessage = new ConfidentialMessage(confidentialData, networkId.getTag());
         return node.send(confidentialMessage, connection);
     }
 
-    public CompletableFuture<Connection> relay(Message message, NetworkPeer networkPeer, KeyPair myKeyPair) {
+    public CompletableFuture<Connection> relay(Message message, NetworkId networkId, KeyPair myKeyPair) {
        /*   Set<Connection> connections = getConnectionsWithSupportedNetwork(peerAddress.getNetworkType());
       Connection outboundConnection = CollectionUtil.getRandomElement(connections);
         if (outboundConnection != null) {
