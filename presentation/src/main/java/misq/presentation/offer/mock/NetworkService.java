@@ -15,10 +15,12 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package misq.presentation;
+package misq.presentation.offer.mock;
 
-public class PresentationMain {
-    public static void main(String[] args) {
+public interface NetworkService {
+    void addListener(MockNetworkService.Listener listener);
 
-    }
+    void removeListener(MockNetworkService.Listener listener);
+
+    java.util.Map<String, misq.finance.offer.Offer> getData();
 }

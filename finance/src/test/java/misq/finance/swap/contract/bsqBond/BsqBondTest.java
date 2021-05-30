@@ -61,8 +61,8 @@ public class BsqBondTest {
         // create offer
         NetworkId makerNetworkId = new NetworkId(Address.localHost(3333), null, "default");
 
-        Asset askAsset = new Asset("USD", true, 100, List.of(FiatTransferType.ZELLE));
-        Asset bidAsset = new Asset("EUR", false, 90, List.of(FiatTransferType.REVOLUT, FiatTransferType.SEPA));
+        Asset askAsset = new Asset("USD", 100, List.of(FiatTransferType.ZELLE));
+        Asset bidAsset = new Asset("EUR", 90, List.of(FiatTransferType.REVOLUT, FiatTransferType.SEPA));
         SwapOffer offer = new SwapOffer(List.of(SwapProtocolType.MULTISIG, SwapProtocolType.REPUTATION),
                 makerNetworkId, bidAsset, askAsset);
 

@@ -28,10 +28,9 @@ import java.util.function.BiFunction;
 
 @Slf4j
 @Getter
-public class OfferListItem {
-
-    private final String amount;
+public class OfferItemOld {
     private final String id;
+    private final String amount;
     private final double premium;
     private final StringProperty price;
     private final DoubleProperty marketPrice;
@@ -40,14 +39,14 @@ public class OfferListItem {
     private final ChangeListener<Number> listener;
     private final BiFunction<Double, Double, String> marketPriceFormatter;
 
-    public OfferListItem(String id,
-                         double premium,
-                         String amount,
-                         StringProperty price,
-                         String maker,
-                         String details,
-                         DoubleProperty marketPrice,
-                         BiFunction<Double, Double, String> marketPriceFormatter) {
+    public OfferItemOld(String id,
+                        double premium,
+                        String amount,
+                        StringProperty price,
+                        String maker,
+                        String details,
+                        DoubleProperty marketPrice,
+                        BiFunction<Double, Double, String> marketPriceFormatter) {
         this.id = id;
         this.premium = premium;
         this.amount = amount;

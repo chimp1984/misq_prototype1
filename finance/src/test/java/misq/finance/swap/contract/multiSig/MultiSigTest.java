@@ -67,8 +67,8 @@ public abstract class MultiSigTest {
         P2pService p2pService = new MockP2pService();
         // create offer
         NetworkId makerNetworkId = new NetworkId(Address.localHost(3333), null, "default");
-        Asset askAsset = new Asset("USD", true, 50000, List.of(FiatTransferType.ZELLE));
-        Asset bidAsset = new Asset("BTC", false, 1, List.of());
+        Asset askAsset = new Asset("USD", 50000, List.of(FiatTransferType.ZELLE));
+        Asset bidAsset = new Asset("BTC", 1, List.of());
         SwapOffer offer = new SwapOffer(List.of(SwapProtocolType.MULTISIG),
                 makerNetworkId, bidAsset, askAsset);
 

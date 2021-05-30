@@ -23,33 +23,33 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import misq.jfx.common.AViewModel;
 import misq.jfx.common.ViewModel;
-import misq.jfx.main.content.offerbook.OfferListItem;
+import misq.jfx.main.content.offerbook.OfferItem;
 
 import java.util.List;
 
 @Slf4j
 public class CreateOfferViewModel extends AViewModel {
     @Getter
-    ObservableList<OfferListItem> offerListItems = FXCollections.observableArrayList();
+    ObservableList<OfferItem> offerItems = FXCollections.observableArrayList();
 
     public CreateOfferViewModel() {
         super();
     }
 
-    public void setOfferListItems(List<OfferListItem> list) {
-        this.offerListItems.clear();
-        this.offerListItems.addAll(list);
+    public void setOfferItems(List<OfferItem> list) {
+        this.offerItems.clear();
+        this.offerItems.addAll(list);
     }
 
-    public void onOfferListItemAdded(OfferListItem item) {
-        this.offerListItems.add(item);
+    public void onOfferListItemAdded(OfferItem item) {
+        this.offerItems.add(item);
     }
 
     public void onOfferListItemRemoved(String offerId) {
-        offerListItems.stream()
+        offerItems.stream()
                 .filter(e -> e.getId().equals(offerId))
                 .findAny()
-                .ifPresent(o -> offerListItems.remove(o));
+                .ifPresent(o -> offerItems.remove(o));
     }
 
     @Override

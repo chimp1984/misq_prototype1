@@ -18,10 +18,15 @@
 package misq.desktop;
 
 import lombok.extern.slf4j.Slf4j;
+import misq.desktop.offer.OfferbookDataModel;
 import misq.jfx.ApplicationModel;
 import misq.jfx.JfxLauncher;
 import misq.jfx.main.content.offerbook.OfferbookViewModel;
-import misq.presentation.Offerbook;
+import misq.presentation.marketprice.MarketPriceService;
+import misq.presentation.marketprice.MockMarketPriceService;
+import misq.presentation.offer.Offerbook;
+import misq.presentation.offer.mock.MockNetworkService;
+import misq.presentation.offer.mock.NetworkService;
 
 @Slf4j
 public class Desktop {
@@ -40,7 +45,10 @@ public class Desktop {
     }
 
     private void init() {
-        Offerbook offerbook = new Offerbook();
-        applicationModel.connect(OfferbookViewModel.class, new OfferbookDataModel(offerbook));
+        NetworkService networkService = new MockNetworkService();
+        Offerbook offerbook = new Offerbook(networkService);
+        MarketPriceService marketPriceService = new MockMarketPriceService();
+        OfferbookDataModel offerbookDataModel = new OfferbookDataModel(offerbook, marketPriceService);
+        applicationModel.connect(OfferbookViewModel.class, offerbookDataModel);
     }
 }

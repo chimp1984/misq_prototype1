@@ -23,6 +23,7 @@ import javafx.geometry.Insets;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
@@ -40,7 +41,7 @@ import java.util.function.Function;
 
 @Slf4j
 public class OfferbookView extends ViewWithModel<VBox, OfferbookViewModel> {
-    private final TableView<OfferListItem> tableView;
+    private final TableView<OfferItem> tableView;
     private final HBox toolbar;
     private final AutoTooltipButton createOfferButton;
 
@@ -62,17 +63,19 @@ public class OfferbookView extends ViewWithModel<VBox, OfferbookViewModel> {
         VBox.setVgrow(tableView, Priority.ALWAYS);
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
 
-        tableView.setItems(model.offerListItems);
-        addPropertyColumn("Price", OfferListItem::getPrice);
-        addValueColumn("Amount", OfferListItem::getAmount);
-        addValueColumn("Details", OfferListItem::getDetails);
-        addValueColumn("Maker", OfferListItem::getMaker);
+        tableView.setItems(model.offerItems);
+        addPropertyColumn("Price", OfferItem::getPrice);
+        addValueColumn("Amount BTC", OfferItem::getBaseAmountWithMinAmount);
+        addPropertyColumn("Amount USD", OfferItem::getQuoteAmount);
+        addValueColumn("Details", OfferItem::getTransferOptions);
+        addMakerColumn("Maker", OfferItem::getMakerInfo);
+        addTakeOfferColumn("");
 
         root.getChildren().addAll(toolbar, tableView);
     }
 
-    private void addValueColumn(String header, Function<OfferListItem, String> valueSupplier) {
-        AutoTooltipTableColumn<OfferListItem, OfferListItem> column = new AutoTooltipTableColumn<>(header) {
+    private void addMakerColumn(String header, Function<OfferItem, String> valueSupplier) {
+        AutoTooltipTableColumn<OfferItem, OfferItem> column = new AutoTooltipTableColumn<>(header) {
             {
                 setMinWidth(125);
             }
@@ -81,11 +84,99 @@ public class OfferbookView extends ViewWithModel<VBox, OfferbookViewModel> {
         column.setCellFactory(
                 new Callback<>() {
                     @Override
-                    public TableCell<OfferListItem, OfferListItem> call(
-                            TableColumn<OfferListItem, OfferListItem> column) {
+                    public TableCell<OfferItem, OfferItem> call(
+                            TableColumn<OfferItem, OfferItem> column) {
+                        return new TableCell<>() {
+                            ImageView iconView = new ImageView();
+                            AutoTooltipButton button = new AutoTooltipButton("Show details");
+
+                            {
+                                button.setGraphic(iconView);
+                                button.setMinWidth(200);
+                                button.setMaxWidth(200);
+                                button.setGraphicTextGap(10);
+                            }
+
+                            @Override
+                            public void updateItem(final OfferItem item, boolean empty) {
+                                super.updateItem(item, empty);
+                                if (item != null && !empty) {
+                                    // setText(valueSupplier.apply(item));
+                                    button.setOnAction(e -> onTakeOffer(item));
+                                    setPadding(new Insets(0, 15, 0, 0));
+                                    setGraphic(button);
+                                } else {
+                                    button.setOnAction(null);
+                                    setGraphic(null);
+                                }
+                            }
+                        };
+                    }
+                });
+        tableView.getColumns().add(column);
+    }
+
+    private void addTakeOfferColumn(String header) {
+        AutoTooltipTableColumn<OfferItem, OfferItem> column = new AutoTooltipTableColumn<>(header) {
+            {
+                setMinWidth(125);
+            }
+        };
+        column.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
+        column.setCellFactory(
+                new Callback<>() {
+                    @Override
+                    public TableCell<OfferItem, OfferItem> call(
+                            TableColumn<OfferItem, OfferItem> column) {
+                        return new TableCell<>() {
+                            ImageView iconView = new ImageView();
+                            AutoTooltipButton button = new AutoTooltipButton("Take offer");
+
+                            {
+                                button.setGraphic(iconView);
+                                button.setMinWidth(200);
+                                button.setMaxWidth(200);
+                                button.setGraphicTextGap(10);
+                            }
+
+                            @Override
+                            public void updateItem(final OfferItem item, boolean empty) {
+                                super.updateItem(item, empty);
+                                if (item != null && !empty) {
+                                    // setText(valueSupplier.apply(item));
+                                    button.setOnAction(e -> onTakeOffer(item));
+                                    setPadding(new Insets(0, 15, 0, 0));
+                                    setGraphic(button);
+                                } else {
+                                    button.setOnAction(null);
+                                    setGraphic(null);
+                                }
+                            }
+                        };
+                    }
+                });
+        tableView.getColumns().add(column);
+    }
+
+    private void onTakeOffer(OfferItem item) {
+
+    }
+
+    private void addValueColumn(String header, Function<OfferItem, String> valueSupplier) {
+        AutoTooltipTableColumn<OfferItem, OfferItem> column = new AutoTooltipTableColumn<>(header) {
+            {
+                setMinWidth(125);
+            }
+        };
+        column.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
+        column.setCellFactory(
+                new Callback<>() {
+                    @Override
+                    public TableCell<OfferItem, OfferItem> call(
+                            TableColumn<OfferItem, OfferItem> column) {
                         return new TableCell<>() {
                             @Override
-                            public void updateItem(final OfferListItem item, boolean empty) {
+                            public void updateItem(final OfferItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null && !empty) {
                                     setText(valueSupplier.apply(item));
@@ -99,8 +190,8 @@ public class OfferbookView extends ViewWithModel<VBox, OfferbookViewModel> {
         tableView.getColumns().add(column);
     }
 
-    private void addPropertyColumn(String header, Function<OfferListItem, StringProperty> valueSupplier) {
-        AutoTooltipTableColumn<OfferListItem, OfferListItem> column = new AutoTooltipTableColumn<>(header) {
+    private void addPropertyColumn(String header, Function<OfferItem, StringProperty> valueSupplier) {
+        AutoTooltipTableColumn<OfferItem, OfferItem> column = new AutoTooltipTableColumn<>(header) {
             {
                 setMinWidth(125);
             }
@@ -109,13 +200,13 @@ public class OfferbookView extends ViewWithModel<VBox, OfferbookViewModel> {
         column.setCellFactory(
                 new Callback<>() {
                     @Override
-                    public TableCell<OfferListItem, OfferListItem> call(
-                            TableColumn<OfferListItem, OfferListItem> column) {
+                    public TableCell<OfferItem, OfferItem> call(
+                            TableColumn<OfferItem, OfferItem> column) {
                         return new TableCell<>() {
-                            OfferListItem previousItem;
+                            OfferItem previousItem;
 
                             @Override
-                            public void updateItem(final OfferListItem item, boolean empty) {
+                            public void updateItem(final OfferItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null && !empty) {
                                     if (previousItem != null) {

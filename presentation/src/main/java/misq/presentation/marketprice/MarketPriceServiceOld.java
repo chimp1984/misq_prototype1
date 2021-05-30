@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package misq.presentation;
+package misq.presentation.marketprice;
 
 import io.reactivex.rxjava3.annotations.NonNull;
 import io.reactivex.rxjava3.observers.DisposableObserver;
@@ -27,7 +27,7 @@ import java.util.*;
 import java.util.function.Consumer;
 
 @Slf4j
-public class MarketsPresentation {
+public class MarketPriceServiceOld {
     public Map<String, Integer> map = new HashMap<>();
     public PublishSubject<Map<String, Integer>> marketPricePublisher = PublishSubject.create();
 
@@ -35,7 +35,7 @@ public class MarketsPresentation {
     @Setter
     public Consumer<Map<String, Integer>> marketPriceConsumer;
 
-    public MarketsPresentation() {
+    public MarketPriceServiceOld() {
         refreshMarketPriceHandler = new DisposableObserver<>() {
             @Override
             public void onNext(@NonNull Boolean b) {
@@ -60,6 +60,7 @@ public class MarketsPresentation {
         new Timer().scheduleAtFixedRate(timerTask, 0, 2000);
         updateMarketPrice();
     }
+
     private void updateMarketPrice() {
         map.put("BTC/USD", new Random().nextInt(100000000));
         map.put("BTC/EUR", new Random().nextInt(1000000));

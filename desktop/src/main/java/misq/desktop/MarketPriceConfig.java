@@ -21,16 +21,16 @@ import lombok.extern.slf4j.Slf4j;
 import misq.jfx.common.LifeCycleChangeListener;
 import misq.jfx.common.ViewModel;
 import misq.jfx.main.top.marketprice.MarketPriceViewModel;
-import misq.presentation.MarketsPresentation;
+import misq.presentation.marketprice.MarketPriceServiceOld;
 
 @Slf4j
 public class MarketPriceConfig implements LifeCycleChangeListener {
-    private final MarketsPresentation presentation;
+    private final MarketPriceServiceOld presentation;
     private final MarketPriceViewModel viewModel;
 
     public MarketPriceConfig(MarketPriceViewModel viewModel) {
         this.viewModel = viewModel;
-        presentation = new MarketsPresentation();
+        presentation = new MarketPriceServiceOld();
 
         viewModel.setRefreshMarketPriceHandler(presentation::onRefreshMarketPrice);
         presentation.setMarketPriceConsumer(viewModel::onMarketPriceChange);

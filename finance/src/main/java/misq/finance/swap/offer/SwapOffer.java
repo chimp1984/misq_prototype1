@@ -19,7 +19,7 @@ package misq.finance.swap.offer;
 
 import lombok.Getter;
 import misq.finance.Asset;
-import misq.finance.offer.Offer;
+import misq.finance.offer.*;
 import misq.finance.swap.SwapProtocolType;
 import misq.p2p.NetworkId;
 
@@ -36,6 +36,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 public class SwapOffer extends Offer {
     private final Asset bidAsset;
     private final Asset askAsset;
+    private final String baseCurrency;
     private final Optional<Double> marketBasedPrice;
     private final Optional<Double> minAmountAsPercentage;
 
@@ -43,19 +44,27 @@ public class SwapOffer extends Offer {
                      NetworkId makerNetworkId,
                      Asset bidAsset,
                      Asset askAsset) {
-        this(protocolTypes, makerNetworkId, bidAsset, askAsset, Optional.empty(), Optional.empty());
+        this(bidAsset, askAsset, bidAsset.getCode(), protocolTypes, makerNetworkId,
+                Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(),
+                Optional.empty(), Optional.empty());
     }
 
-    public SwapOffer(List<SwapProtocolType> protocolTypes,
-                     NetworkId makerNetworkId,
-                     Asset bidAsset,
+    public SwapOffer(Asset bidAsset,
                      Asset askAsset,
+                     String baseCurrency,
+                     List<SwapProtocolType> protocolTypes,
+                     NetworkId makerNetworkId,
                      Optional<Double> marketBasedPrice,
-                     Optional<Double> minAmountAsPercentage) {
-        super(protocolTypes, makerNetworkId);
+                     Optional<Double> minAmountAsPercentage,
+                     Optional<DisputeResolutionOptions> disputeResolutionOptions,
+                     Optional<FeeOptions> feeOptions,
+                     Optional<ReputationOptions> reputationOptions,
+                     Optional<TransferOptions> transferOptions) {
+        super(protocolTypes, makerNetworkId, disputeResolutionOptions, feeOptions, reputationOptions, transferOptions);
 
         this.bidAsset = bidAsset;
         this.askAsset = askAsset;
+        this.baseCurrency = baseCurrency;
         this.marketBasedPrice = marketBasedPrice;
         this.minAmountAsPercentage = minAmountAsPercentage;
     }
@@ -66,21 +75,21 @@ public class SwapOffer extends Offer {
 
     private double getFixPrice() {
         double baseAssetAmount = (double) getBaseAsset().getAmount();
-        double counterAssetAmount = (double) getCounterAsset().getAmount();
-        checkArgument(counterAssetAmount > 0);
-        return baseAssetAmount / counterAssetAmount;
+        double quoteAssetAmount = (double) getQuoteAsset().getAmount();
+        checkArgument(quoteAssetAmount > 0);
+        return quoteAssetAmount / baseAssetAmount * 10000; // for fiat...
     }
 
-    private Asset getBaseAsset() {
-        if (askAsset.isBase()) {
+    public Asset getBaseAsset() {
+        if (askAsset.getCode().equals(baseCurrency)) {
             return askAsset;
         } else {
             return bidAsset;
         }
     }
 
-    private Asset getCounterAsset() {
-        if (bidAsset.isBase()) {
+    public Asset getQuoteAsset() {
+        if (bidAsset.getCode().equals(baseCurrency)) {
             return askAsset;
         } else {
             return bidAsset;
