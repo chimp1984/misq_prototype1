@@ -17,6 +17,9 @@
 
 package misq.jfx.main.content.offerbook;
 
+import javafx.application.Platform;
+import javafx.beans.property.DoubleProperty;
+import javafx.beans.property.SimpleDoubleProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
@@ -36,6 +39,7 @@ public class OfferbookViewModel extends AViewModel {
     final ObservableList<String> currencies = FXCollections.observableArrayList("BTC", "USD", "EUR", "XMR", "USDT");
     private String selectedAskCurrency;
     private String selectedBidCurrency;
+    final DoubleProperty marketPrice = new SimpleDoubleProperty(0);
 
     public OfferbookViewModel() {
         super();
@@ -44,17 +48,25 @@ public class OfferbookViewModel extends AViewModel {
     public void setOfferItems(List<OfferItem> list) {
         this.offerItems.clear();
         this.offerItems.addAll(list);
+        offerItems.sort(OfferItem::compareTo);
     }
 
     public void onOfferItemAdded(OfferItem item) {
-        this.offerItems.add(item);
+        Platform.runLater(() -> {
+            this.offerItems.add(item);
+            offerItems.sort(OfferItem::compareTo);
+        });
     }
 
     public void onOfferListItemRemoved(String offerId) {
-        offerItems.stream()
+        Platform.runLater(() -> offerItems.stream()
                 .filter(e -> e.getId().equals(offerId))
                 .findAny()
-                .ifPresent(o -> offerItems.remove(o));
+                .ifPresent(offerItems::remove));
+    }
+
+    public void onMarketPriceUpdate(double price) {
+        Platform.runLater(() -> marketPrice.set(price));
     }
 
     @Override
@@ -73,12 +85,12 @@ public class OfferbookViewModel extends AViewModel {
     }
 
 
-    public void onAskCurrencySelected(String selectedAskCurrency) {
+    void onAskCurrencySelected(String selectedAskCurrency) {
         this.selectedAskCurrency = selectedAskCurrency;
         applyFilter();
     }
 
-    public void onBidCurrencySelected(String selectedBidCurrency) {
+    void onBidCurrencySelected(String selectedBidCurrency) {
         this.selectedBidCurrency = selectedBidCurrency;
         applyFilter();
     }

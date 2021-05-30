@@ -267,6 +267,8 @@ configure(project(':jfx')) {
         compile "de.jensd:fontawesomefx:$fontawesomefxVersion"
         compile "de.jensd:fontawesomefx-commons:$fontawesomefxCommonsVersion"
         compile "de.jensd:fontawesomefx-materialdesignfont:$fontawesomefxMaterialdesignfontVersion"
+        implementation group: 'org.controlsfx', name: 'controlsfx', version: '11.1.0'
+
     }
 }
 

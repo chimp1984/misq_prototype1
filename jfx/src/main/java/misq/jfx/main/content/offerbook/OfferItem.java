@@ -19,17 +19,20 @@ package misq.jfx.main.content.offerbook;
 
 import javafx.application.Platform;
 import javafx.beans.property.DoubleProperty;
+import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.beans.value.ChangeListener;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.NotNull;
 
+import java.util.Map;
 import java.util.Optional;
 
 @Slf4j
 @Getter
-public class OfferItem {
+public class OfferItem implements Comparable<OfferItem> {
     private final String id;
     private final String date;
     private final String protocolTypes;
@@ -56,11 +59,13 @@ public class OfferItem {
     private final DoubleProperty marketPrice;       // used for getting notified for market price updates to call priceSupplied function
     private final QuoteAmountSupplier quoteAmountSupplier;
     private final String quoteCurrencyCode;
+    private final long quoteAmountAsLong;
     private final long baseAmountAsLong;
     private final String baseAmountWithMinAmount;
     private final Optional<Double> minAmountAsPercentage;
+    private final PriceComparator priceComparator;
     private final PriceSupplier priceSupplier;
-
+    private final DoubleProperty priceAsDouble = new SimpleDoubleProperty(0d);
     private final ChangeListener<Number> listener;
 
     public OfferItem(String id,
@@ -80,12 +85,14 @@ public class OfferItem {
                      double fixPriceAsDouble,
                      Optional<Double> marketBasedPrice,
                      DoubleProperty marketPrice,
-                     PriceSupplier priceSupplier,
-                     QuoteAmountSupplier quoteAmountSupplier,
                      String quoteCurrencyCode,
+                     long quoteAmountAsLong,
                      long baseAmountAsLong,
                      String baseAmountWithMinAmount,
-                     Optional<Double> minAmountAsPercentage) {
+                     Optional<Double> minAmountAsPercentage,
+                     PriceSupplier priceSupplier,
+                     QuoteAmountSupplier quoteAmountSupplier,
+                     PriceComparator priceComparator) {
         this.id = id;
         this.date = date;
         this.protocolTypes = protocolTypes;
@@ -103,20 +110,24 @@ public class OfferItem {
         this.fixPriceAsDouble = fixPriceAsDouble;
         this.marketBasedPrice = marketBasedPrice;
         this.marketPrice = marketPrice;
-        this.quoteAmountSupplier = quoteAmountSupplier;
         this.quoteCurrencyCode = quoteCurrencyCode;
+        this.quoteAmountAsLong = quoteAmountAsLong;
         this.baseAmountAsLong = baseAmountAsLong;
         this.baseAmountWithMinAmount = baseAmountWithMinAmount;
         this.minAmountAsPercentage = minAmountAsPercentage;
+        this.priceSupplier = priceSupplier;
+        this.quoteAmountSupplier = quoteAmountSupplier;
+        this.priceComparator = priceComparator;
 
         // We get called from a non UI thread so we need to wrap it into Platform.runLater
         listener = (observable, oldValue, newValue) -> Platform.runLater(this::updatedPriceAndAmount);
-        this.priceSupplier = priceSupplier;
         updatedPriceAndAmount();
     }
 
     private void updatedPriceAndAmount() {
-        price.set(priceSupplier.get(fixPriceAsDouble, marketBasedPrice, marketPrice.get()));
+        Map.Entry<String, Double> priceTuple = priceSupplier.get(fixPriceAsDouble, marketBasedPrice, marketPrice.get());
+        priceAsDouble.set(priceTuple.getValue());
+        price.set(priceTuple.getKey());
         quoteAmount.set(quoteAmountSupplier.get(baseAmountAsLong, minAmountAsPercentage, marketBasedPrice, marketPrice.get(), quoteCurrencyCode));
     }
 
@@ -127,5 +138,22 @@ public class OfferItem {
         } else {
             marketPrice.removeListener(listener);
         }
+    }
+
+    public int compareBaseAmount(OfferItem other) {
+        return Long.compare(baseAmountAsLong, other.baseAmountAsLong);
+    }
+
+    public int compareQuoteAmount(OfferItem other) {
+        return Long.compare(quoteAmountAsLong, other.quoteAmountAsLong);
+    }
+
+    public int comparePrice(OfferItem other) {
+        return priceComparator.compare(priceAsDouble.get(), other.priceAsDouble.get(), bidAssetCode, quoteCurrencyCode);
+    }
+
+    @Override
+    public int compareTo(@NotNull OfferItem other) {
+        return comparePrice(other);
     }
 }

@@ -35,7 +35,10 @@ import misq.jfx.components.AutocompleteComboBox;
 import misq.jfx.main.MainView;
 import misq.jfx.main.content.createoffer.CreateOfferView;
 import misq.jfx.navigation.Navigation;
+import org.controlsfx.control.RangeSlider;
 
+import java.util.Comparator;
+import java.util.Optional;
 import java.util.function.Function;
 
 @Slf4j
@@ -50,14 +53,25 @@ public class OfferbookView extends ViewWithModel<VBox, OfferbookViewModel> {
         toolbar.setMinHeight(70);
         toolbar.setMaxHeight(toolbar.getMinHeight());
 
+        RangeSlider slider = new RangeSlider(0, 100, 10, 90);
+        //Setting the slider properties
+        slider.setShowTickLabels(true);
+        slider.setShowTickMarks(true);
+        slider.setMajorTickUnit(25);
+        slider.setBlockIncrement(10);
+
         Label askCurrencyLabel = new Label("I want (ask):");
         askCurrencyLabel.setPadding(new Insets(4, 8, 0, 0));
+
         AutocompleteComboBox<String> askCurrency = new AutocompleteComboBox<>();
         askCurrency.setAutocompleteItems(model.currencies);
         askCurrency.setOnAction(e -> model.onAskCurrencySelected(askCurrency.getSelectionModel().getSelectedItem()));
         askCurrency.getEditor().getStyleClass().add("combo-box-editor-bold");
         askCurrency.getSelectionModel().select(0);
         model.onAskCurrencySelected(askCurrency.getSelectionModel().getSelectedItem());
+
+        VBox askBox = new VBox();
+        askBox.getChildren().addAll(askCurrencyLabel, slider);
 
         Label bidCurrencyLabel = new Label("I give (bid):");
         bidCurrencyLabel.setPadding(new Insets(4, 8, 0, 60));
@@ -83,20 +97,24 @@ public class OfferbookView extends ViewWithModel<VBox, OfferbookViewModel> {
 
         Pane spacer = new Pane();
         HBox.setHgrow(spacer, Priority.ALWAYS);
-        toolbar.getChildren().addAll(askCurrencyLabel, askCurrency, flipButton, bidCurrencyLabel, bidCurrency, spacer, createOfferButton);
+        toolbar.getChildren().addAll(/*askBox, */askCurrencyLabel, askCurrency, flipButton, bidCurrencyLabel, bidCurrency, spacer, createOfferButton);
 
         tableView = new TableView<>();
         VBox.setVgrow(tableView, Priority.ALWAYS);
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        //tableView.setTableMenuButtonVisible(true);
 
         tableView.setItems(model.sortedItems);
-        addPropertyColumn("Price", OfferItem::getPrice);
-        addValueColumn("Base currency amount", OfferItem::getBaseAmountWithMinAmount);
-        addPropertyColumn("Quote currency amount", OfferItem::getQuoteAmount);
-        addValueColumn("Details", OfferItem::getTransferOptions);
+        model.sortedItems.comparatorProperty().bind(tableView.comparatorProperty());
+        addValueColumn("Offered amount", OfferItem::getBaseAmountWithMinAmount, Optional.of(OfferItem::compareBaseAmount));
+        addPropertyColumn("Price", OfferItem::getPrice, Optional.of(OfferItem::comparePrice));
+        addPropertyColumn("Amount to pay", OfferItem::getQuoteAmount, Optional.of(OfferItem::compareQuoteAmount));
+        addValueColumn("Details", OfferItem::getTransferOptions, Optional.empty());
         addMakerColumn("Maker", OfferItem::getMakerInfo);
         addTakeOfferColumn("");
 
+        model.marketPrice.addListener(observable -> tableView.sort());
+        tableView.sort();
         root.getChildren().addAll(toolbar, tableView);
     }
 
@@ -188,7 +206,7 @@ public class OfferbookView extends ViewWithModel<VBox, OfferbookViewModel> {
 
     }
 
-    private void addValueColumn(String header, Function<OfferItem, String> valueSupplier) {
+    private void addValueColumn(String header, Function<OfferItem, String> displayStringSupplier, Optional<Comparator<OfferItem>> optionalComparator) {
         AutoTooltipTableColumn<OfferItem, OfferItem> column = new AutoTooltipTableColumn<>(header) {
             {
                 setMinWidth(125);
@@ -205,7 +223,7 @@ public class OfferbookView extends ViewWithModel<VBox, OfferbookViewModel> {
                             public void updateItem(final OfferItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null && !empty) {
-                                    setText(valueSupplier.apply(item));
+                                    setText(displayStringSupplier.apply(item));
                                 } else {
                                     setText("");
                                 }
@@ -213,10 +231,15 @@ public class OfferbookView extends ViewWithModel<VBox, OfferbookViewModel> {
                         };
                     }
                 });
+        optionalComparator.ifPresent(comparator -> {
+            column.setSortable(true);
+            column.setComparator(comparator);
+        });
+
         tableView.getColumns().add(column);
     }
 
-    private void addPropertyColumn(String header, Function<OfferItem, StringProperty> valueSupplier) {
+    private void addPropertyColumn(String header, Function<OfferItem, StringProperty> valueSupplier, Optional<Comparator<OfferItem>> optionalComparator) {
         AutoTooltipTableColumn<OfferItem, OfferItem> column = new AutoTooltipTableColumn<>(header) {
             {
                 setMinWidth(125);

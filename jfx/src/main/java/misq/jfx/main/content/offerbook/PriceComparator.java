@@ -17,9 +17,6 @@
 
 package misq.jfx.main.content.offerbook;
 
-import java.util.Map;
-import java.util.Optional;
-
-public interface PriceSupplier {
-    Map.Entry<String, Double> get(double fixPrice, Optional<Double> marketBasedPrice, double marketPrice);
+public interface PriceComparator {
+    int compare(Double selfPrice, Double otherPrice, String bidAssetCode, String quoteCurrencyCode);
 }

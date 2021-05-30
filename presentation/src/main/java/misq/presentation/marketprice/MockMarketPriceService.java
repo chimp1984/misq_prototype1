@@ -22,6 +22,8 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.Random;
 import java.util.Set;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.CopyOnWriteArraySet;
 
 @Slf4j
@@ -37,14 +39,14 @@ public class MockMarketPriceService implements MarketPriceService {
 
     public MockMarketPriceService() {
         marketPrice = 50000 + new Random().nextInt(10000) / 10000d;
-   /*     new Timer().scheduleAtFixedRate(new TimerTask() {
+        new Timer().scheduleAtFixedRate(new TimerTask() {
             @Override
             public void run() {
                 marketPrice = 50000 + new Random().nextInt(1000000) / 1000d;
                 // log.error("price update {}", marketPrice);
                 listeners.forEach(e -> e.onPriceUpdate(marketPrice));
             }
-        }, 0, 1000);*/
+        }, 0, 1000);
     }
 
     @Override

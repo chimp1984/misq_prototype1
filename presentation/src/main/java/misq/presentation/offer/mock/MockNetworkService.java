@@ -43,7 +43,7 @@ public class MockNetworkService implements NetworkService {
     private final Map<String, Offer> data = new HashMap<>();
 
     public MockNetworkService() {
-        for (int i = 0; i < 30; i++) {
+        for (int i = 0; i < 10; i++) {
             Offer offer = getRandomOffer();
             data.put(offer.getId(), offer);
         }
@@ -91,24 +91,24 @@ public class MockNetworkService implements NetworkService {
         String baseCurrency;
         //  int rand = new Random().nextInt(3);
         int rand = new Random().nextInt(2);
-        // rand=1;
+        // rand = 0;
         if (rand == 0) {
             long usdAmount = new Random().nextInt(100000) + 500000000; // precision 4 / 50k usd
-            long btcAmount = new Random().nextInt(10000000) + 100000000; // precision 8 / 1 btc
-            usdAmount = 500000000; // precision 4 / 50k usd
-            btcAmount = 100000000; // precision 8 / 1 btc
+            long btcAmount = new Random().nextInt(100000000) + 100000000; // precision 8 / 1 btc
+            // usdAmount = 500000000; // precision 4 / 50k usd
+            // btcAmount = 100000000; // precision 8 / 1 btc
             askAsset = getRandomAsset("USD", usdAmount);
             bidAsset = getRandomAsset("BTC", btcAmount);
             baseCurrency = "BTC";
-            marketBasedPrice = Optional.of(0.01);
+            marketBasedPrice = Optional.of(0.3d + new Random().nextInt(100) / 100d);
             minAmountAsPercentage = Optional.of(0.1);
         } else if (rand == 1) {
-            long usdAmount = 620000000; // precision 4 / 50k usd
-            long btcAmount = 121000000; // precision 8 / 1 btc
+            long usdAmount = new Random().nextInt(100000) + 600000000; // precision 4 / 50k usd
+            long btcAmount = new Random().nextInt(100000000) + 110000000; // precision 8 / 1 btc
             askAsset = getRandomAsset("BTC", btcAmount);
             bidAsset = getRandomAsset("USD", usdAmount);
             baseCurrency = "BTC";
-            marketBasedPrice = Optional.of(0.03);
+            marketBasedPrice = Optional.of(0.1d + new Random().nextInt(100) / 100d);
             minAmountAsPercentage = Optional.of(0.3);
         } else if (rand == 2) {
             long usdAmount = new Random().nextInt(100000) + 1200000; // precision 4 / 120 usd

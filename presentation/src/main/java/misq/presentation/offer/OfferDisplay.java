@@ -27,9 +27,7 @@ import misq.presentation.formatters.AmountFormatter;
 import misq.presentation.formatters.DateFormatter;
 
 import java.text.DecimalFormat;
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @Slf4j
 public class OfferDisplay {
@@ -66,7 +64,7 @@ public class OfferDisplay {
         return assetTransferType.toString();
     }
 
-    public static String getPrice(double fixPrice, Optional<Double> marketBasedPrice, double marketPrice) {
+    public static Map.Entry<String, Double> getPrice(double fixPrice, Optional<Double> marketBasedPrice, double marketPrice) {
         double percentage;
         double price;
         DecimalFormat df = new DecimalFormat("#.##");
@@ -78,7 +76,8 @@ public class OfferDisplay {
             percentage = marketPrice / fixPrice;
             price = fixPrice;
         }
-        return df.format(price) + " (" + df.format(percentage * 100) + "%)";
+        String displayPrice = df.format(price) + " (" + df.format(percentage * 100) + "%)";
+        return new AbstractMap.SimpleEntry<>(displayPrice, price);
     }
 
     public static String getQuoteAmount(long baseAmount, Optional<Double> minAmountAsPercentage, Optional<Double> marketBasedPrice, double marketPrice, String currencyCode) {
@@ -105,4 +104,11 @@ public class OfferDisplay {
         return minAmountString + df.format(amount) + " " + currencyCode;
     }
 
+    public static int comparePrice(Double selfPrice, Double otherPrice, String bidAssetCode, String quoteCurrencyCode) {
+        if (bidAssetCode.equals(quoteCurrencyCode)) {
+            return Double.compare(otherPrice, selfPrice);
+        } else {
+            return Double.compare(selfPrice, otherPrice);
+        }
+    }
 }

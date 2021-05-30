@@ -25,10 +25,7 @@ import misq.finance.offer.Offer;
 import misq.finance.swap.offer.SwapOffer;
 import misq.jfx.common.LifeCycleChangeListener;
 import misq.jfx.common.ViewModel;
-import misq.jfx.main.content.offerbook.OfferItem;
-import misq.jfx.main.content.offerbook.OfferbookViewModel;
-import misq.jfx.main.content.offerbook.PriceSupplier;
-import misq.jfx.main.content.offerbook.QuoteAmountSupplier;
+import misq.jfx.main.content.offerbook.*;
 import misq.presentation.marketprice.MarketPriceService;
 import misq.presentation.marketprice.MockMarketPriceService;
 import misq.presentation.offer.OfferDisplay;
@@ -66,11 +63,11 @@ public class OfferbookDataModel implements LifeCycleChangeListener {
             }
         };
 
-        // marketPriceListener = marketPrice::set;
         marketPriceListener = new MockMarketPriceService.Listener() {
             @Override
             public void onPriceUpdate(double value) {
                 marketPrice.set(value);
+                viewModel.onMarketPriceUpdate(value);
             }
         };
     }
@@ -123,11 +120,15 @@ public class OfferbookDataModel implements LifeCycleChangeListener {
         double fixPriceAsDouble = offer.getPrice();
 
         Optional<Double> marketBasedPrice = offer.getMarketBasedPrice();
-        PriceSupplier priceSupplier = OfferDisplay::getPrice;
-        QuoteAmountSupplier quoteAmountSupplier = OfferDisplay::getQuoteAmount;
+
+        long quoteAmountAsLong = offer.getQuoteAsset().getAmount();
         long baseAmountAsLong = offer.getBaseAsset().getAmount();
         String baseAmountWithMinAmount = OfferDisplay.formatBaseAmount(offer.getBaseAsset().getAmount(), offer.getMinAmountAsPercentage(), offer.getBaseAsset().getCode());
         String quoteCurrencyCode = offer.getQuoteAsset().getCode();
+
+        PriceSupplier priceSupplier = OfferDisplay::getPrice;
+        QuoteAmountSupplier quoteAmountSupplier = OfferDisplay::getQuoteAmount;
+        PriceComparator priceComparator = OfferDisplay::comparePrice;
         return new OfferItem(id,
                 date,
                 protocolTypes,
@@ -145,11 +146,13 @@ public class OfferbookDataModel implements LifeCycleChangeListener {
                 fixPriceAsDouble,
                 marketBasedPrice,
                 marketPrice,
-                priceSupplier,
-                quoteAmountSupplier,
                 quoteCurrencyCode,
+                quoteAmountAsLong,
                 baseAmountAsLong,
                 baseAmountWithMinAmount,
-                offer.getMinAmountAsPercentage());
+                offer.getMinAmountAsPercentage(),
+                priceSupplier,
+                quoteAmountSupplier,
+                priceComparator);
     }
 }
