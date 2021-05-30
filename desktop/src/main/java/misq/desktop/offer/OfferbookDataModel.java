@@ -126,7 +126,8 @@ public class OfferbookDataModel implements LifeCycleChangeListener {
         PriceSupplier priceSupplier = OfferDisplay::getPrice;
         QuoteAmountSupplier quoteAmountSupplier = OfferDisplay::getQuoteAmount;
         long baseAmountAsLong = offer.getBaseAsset().getAmount();
-        String baseAmountWithMinAmount = OfferDisplay.formatAmountWithMinAmount(offer.getBaseAsset().getAmount(), offer.getMinAmountAsPercentage(), bidAssetCode);
+        String baseAmountWithMinAmount = OfferDisplay.formatBaseAmount(offer.getBaseAsset().getAmount(), offer.getMinAmountAsPercentage(), offer.getBaseAsset().getCode());
+        String quoteCurrencyCode = offer.getQuoteAsset().getCode();
         return new OfferItem(id,
                 date,
                 protocolTypes,
@@ -146,6 +147,7 @@ public class OfferbookDataModel implements LifeCycleChangeListener {
                 marketPrice,
                 priceSupplier,
                 quoteAmountSupplier,
+                quoteCurrencyCode,
                 baseAmountAsLong,
                 baseAmountWithMinAmount,
                 offer.getMinAmountAsPercentage());

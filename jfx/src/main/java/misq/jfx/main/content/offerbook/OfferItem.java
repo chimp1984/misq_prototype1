@@ -55,6 +55,7 @@ public class OfferItem {
     private final Optional<Double> marketBasedPrice;       // provided for calculating the market based price
     private final DoubleProperty marketPrice;       // used for getting notified for market price updates to call priceSupplied function
     private final QuoteAmountSupplier quoteAmountSupplier;
+    private final String quoteCurrencyCode;
     private final long baseAmountAsLong;
     private final String baseAmountWithMinAmount;
     private final Optional<Double> minAmountAsPercentage;
@@ -81,6 +82,7 @@ public class OfferItem {
                      DoubleProperty marketPrice,
                      PriceSupplier priceSupplier,
                      QuoteAmountSupplier quoteAmountSupplier,
+                     String quoteCurrencyCode,
                      long baseAmountAsLong,
                      String baseAmountWithMinAmount,
                      Optional<Double> minAmountAsPercentage) {
@@ -102,6 +104,7 @@ public class OfferItem {
         this.marketBasedPrice = marketBasedPrice;
         this.marketPrice = marketPrice;
         this.quoteAmountSupplier = quoteAmountSupplier;
+        this.quoteCurrencyCode = quoteCurrencyCode;
         this.baseAmountAsLong = baseAmountAsLong;
         this.baseAmountWithMinAmount = baseAmountWithMinAmount;
         this.minAmountAsPercentage = minAmountAsPercentage;
@@ -113,8 +116,8 @@ public class OfferItem {
     }
 
     private void updatedPriceAndAmount() {
-        price.set(priceSupplier.getDisplayPrice(fixPriceAsDouble, marketBasedPrice, marketPrice.get()));
-        quoteAmount.set(quoteAmountSupplier.getDisplayAmount(baseAmountAsLong, minAmountAsPercentage, marketBasedPrice, marketPrice.get()));
+        price.set(priceSupplier.get(fixPriceAsDouble, marketBasedPrice, marketPrice.get()));
+        quoteAmount.set(quoteAmountSupplier.get(baseAmountAsLong, minAmountAsPercentage, marketBasedPrice, marketPrice.get(), quoteCurrencyCode));
     }
 
     public void isVisible(boolean visible) {

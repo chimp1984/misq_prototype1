@@ -49,13 +49,13 @@ public class OfferDisplay {
         return transferOptions.map(e -> e.getBankName() + " / " + e.getCountyCodeOfBank()).orElse("-");
     }
 
-    public static String formatAmountWithMinAmount(long amount, Optional<Double> minAmountAsPercentage, String currencyCode) {
+    public static String formatBaseAmount(long amount, Optional<Double> minAmountAsPercentage, String currencyCode) {
         String amountString = AmountFormatter.formatAmount(amount, currencyCode);
         String minAmountString = minAmountAsPercentage
                 .map(e -> Math.round(amount * e))
                 .map(e -> AmountFormatter.formatAmount(e, currencyCode) + " - ")
                 .orElse("");
-        return minAmountString + amountString;
+        return minAmountString + amountString + " " + currencyCode;
     }
 
     public static String formatTransferTypes(List<TransferType> transferTypes) {
@@ -81,7 +81,7 @@ public class OfferDisplay {
         return df.format(price) + " (" + df.format(percentage * 100) + "%)";
     }
 
-    public static String getQuoteAmount(long baseAmount, Optional<Double> minAmountAsPercentage, Optional<Double> marketBasedPrice, double marketPrice) {
+    public static String getQuoteAmount(long baseAmount, Optional<Double> minAmountAsPercentage, Optional<Double> marketBasedPrice, double marketPrice, String currencyCode) {
         double amount;
         double percentage;
         double price;
@@ -102,7 +102,7 @@ public class OfferDisplay {
         } else {
             minAmountString = "";
         }
-        return minAmountString + df.format(amount);
+        return minAmountString + df.format(amount) + " " + currencyCode;
     }
 
 }

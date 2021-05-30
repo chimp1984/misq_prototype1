@@ -19,18 +19,23 @@ package misq.jfx.main.content.offerbook;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import lombok.Getter;
+import javafx.collections.transformation.FilteredList;
+import javafx.collections.transformation.SortedList;
 import lombok.extern.slf4j.Slf4j;
 import misq.jfx.common.AViewModel;
 import misq.jfx.common.ViewModel;
 
 import java.util.List;
+import java.util.function.Predicate;
 
 @Slf4j
 public class OfferbookViewModel extends AViewModel {
-
-    @Getter
-    ObservableList<OfferItem> offerItems = FXCollections.observableArrayList();
+    final ObservableList<OfferItem> offerItems = FXCollections.observableArrayList();
+    final FilteredList<OfferItem> filteredItems = new FilteredList<>(offerItems);
+    final SortedList<OfferItem> sortedItems = new SortedList<>(filteredItems);
+    final ObservableList<String> currencies = FXCollections.observableArrayList("BTC", "USD", "EUR", "XMR", "USDT");
+    private String selectedAskCurrency;
+    private String selectedBidCurrency;
 
     public OfferbookViewModel() {
         super();
@@ -67,7 +72,20 @@ public class OfferbookViewModel extends AViewModel {
         super.onViewRemoved();
     }
 
-    public void onMarketPriceChange() {
 
+    public void onAskCurrencySelected(String selectedAskCurrency) {
+        this.selectedAskCurrency = selectedAskCurrency;
+        applyFilter();
+    }
+
+    public void onBidCurrencySelected(String selectedBidCurrency) {
+        this.selectedBidCurrency = selectedBidCurrency;
+        applyFilter();
+    }
+
+    private void applyFilter() {
+        Predicate<OfferItem> predicate = item -> item.getBidAssetCode().equals(selectedAskCurrency) &&
+                item.getAskAssetCode().equals(selectedBidCurrency);
+        filteredItems.setPredicate(predicate);
     }
 }

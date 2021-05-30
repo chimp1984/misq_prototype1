@@ -20,5 +20,5 @@ package misq.jfx.main.content.offerbook;
 import java.util.Optional;
 
 public interface QuoteAmountSupplier {
-    String getDisplayAmount(long amount, Optional<Double> minAmountAsPercentage, Optional<Double> marketBasedPrice, double marketPrice);
+    String get(long amount, Optional<Double> minAmountAsPercentage, Optional<Double> marketBasedPrice, double marketPrice, String quoteCurrencyCode);
 }

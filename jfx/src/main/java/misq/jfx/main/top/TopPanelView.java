@@ -39,6 +39,6 @@ public class TopPanelView extends View<HBox> {
 
         Pane spacer = new Pane();
         HBox.setHgrow(spacer, Priority.ALWAYS);
-        root.getChildren().addAll(logo, spacer, marketPriceView.getRoot());
+        root.getChildren().addAll(logo, spacer /*,marketPriceView.getRoot()*/);
     }
 }

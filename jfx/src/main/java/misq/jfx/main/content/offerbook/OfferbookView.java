@@ -20,9 +20,7 @@ package misq.jfx.main.content.offerbook;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.StringProperty;
 import javafx.geometry.Insets;
-import javafx.scene.control.TableCell;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableView;
+import javafx.scene.control.*;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
@@ -33,6 +31,7 @@ import lombok.extern.slf4j.Slf4j;
 import misq.jfx.common.ViewWithModel;
 import misq.jfx.components.AutoTooltipButton;
 import misq.jfx.components.AutoTooltipTableColumn;
+import misq.jfx.components.AutocompleteComboBox;
 import misq.jfx.main.MainView;
 import misq.jfx.main.content.createoffer.CreateOfferView;
 import misq.jfx.navigation.Navigation;
@@ -51,22 +50,49 @@ public class OfferbookView extends ViewWithModel<VBox, OfferbookViewModel> {
         toolbar.setMinHeight(70);
         toolbar.setMaxHeight(toolbar.getMinHeight());
 
+        Label askCurrencyLabel = new Label("I want (ask):");
+        askCurrencyLabel.setPadding(new Insets(4, 8, 0, 0));
+        AutocompleteComboBox<String> askCurrency = new AutocompleteComboBox<>();
+        askCurrency.setAutocompleteItems(model.currencies);
+        askCurrency.setOnAction(e -> model.onAskCurrencySelected(askCurrency.getSelectionModel().getSelectedItem()));
+        askCurrency.getEditor().getStyleClass().add("combo-box-editor-bold");
+        askCurrency.getSelectionModel().select(0);
+        model.onAskCurrencySelected(askCurrency.getSelectionModel().getSelectedItem());
+
+        Label bidCurrencyLabel = new Label("I give (bid):");
+        bidCurrencyLabel.setPadding(new Insets(4, 8, 0, 60));
+        AutocompleteComboBox<String> bidCurrency = new AutocompleteComboBox<>();
+        bidCurrency.setAutocompleteItems(model.currencies);
+        bidCurrency.setOnAction(e -> model.onBidCurrencySelected(bidCurrency.getSelectionModel().getSelectedItem()));
+        bidCurrency.getEditor().getStyleClass().add("combo-box-editor-bold");
+        bidCurrency.getSelectionModel().select(1);
+        model.onBidCurrencySelected(bidCurrency.getSelectionModel().getSelectedItem());
+
+        Button flipButton = new AutoTooltipButton("<- Flip ->");
+        HBox.setMargin(flipButton, new Insets(-2, 0, 0, 60));
+        flipButton.setOnAction(e -> {
+            String ask = askCurrency.getSelectionModel().getSelectedItem();
+            String bid = bidCurrency.getSelectionModel().getSelectedItem();
+            askCurrency.getSelectionModel().select(bid);
+            bidCurrency.getSelectionModel().select(ask);
+        });
+
         createOfferButton = new AutoTooltipButton("Create offer");
         createOfferButton.setOnAction(e -> Navigation.navigateTo(MainView.class, CreateOfferView.class));
         HBox.setMargin(createOfferButton, new Insets(20, 20, 20, 20));
 
         Pane spacer = new Pane();
         HBox.setHgrow(spacer, Priority.ALWAYS);
-        toolbar.getChildren().addAll(spacer, createOfferButton);
+        toolbar.getChildren().addAll(askCurrencyLabel, askCurrency, flipButton, bidCurrencyLabel, bidCurrency, spacer, createOfferButton);
 
         tableView = new TableView<>();
         VBox.setVgrow(tableView, Priority.ALWAYS);
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
 
-        tableView.setItems(model.offerItems);
+        tableView.setItems(model.sortedItems);
         addPropertyColumn("Price", OfferItem::getPrice);
-        addValueColumn("Amount BTC", OfferItem::getBaseAmountWithMinAmount);
-        addPropertyColumn("Amount USD", OfferItem::getQuoteAmount);
+        addValueColumn("Base currency amount", OfferItem::getBaseAmountWithMinAmount);
+        addPropertyColumn("Quote currency amount", OfferItem::getQuoteAmount);
         addValueColumn("Details", OfferItem::getTransferOptions);
         addMakerColumn("Maker", OfferItem::getMakerInfo);
         addTakeOfferColumn("");

@@ -20,5 +20,5 @@ package misq.jfx.main.content.offerbook;
 import java.util.Optional;
 
 public interface PriceSupplier {
-    String getDisplayPrice(double fixPrice, Optional<Double> marketBasedPrice, double marketPrice);
+    String get(double fixPrice, Optional<Double> marketBasedPrice, double marketPrice);
 }
