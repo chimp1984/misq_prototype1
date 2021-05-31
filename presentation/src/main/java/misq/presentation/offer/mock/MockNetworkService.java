@@ -48,7 +48,7 @@ public class MockNetworkService implements NetworkService {
             data.put(offer.getId(), offer);
         }
 
-        new Timer().scheduleAtFixedRate(new TimerTask() {
+       /* new Timer().scheduleAtFixedRate(new TimerTask() {
             @Override
             public void run() {
                 int toggle = new Random().nextInt(2);
@@ -70,7 +70,7 @@ public class MockNetworkService implements NetworkService {
                     }
                 }
             }
-        }, 0, 500);
+        }, 0, 500);*/
     }
 
     @Override
@@ -91,25 +91,29 @@ public class MockNetworkService implements NetworkService {
         String baseCurrency;
         //  int rand = new Random().nextInt(3);
         int rand = new Random().nextInt(2);
-        // rand = 0;
+        //  rand = 0;
         if (rand == 0) {
-            long usdAmount = new Random().nextInt(100000) + 500000000; // precision 4 / 50k usd
+            long usdAmount = new Random().nextInt(1000) + 500000000; // precision 4 / 50k usd
             long btcAmount = new Random().nextInt(100000000) + 100000000; // precision 8 / 1 btc
-            // usdAmount = 500000000; // precision 4 / 50k usd
-            // btcAmount = 100000000; // precision 8 / 1 btc
+            //  usdAmount = 500000000; // precision 4 / 50k usd
+            //   btcAmount = 100000000; // precision 8 / 1 btc
             askAsset = getRandomAsset("USD", usdAmount);
             bidAsset = getRandomAsset("BTC", btcAmount);
             baseCurrency = "BTC";
             marketBasedPrice = Optional.of(0.3d + new Random().nextInt(100) / 100d);
-            minAmountAsPercentage = Optional.of(0.1);
+            minAmountAsPercentage = new Random().nextBoolean() ? Optional.empty() : Optional.of(0.1);
+            // minAmountAsPercentage = Optional.empty();
         } else if (rand == 1) {
-            long usdAmount = new Random().nextInt(100000) + 600000000; // precision 4 / 50k usd
+            long usdAmount = new Random().nextInt(1000) + 600000000; // precision 4 / 50k usd
             long btcAmount = new Random().nextInt(100000000) + 110000000; // precision 8 / 1 btc
+            // usdAmount = 600000000; // precision 4 / 50k usd
+            //  btcAmount = 120000000; // precision 8 / 1 btc
             askAsset = getRandomAsset("BTC", btcAmount);
             bidAsset = getRandomAsset("USD", usdAmount);
             baseCurrency = "BTC";
             marketBasedPrice = Optional.of(0.1d + new Random().nextInt(100) / 100d);
-            minAmountAsPercentage = Optional.of(0.3);
+            minAmountAsPercentage = new Random().nextBoolean() ? Optional.empty() : Optional.of(0.3);
+            // minAmountAsPercentage = Optional.empty();
         } else if (rand == 2) {
             long usdAmount = new Random().nextInt(100000) + 1200000; // precision 4 / 120 usd
             long eurAmount = new Random().nextInt(100000) + 1000000; // precision 4 / 100 eur

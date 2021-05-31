@@ -40,6 +40,8 @@ public class SwapOffer extends Offer {
     private final Optional<Double> marketBasedPrice;
     private final Optional<Double> minAmountAsPercentage;
 
+    private transient final long minBaseAmount;
+
     public SwapOffer(List<SwapProtocolType> protocolTypes,
                      NetworkId makerNetworkId,
                      Asset bidAsset,
@@ -67,18 +69,18 @@ public class SwapOffer extends Offer {
         this.baseCurrency = baseCurrency;
         this.marketBasedPrice = marketBasedPrice;
         this.minAmountAsPercentage = minAmountAsPercentage;
+
+        minBaseAmount = minAmountAsPercentage.map(perc -> Math.round(getBaseAsset().getAmount() * perc))
+                .orElse(getBaseAsset().getAmount());
     }
 
-    public double getPrice() {
-        return marketBasedPrice.orElse(getFixPrice());
-    }
-
-    private double getFixPrice() {
+    public double getFixPrice() {
         double baseAssetAmount = (double) getBaseAsset().getAmount();
         double quoteAssetAmount = (double) getQuoteAsset().getAmount();
         checkArgument(quoteAssetAmount > 0);
         return quoteAssetAmount / baseAssetAmount * 10000; // for fiat...
     }
+
 
     public Asset getBaseAsset() {
         if (askAsset.getCode().equals(baseCurrency)) {

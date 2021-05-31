@@ -27,9 +27,12 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.stream.Collectors;
 
 @Slf4j
 public class Offerbook {
+
+
     public interface Listener {
         void onOfferAdded(Offer offer);
 
@@ -60,6 +63,10 @@ public class Offerbook {
                 listeners.forEach(listener -> listener.onOfferRemoved(offer));
             }
         });
+    }
+
+    public List<Offer> getOffers(List<String> offerIds) {
+        return offers.stream().filter(e -> e.getId().equals(offerIds)).collect(Collectors.toList());
     }
 
     public void addListener(Listener listener) {

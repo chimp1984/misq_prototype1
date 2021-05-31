@@ -26,16 +26,17 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
+import javafx.scene.text.TextAlignment;
 import javafx.util.Callback;
 import lombok.extern.slf4j.Slf4j;
 import misq.jfx.common.ViewWithModel;
 import misq.jfx.components.AutoTooltipButton;
+import misq.jfx.components.AutoTooltipSlideToggleButton;
 import misq.jfx.components.AutoTooltipTableColumn;
 import misq.jfx.components.AutocompleteComboBox;
 import misq.jfx.main.MainView;
 import misq.jfx.main.content.createoffer.CreateOfferView;
 import misq.jfx.navigation.Navigation;
-import org.controlsfx.control.RangeSlider;
 
 import java.util.Comparator;
 import java.util.Optional;
@@ -44,21 +45,12 @@ import java.util.function.Function;
 @Slf4j
 public class OfferbookView extends ViewWithModel<VBox, OfferbookViewModel> {
     private final TableView<OfferItem> tableView;
-    private final HBox toolbar;
-    private final AutoTooltipButton createOfferButton;
+    private final RangeSliderBox /*baseAmountSliderBox, priceSliderBox, */quoteAmountSliderBox;
+
 
     public OfferbookView() {
         super(new VBox(), new OfferbookViewModel());
-        toolbar = new HBox();
-        toolbar.setMinHeight(70);
-        toolbar.setMaxHeight(toolbar.getMinHeight());
 
-        RangeSlider slider = new RangeSlider(0, 100, 10, 90);
-        //Setting the slider properties
-        slider.setShowTickLabels(true);
-        slider.setShowTickMarks(true);
-        slider.setMajorTickUnit(25);
-        slider.setBlockIncrement(10);
 
         Label askCurrencyLabel = new Label("I want (ask):");
         askCurrencyLabel.setPadding(new Insets(4, 8, 0, 0));
@@ -70,8 +62,7 @@ public class OfferbookView extends ViewWithModel<VBox, OfferbookViewModel> {
         askCurrency.getSelectionModel().select(0);
         model.onAskCurrencySelected(askCurrency.getSelectionModel().getSelectedItem());
 
-        VBox askBox = new VBox();
-        askBox.getChildren().addAll(askCurrencyLabel, slider);
+        Button flipButton = new AutoTooltipButton("<- Flip ->");
 
         Label bidCurrencyLabel = new Label("I give (bid):");
         bidCurrencyLabel.setPadding(new Insets(4, 8, 0, 60));
@@ -82,7 +73,7 @@ public class OfferbookView extends ViewWithModel<VBox, OfferbookViewModel> {
         bidCurrency.getSelectionModel().select(1);
         model.onBidCurrencySelected(bidCurrency.getSelectionModel().getSelectedItem());
 
-        Button flipButton = new AutoTooltipButton("<- Flip ->");
+
         HBox.setMargin(flipButton, new Insets(-2, 0, 0, 60));
         flipButton.setOnAction(e -> {
             String ask = askCurrency.getSelectionModel().getSelectedItem();
@@ -91,13 +82,56 @@ public class OfferbookView extends ViewWithModel<VBox, OfferbookViewModel> {
             bidCurrency.getSelectionModel().select(ask);
         });
 
-        createOfferButton = new AutoTooltipButton("Create offer");
+        Pane spacer = new Pane();
+        HBox.setHgrow(spacer, Priority.ALWAYS);
+
+        AutoTooltipButton createOfferButton = new AutoTooltipButton("Create offer");
         createOfferButton.setOnAction(e -> Navigation.navigateTo(MainView.class, CreateOfferView.class));
         HBox.setMargin(createOfferButton, new Insets(20, 20, 20, 20));
 
-        Pane spacer = new Pane();
-        HBox.setHgrow(spacer, Priority.ALWAYS);
-        toolbar.getChildren().addAll(/*askBox, */askCurrencyLabel, askCurrency, flipButton, bidCurrencyLabel, bidCurrency, spacer, createOfferButton);
+        HBox currencySelectionBox = new HBox();
+        currencySelectionBox.setMinHeight(70);
+        currencySelectionBox.setMaxHeight(currencySelectionBox.getMinHeight());
+        currencySelectionBox.getChildren().addAll(askCurrencyLabel, askCurrency, flipButton, bidCurrencyLabel, bidCurrency, spacer, createOfferButton);
+
+        AutoTooltipSlideToggleButton amountPriceFilterToggle = new AutoTooltipSlideToggleButton("Filter by amount and price");
+        amountPriceFilterToggle.setTextAlignment(TextAlignment.LEFT);
+
+        HBox amountPriceFilterBox = new HBox();
+        amountPriceFilterBox.setSpacing(80);
+        amountPriceFilterBox.setPadding(new Insets(50, 0, 0, 0));
+        amountPriceFilterBox.visibleProperty().bind(amountPriceFilterToggle.selectedProperty());
+        amountPriceFilterToggle.setSelected(true);
+
+      /*  baseAmountSliderBox = new RangeSliderBox("Filter by BTC amount",
+                300,
+                model.lowBaseAmount,
+                model.highBaseAmount,
+                model.getFilteredItems(),
+                model::getSmallestBaseAmount,
+                model::getLargestBaseAmount,
+                model::getFormattedBaseAmount);
+
+        priceSliderBox = new RangeSliderBox("Filter by price",
+                300,
+                model.lowPrice,
+                model.highPrice,
+                model.getFilteredItems(),
+                model::getLowestPrice,
+                model::getHighestPrice,
+                model::getFormattedPrice);*/
+
+        quoteAmountSliderBox = new RangeSliderBox("Filter by USD amount",
+                300,
+                model.lowQuoteAmount,
+                model.highQuoteAmount,
+                model.getFilteredItems(),
+                model::getSmallestQuoteAmount,
+                model::getLargestQuoteAmount,
+                model::getFormattedQuoteAmount);
+
+        amountPriceFilterBox.getChildren().addAll(/*baseAmountSliderBox, priceSliderBox,*/ quoteAmountSliderBox);
+
 
         tableView = new TableView<>();
         VBox.setVgrow(tableView, Priority.ALWAYS);
@@ -115,7 +149,14 @@ public class OfferbookView extends ViewWithModel<VBox, OfferbookViewModel> {
 
         model.marketPrice.addListener(observable -> tableView.sort());
         tableView.sort();
-        root.getChildren().addAll(toolbar, tableView);
+        root.getChildren().addAll(currencySelectionBox, amountPriceFilterToggle, amountPriceFilterBox, tableView);
+    }
+
+    @Override
+    public void onViewAdded() {
+       /* baseAmountSliderBox.onViewAdded();
+        priceSliderBox.onViewAdded();*/
+        quoteAmountSliderBox.onViewAdded();
     }
 
     private void addMakerColumn(String header, Function<OfferItem, String> valueSupplier) {

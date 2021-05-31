@@ -23,6 +23,7 @@ import misq.finance.ProtocolType;
 import misq.finance.contract.AssetTransfer;
 import misq.finance.offer.ReputationOptions;
 import misq.finance.offer.TransferOptions;
+import misq.finance.swap.offer.SwapOffer;
 import misq.presentation.formatters.AmountFormatter;
 import misq.presentation.formatters.DateFormatter;
 
@@ -47,13 +48,58 @@ public class OfferDisplay {
         return transferOptions.map(e -> e.getBankName() + " / " + e.getCountyCodeOfBank()).orElse("-");
     }
 
-    public static String formatBaseAmount(long amount, Optional<Double> minAmountAsPercentage, String currencyCode) {
-        String amountString = AmountFormatter.formatAmount(amount, currencyCode);
+    public static String formatAmountWithMinAmount(long amount, Optional<Double> minAmountAsPercentage, String currencyCode) {
         String minAmountString = minAmountAsPercentage
                 .map(e -> Math.round(amount * e))
                 .map(e -> AmountFormatter.formatAmount(e, currencyCode) + " - ")
                 .orElse("");
-        return minAmountString + amountString + " " + currencyCode;
+        return minAmountString + formatAmount(amount, currencyCode);
+    }
+
+    public static String formatAmount(long amount, String currencyCode) {
+        return AmountFormatter.formatAmount(amount, currencyCode);
+    }
+
+    public static long getSmallestBaseAmount(List<SwapOffer> offers) {
+        return offers.stream()
+                .mapToLong(SwapOffer::getMinBaseAmount)
+                .min()
+                .orElse(0);
+    }
+
+    public static long getLargestBaseAmount(List<SwapOffer> offers) {
+        return offers.stream()
+                .mapToLong(offer -> offer.getBaseAsset().getAmount())
+                .max()
+                .orElse(0);
+    }
+
+    public static long getSmallestQuoteAmount(List<SwapOffer> offers, Double marketPrice) {
+        return offers.stream()
+                .mapToLong(offer -> getMinQuoteAmount(offer.getBaseAsset().getAmount(), offer.getMinAmountAsPercentage(), offer.getMarketBasedPrice(), marketPrice))
+                .min()
+                .orElse(0);
+    }
+
+    public static long getLargestQuoteAmount(List<SwapOffer> offers, Double marketPrice) {
+        return offers.stream()
+                .mapToLong(offer -> getQuoteAmount(offer.getBaseAsset().getAmount(), offer.getMarketBasedPrice(), marketPrice))
+                .peek(e -> log.error("" + e)).max()
+                .orElse(0);
+    }
+
+    public static double getLowestPrice(List<SwapOffer> offers, Optional<Double> marketPrice) {
+        return offers.stream()
+                .mapToDouble(offer -> getPrice(offer.getFixPrice(), offer.getMarketBasedPrice(), marketPrice))
+                .min()
+                .orElse(0);
+    }
+
+    public static double getHighestPrice(List<SwapOffer> offers, Optional<Double> marketPrice) {
+        return offers.stream()
+                .mapToDouble(offer -> getPrice(offer.getFixPrice(), offer.getMarketBasedPrice(), marketPrice))
+                .max()
+                .orElse(0);
     }
 
     public static String formatTransferTypes(List<TransferType> transferTypes) {
@@ -64,7 +110,7 @@ public class OfferDisplay {
         return assetTransferType.toString();
     }
 
-    public static Map.Entry<String, Double> getPrice(double fixPrice, Optional<Double> marketBasedPrice, double marketPrice) {
+    public static Map.Entry<String, Double> getPriceTuple(double fixPrice, Optional<Double> marketBasedPrice, double marketPrice) {
         double percentage;
         double price;
         DecimalFormat df = new DecimalFormat("#.##");
@@ -76,16 +122,50 @@ public class OfferDisplay {
             percentage = marketPrice / fixPrice;
             price = fixPrice;
         }
-        String displayPrice = df.format(price) + " (" + df.format(percentage * 100) + "%)";
-        return new AbstractMap.SimpleEntry<>(displayPrice, price);
+        String displayString = df.format(price) + " (" + df.format(percentage * 100) + "%)";
+        return new AbstractMap.SimpleEntry<>(displayString, price);
     }
 
-    public static String getQuoteAmount(long baseAmount, Optional<Double> minAmountAsPercentage, Optional<Double> marketBasedPrice, double marketPrice, String currencyCode) {
+    public static double getPrice(double fixPrice, Optional<Double> marketBasedPrice, Optional<Double> marketPrice) {
+        return marketBasedPrice.map(percentage -> marketPrice
+                .map(marketPrice1 -> marketPrice1 * (1 + percentage)).orElse(fixPrice))
+                .orElse(fixPrice);
+    }
+
+    public static String getFormattedQuoteAmount(long baseAmount, Optional<Double> minAmountAsPercentage, Optional<Double> marketBasedPrice, double marketPrice, String currencyCode) {
+        double amount = getQuoteAmount(baseAmount, marketBasedPrice, marketPrice) / 10000d;
+        String minAmountString;
+        DecimalFormat df = new DecimalFormat("#.##");
+        df.setMinimumFractionDigits(2);
+        if (minAmountAsPercentage.isPresent()) {
+            long minAmount = Math.round(amount * minAmountAsPercentage.get());
+            minAmountString = df.format(minAmount) + " - ";
+        } else {
+            minAmountString = "";
+        }
+        return minAmountString + df.format(amount) + " " + currencyCode;
+    }
+
+    public static long getQuoteAmount(long baseAmount, Optional<Double> marketBasedPrice, double marketPrice) {
         double amount;
         double percentage;
         double price;
-        DecimalFormat df = new DecimalFormat("#.##");
-        df.setMinimumFractionDigits(2);
+
+        if (marketBasedPrice.isPresent()) {
+            percentage = marketBasedPrice.get();
+            price = marketPrice * (1 + percentage);
+            amount = baseAmount / 100000000d * price;
+        } else {
+            amount = baseAmount / 100000000d;
+        }
+        return Math.round(amount * 10000);
+    }
+
+    public static long getMinQuoteAmount(long baseAmount, Optional<Double> minAmountAsPercentage, Optional<Double> marketBasedPrice, double marketPrice) {
+        double amount;
+        double percentage;
+        double price;
+
         if (marketBasedPrice.isPresent()) {
             percentage = marketBasedPrice.get();
             price = marketPrice * (1 + percentage);
@@ -94,14 +174,12 @@ public class OfferDisplay {
             amount = baseAmount / 100000000d;
         }
 
-        String minAmountString;
         if (minAmountAsPercentage.isPresent()) {
             long minAmount = Math.round(amount * minAmountAsPercentage.get());
-            minAmountString = df.format(minAmount) + " - ";
+            return Math.round(minAmount * 10000);
         } else {
-            minAmountString = "";
+            return Math.round(amount * 10000);
         }
-        return minAmountString + df.format(amount) + " " + currencyCode;
     }
 
     public static int comparePrice(Double selfPrice, Double otherPrice, String bidAssetCode, String quoteCurrencyCode) {

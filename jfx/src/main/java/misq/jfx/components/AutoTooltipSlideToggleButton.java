@@ -11,6 +11,11 @@ public class AutoTooltipSlideToggleButton extends JFXToggleButton {
         super();
     }
 
+    public AutoTooltipSlideToggleButton(String label) {
+        super();
+        setText(label);
+    }
+
     @Override
     protected Skin<?> createDefaultSkin() {
         return new AutoTooltipSlideToggleButtonSkin(this);

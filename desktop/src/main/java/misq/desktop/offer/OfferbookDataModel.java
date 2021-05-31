@@ -33,6 +33,7 @@ import misq.presentation.offer.Offerbook;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -89,6 +90,14 @@ public class OfferbookDataModel implements LifeCycleChangeListener {
                 .collect(Collectors.toList());
         viewModel.setOfferItems(items);
         offerbook.addListener(offerBookListener);
+
+        viewModel.setAmountFormatter(OfferDisplay::formatAmount);
+        viewModel.setSmallestBaseAmountSupplier(offerIds -> OfferDisplay.getSmallestBaseAmount(getOffersFromOfferIds(offerIds)));
+        viewModel.setLargestBaseAmountSupplier(offerIds -> OfferDisplay.getLargestBaseAmount(getOffersFromOfferIds(offerIds)));
+        viewModel.setSmallestQuoteAmountSupplier(offerIds -> OfferDisplay.getSmallestQuoteAmount(getOffersFromOfferIds(offerIds), marketPrice.get()));
+        viewModel.setLargestQuoteAmountSupplier(offerIds -> OfferDisplay.getLargestQuoteAmount(getOffersFromOfferIds(offerIds), marketPrice.get()));
+        viewModel.setLowestPriceSupplier(offerIds -> OfferDisplay.getLowestPrice(getOffersFromOfferIds(offerIds), Optional.of(marketPrice.get())));
+        viewModel.setHighestPriceSupplier(offerIds -> OfferDisplay.getHighestPrice(getOffersFromOfferIds(offerIds), Optional.of(marketPrice.get())));
     }
 
     @Override
@@ -117,17 +126,21 @@ public class OfferbookDataModel implements LifeCycleChangeListener {
         String askAssetTransferTypes = OfferDisplay.formatTransferTypes(askAsset.getTransferTypes());
         String askAssetAssetTransferType = OfferDisplay.formatAssetTransferType(askAsset.getAssetTransferType());
 
-        double fixPriceAsDouble = offer.getPrice();
+        double fixPriceAsDouble = offer.getFixPrice();
 
         Optional<Double> marketBasedPrice = offer.getMarketBasedPrice();
 
         long quoteAmountAsLong = offer.getQuoteAsset().getAmount();
         long baseAmountAsLong = offer.getBaseAsset().getAmount();
-        String baseAmountWithMinAmount = OfferDisplay.formatBaseAmount(offer.getBaseAsset().getAmount(), offer.getMinAmountAsPercentage(), offer.getBaseAsset().getCode());
-        String quoteCurrencyCode = offer.getQuoteAsset().getCode();
+        long minBaseAmountAsLong = offer.getMinBaseAmount();
+        long minQuoteAmountAsLong = OfferDisplay.getQuoteAmount(offer.getBaseAsset().getAmount(), offer.getMinAmountAsPercentage(), marketPrice.get());
 
-        PriceSupplier priceSupplier = OfferDisplay::getPrice;
-        QuoteAmountSupplier quoteAmountSupplier = OfferDisplay::getQuoteAmount;
+        String baseAmountWithMinAmount = OfferDisplay.formatAmountWithMinAmount(offer.getBaseAsset().getAmount(), offer.getMinAmountAsPercentage(), offer.getBaseAsset().getCode());
+
+        String quoteCurrencyCode = offer.getQuoteAsset().getCode();
+        String baseCurrencyCode = offer.getBaseCurrency();
+        PriceSupplier priceSupplier = OfferDisplay::getPriceTuple;
+        QuoteAmountSupplier quoteAmountSupplier = OfferDisplay::getFormattedQuoteAmount;
         PriceComparator priceComparator = OfferDisplay::comparePrice;
         return new OfferItem(id,
                 date,
@@ -147,12 +160,23 @@ public class OfferbookDataModel implements LifeCycleChangeListener {
                 marketBasedPrice,
                 marketPrice,
                 quoteCurrencyCode,
+                baseCurrencyCode,
                 quoteAmountAsLong,
                 baseAmountAsLong,
+                minBaseAmountAsLong,
+                minQuoteAmountAsLong,
                 baseAmountWithMinAmount,
                 offer.getMinAmountAsPercentage(),
                 priceSupplier,
                 quoteAmountSupplier,
                 priceComparator);
+    }
+
+    private List<SwapOffer> getOffersFromOfferIds(Set<String> offerIds) {
+        return offerbook.getOffers().stream()
+                .filter(e -> offerIds.contains(e.getId()))
+                .filter(e -> e instanceof SwapOffer)
+                .map(e -> (SwapOffer) e)
+                .collect(Collectors.toList());
     }
 }

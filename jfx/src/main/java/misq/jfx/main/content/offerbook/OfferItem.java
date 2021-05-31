@@ -59,8 +59,11 @@ public class OfferItem implements Comparable<OfferItem> {
     private final DoubleProperty marketPrice;       // used for getting notified for market price updates to call priceSupplied function
     private final QuoteAmountSupplier quoteAmountSupplier;
     private final String quoteCurrencyCode;
+    private final String baseCurrencyCode;
     private final long quoteAmountAsLong;
     private final long baseAmountAsLong;
+    private final long minBaseAmountAsLong;
+    private final long minQuoteAmountAsLong;
     private final String baseAmountWithMinAmount;
     private final Optional<Double> minAmountAsPercentage;
     private final PriceComparator priceComparator;
@@ -86,8 +89,11 @@ public class OfferItem implements Comparable<OfferItem> {
                      Optional<Double> marketBasedPrice,
                      DoubleProperty marketPrice,
                      String quoteCurrencyCode,
+                     String baseCurrencyCode,
                      long quoteAmountAsLong,
                      long baseAmountAsLong,
+                     long minBaseAmountAsLong,
+                     long minQuoteAmountAsLong,
                      String baseAmountWithMinAmount,
                      Optional<Double> minAmountAsPercentage,
                      PriceSupplier priceSupplier,
@@ -111,8 +117,11 @@ public class OfferItem implements Comparable<OfferItem> {
         this.marketBasedPrice = marketBasedPrice;
         this.marketPrice = marketPrice;
         this.quoteCurrencyCode = quoteCurrencyCode;
+        this.baseCurrencyCode = baseCurrencyCode;
         this.quoteAmountAsLong = quoteAmountAsLong;
         this.baseAmountAsLong = baseAmountAsLong;
+        this.minBaseAmountAsLong = minBaseAmountAsLong;
+        this.minQuoteAmountAsLong = minQuoteAmountAsLong;
         this.baseAmountWithMinAmount = baseAmountWithMinAmount;
         this.minAmountAsPercentage = minAmountAsPercentage;
         this.priceSupplier = priceSupplier;
