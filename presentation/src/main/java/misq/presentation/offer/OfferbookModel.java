@@ -101,16 +101,27 @@ public class OfferbookModel implements Model {
         marketPriceListener = marketPrice::set;
     }
 
-    public void init() {
-        marketPrice.set(marketPriceService.getMarketPrice());
-        marketPriceService.addListener(marketPriceListener);
+    @Override
+    public void initialize() {
+    }
 
+    @Override
+    public void activate() {
+        marketPrice.set(marketPriceService.getMarketPrice());
         offerItems.addAll(offerbook.getOffers().stream()
                 .filter(e -> e instanceof SwapOffer)
                 .map(e -> (SwapOffer) e)
                 .map(this::toOfferListItem)
                 .collect(Collectors.toList()));
+
+        marketPriceService.addListener(marketPriceListener);
         offerbook.addListener(offerBookListener);
+    }
+
+    @Override
+    public void deactivate() {
+        marketPriceService.removeListener(marketPriceListener);
+        offerbook.removeListener(offerBookListener);
     }
 
     private OfferListItem toOfferListItem(SwapOffer offer) {

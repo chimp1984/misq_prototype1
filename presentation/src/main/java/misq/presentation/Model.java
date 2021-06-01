@@ -18,4 +18,9 @@
 package misq.presentation;
 
 public interface Model {
+    void initialize();
+
+    void activate();
+
+    void deactivate();
 }

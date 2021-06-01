@@ -24,6 +24,7 @@ import misq.jfx.MvcInjector;
 import misq.jfx.main.content.offerbook.OfferbookView;
 import misq.presentation.marketprice.MarketPriceService;
 import misq.presentation.marketprice.MockMarketPriceService;
+import misq.presentation.offer.OfferbookController;
 import misq.presentation.offer.OfferbookModel;
 
 @Slf4j
@@ -36,18 +37,18 @@ public class Desktop {
     private void launchApplication() {
         JfxLauncher.launch()
                 .whenComplete((success, throwable) -> {
-                    init();
+                    initialize();
                 });
     }
 
-    private void init() {
+    private void initialize() {
         Offerbook.NetworkService networkService = new Offerbook.MockNetworkService();
         Offerbook offerbook = new Offerbook(networkService);
         MarketPriceService marketPriceService = new MockMarketPriceService();
 
+        // Probably we will need some DI framework for wiring up the view with its controller and model
         OfferbookModel offerbookModel = new OfferbookModel(offerbook, marketPriceService);
-        offerbookModel.init();
-
-        MvcInjector.glue(OfferbookView.class, offerbookModel);
+        OfferbookController offerbookController = new OfferbookController(offerbookModel);
+        MvcInjector.glue(OfferbookView.class, offerbookController);
     }
 }

@@ -59,14 +59,26 @@ public class OfferbookView extends ViewWithModelAndController<VBox, OfferbookCon
     private AutoTooltipButton createOfferButton;
 
     public OfferbookView() {
-        super(new VBox(), OfferbookController.class);
+        super(new VBox());
 
         setupView();
         configModel();
         configController();
     }
 
-    private void setupView() {
+    @Override
+    public void onViewAdded() {
+        baseAmountSliderBox.onViewAdded();
+        priceSliderBox.onViewAdded();
+    }
+
+    @Override
+    protected void onViewRemoved() {
+    }
+
+
+    @Override
+    protected void setupView() {
         Label askCurrencyLabel = new Label("I want (ask):");
         askCurrencyLabel.setPadding(new Insets(4, 8, 0, 0));
 
@@ -120,7 +132,8 @@ public class OfferbookView extends ViewWithModelAndController<VBox, OfferbookCon
 
     }
 
-    private void configModel() {
+    @Override
+    protected void configModel() {
         askCurrencyComboBox.setAutocompleteItems(model.getCurrencies());
         askCurrencyComboBox.getSelectionModel().select(model.getSelectedAskCurrency().get());
 
@@ -136,7 +149,8 @@ public class OfferbookView extends ViewWithModelAndController<VBox, OfferbookCon
         tableView.sort();
     }
 
-    private void configController() {
+    @Override
+    protected void configController() {
         flipButton.setOnAction(e -> {
             String ask = askCurrencyComboBox.getSelectionModel().getSelectedItem();
             String bid = bidCurrencyComboBox.getSelectionModel().getSelectedItem();
@@ -152,12 +166,6 @@ public class OfferbookView extends ViewWithModelAndController<VBox, OfferbookCon
         });
     }
 
-    @Override
-    public void onViewAdded() {
-        baseAmountSliderBox.onViewAdded();
-        priceSliderBox.onViewAdded();
-    }
-
     private void addMakerColumn(String header) {
         AutoTooltipTableColumn<OfferListItem, OfferListItem> column = new AutoTooltipTableColumn<>(header) {
             {
@@ -171,8 +179,8 @@ public class OfferbookView extends ViewWithModelAndController<VBox, OfferbookCon
                     public TableCell<OfferListItem, OfferListItem> call(
                             TableColumn<OfferListItem, OfferListItem> column) {
                         return new TableCell<>() {
-                            ImageView iconView = new ImageView();
-                            AutoTooltipButton button = new AutoTooltipButton("Show details");
+                            final ImageView iconView = new ImageView();
+                            final AutoTooltipButton button = new AutoTooltipButton("Show details");
 
                             {
                                 button.setGraphic(iconView);
@@ -185,7 +193,7 @@ public class OfferbookView extends ViewWithModelAndController<VBox, OfferbookCon
                             public void updateItem(final OfferListItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null && !empty) {
-                                    button.setOnAction(e -> onTakeOffer(item));
+                                    button.setOnAction(e -> controller.onShowMakerDetails(item));
                                     setPadding(new Insets(0, 15, 0, 0));
                                     setGraphic(button);
                                 } else {
@@ -212,8 +220,8 @@ public class OfferbookView extends ViewWithModelAndController<VBox, OfferbookCon
                     public TableCell<OfferListItem, OfferListItem> call(
                             TableColumn<OfferListItem, OfferListItem> column) {
                         return new TableCell<>() {
-                            ImageView iconView = new ImageView();
-                            AutoTooltipButton button = new AutoTooltipButton("Take offer");
+                            final ImageView iconView = new ImageView();
+                            final AutoTooltipButton button = new AutoTooltipButton("Take offer");
 
                             {
                                 button.setGraphic(iconView);
@@ -226,8 +234,7 @@ public class OfferbookView extends ViewWithModelAndController<VBox, OfferbookCon
                             public void updateItem(final OfferListItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null && !empty) {
-                                    // setText(valueSupplier.apply(item));
-                                    button.setOnAction(e -> onTakeOffer(item));
+                                    button.setOnAction(e -> controller.onTakeOffer(item));
                                     setPadding(new Insets(0, 15, 0, 0));
                                     setGraphic(button);
                                 } else {
@@ -239,10 +246,6 @@ public class OfferbookView extends ViewWithModelAndController<VBox, OfferbookCon
                     }
                 });
         tableView.getColumns().add(column);
-    }
-
-    private void onTakeOffer(OfferListItem item) {
-
     }
 
     private void addValueColumn(String header, Function<OfferListItem, String> displayStringSupplier, Optional<Comparator<OfferListItem>> optionalComparator) {

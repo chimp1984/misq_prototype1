@@ -18,4 +18,11 @@
 package misq.presentation;
 
 public interface Controller {
+    <M extends Model> M getModel();
+
+    void onCreateView();
+
+    void onViewAdded();
+
+    void onViewRemoved();
 }

@@ -17,6 +17,7 @@
 
 package misq.presentation.offer;
 
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import misq.presentation.Controller;
 
@@ -24,10 +25,25 @@ import java.util.function.Predicate;
 
 @Slf4j
 public class OfferbookController implements Controller {
+    @Getter
     private final OfferbookModel model;
 
     public OfferbookController(OfferbookModel model) {
         this.model = model;
+    }
+
+    public void onCreateView() {
+        model.initialize();
+    }
+
+    @Override
+    public void onViewAdded() {
+        model.activate();
+    }
+
+    @Override
+    public void onViewRemoved() {
+        model.deactivate();
     }
 
     public void onSelectAskCurrency(String currency) {
@@ -47,6 +63,12 @@ public class OfferbookController implements Controller {
     }
 
     public void onCreateOffer() {
+    }
+
+    public void onTakeOffer(OfferListItem item) {
+    }
+
+    public void onShowMakerDetails(OfferListItem item) {
     }
 
     public void onLowBaseAmountFilterChange(double percentage) {

@@ -26,15 +26,12 @@ public abstract class ViewWithModelAndController<T extends Node, C extends Contr
     protected C controller;
     protected final M model;
 
-    public ViewWithModelAndController(T root, Class<C> controllerClass) {
+    public ViewWithModelAndController(T root) {
         super(root);
 
-        model = MvcInjector.getModel(this.getClass());
-        try {
-            controller = controllerClass.getDeclaredConstructor(model.getClass()).newInstance(model);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        controller = MvcInjector.getController(this.getClass());
+        model = controller.getModel();
+        controller.onCreateView();
 
         if (root != null) {
             root.sceneProperty().addListener((ov, oldValue, newValue) -> {
@@ -47,9 +44,18 @@ public abstract class ViewWithModelAndController<T extends Node, C extends Contr
         }
     }
 
-    public void onViewAdded() {
+    protected void onViewAdded() {
+        controller.onViewAdded();
     }
 
-    public void onViewRemoved() {
+    protected void onViewRemoved() {
+        controller.onViewRemoved();
     }
+
+    abstract protected void setupView();
+
+    abstract protected void configModel();
+
+    abstract protected void configController();
+
 }
