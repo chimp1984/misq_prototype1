@@ -1,5 +1,7 @@
 # Misq
 
+[![Release](https://jitpack.io/v/chimp1984/misq.svg)](https://jitpack.io/#chimp1984/misq)
+
 [![Build Status](https://travis-ci.org/github/chimp1984/misq.svg?branch=master)](https://travis-ci.org/github/chimp1984/misq)
 
 
