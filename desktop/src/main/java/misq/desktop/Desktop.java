@@ -48,7 +48,7 @@ public class Desktop {
 
         // Probably we will need some DI framework for wiring up the view with its controller and model
         OfferbookModel offerbookModel = new OfferbookModel(offerbook, marketPriceService);
-        OfferbookController offerbookController = new OfferbookController(offerbookModel);
+        OfferbookController offerbookController = new OfferbookController(offerbookModel, offerbook, marketPriceService);
         MvcInjector.glue(OfferbookView.class, offerbookController);
     }
 }

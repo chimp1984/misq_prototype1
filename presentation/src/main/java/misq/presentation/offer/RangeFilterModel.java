@@ -31,9 +31,9 @@ public class RangeFilterModel {
     @Getter
     private final BooleanProperty visible = new SimpleBooleanProperty();
     @Getter
-    private final DoubleProperty lowPercentage = new SimpleDoubleProperty();
+    private final DoubleProperty lowPercentage = new SimpleDoubleProperty(); // has bidirectional binding
     @Getter
-    private final DoubleProperty highPercentage = new SimpleDoubleProperty();
+    private final DoubleProperty highPercentage = new SimpleDoubleProperty();// has bidirectional binding
     @Getter
     private final StringProperty lowFormattedAmount = new SimpleStringProperty();
     @Getter
@@ -48,6 +48,7 @@ public class RangeFilterModel {
 
     public RangeFilterModel(OfferbookModel model) {
         this.model = model;
+
         lowPercentageListener = (observable, oldValue, newValue) -> {
             long value = lowBaseAmountPercentToValue((double) newValue);
             Predicate<OfferListItem> predicate = item -> item.getOffer().getBaseAsset().getAmount() >= value;
@@ -80,7 +81,7 @@ public class RangeFilterModel {
         getHighPercentage().removeListener(highPercentageListener);
     }
 
-    public void reset() {
+    void reset() {
         clearFilterPredicates();
         applyMinBaseAmountValue();
         applyMaxBaseAmountValue();
@@ -90,66 +91,64 @@ public class RangeFilterModel {
         highPercentage.set(100);
     }
 
-    public void clearFilterPredicates() {
+    void clearFilterPredicates() {
         lowPredicate = e -> true;
         highPredicate = e -> true;
     }
 
-
-    public void applyMinBaseAmountValue() {
-        FilteredList<OfferListItem> tempList = new FilteredList<>(model.getOfferItems());
-        tempList.setPredicate(model.getCurrencyPredicate());
+    private void applyMinBaseAmountValue() {
+        FilteredList<OfferListItem> tempList = new FilteredList<>(model.offerItems);
+        tempList.setPredicate(model.currencyPredicate);
         min = getMin(tempList);
     }
 
-    public void applyMaxBaseAmountValue() {
-        FilteredList<OfferListItem> tempList = new FilteredList<>(model.getOfferItems());
-        tempList.setPredicate(model.getCurrencyPredicate());
+    private void applyMaxBaseAmountValue() {
+        FilteredList<OfferListItem> tempList = new FilteredList<>(model.offerItems);
+        tempList.setPredicate(model.currencyPredicate);
         max = getMax(tempList);
     }
 
-    public long lowBaseAmountPercentToValue(double value) {
+    private long lowBaseAmountPercentToValue(double value) {
         long low = min + Math.round((max - min) * value / 100d);
-        lowFormattedAmount.set(AmountFormatter.formatAmount(low, model.getBaseCurrency()));
+        lowFormattedAmount.set(AmountFormatter.formatAmount(low, model.baseCurrency));
         return low;
     }
 
-    public long highBaseAmountPercentToValue(double value) {
+    private long highBaseAmountPercentToValue(double value) {
         long high = Math.round(max * value / 100d);
-        highFormattedAmount.set(AmountFormatter.formatAmount(high, model.getBaseCurrency()));
+        highFormattedAmount.set(AmountFormatter.formatAmount(high, model.baseCurrency));
         return high;
     }
 
-    public void setLowBaseAmountPredicate(Predicate<OfferListItem> predicate) {
+    private void setLowBaseAmountPredicate(Predicate<OfferListItem> predicate) {
         model.clearFilterPredicates();
-        model.getListFilterPredicates().add(model.getCurrencyPredicate());
-        model.getListFilterPredicates().add(predicate);
-        model.getListFilterPredicates().add(highPredicate);
+        model.listFilterPredicates.add(model.currencyPredicate);
+        model.listFilterPredicates.add(predicate);
+        model.listFilterPredicates.add(highPredicate);
         lowPredicate = predicate;
         model.applyListFilterPredicates();
     }
 
-    public void setHighBaseAmountPredicate(Predicate<OfferListItem> predicate) {
+    private void setHighBaseAmountPredicate(Predicate<OfferListItem> predicate) {
         model.clearFilterPredicates();
-        model.getListFilterPredicates().add(model.getCurrencyPredicate());
-        model.getListFilterPredicates().add(predicate);
-        model.getListFilterPredicates().add(lowPredicate);
+        model.listFilterPredicates.add(model.currencyPredicate);
+        model.listFilterPredicates.add(predicate);
+        model.listFilterPredicates.add(lowPredicate);
         highPredicate = predicate;
         model.applyListFilterPredicates();
     }
 
-    public static long getMin(List<OfferListItem> offers) {
+    private static long getMin(List<OfferListItem> offers) {
         return offers.stream()
                 .mapToLong(e -> e.getOffer().getMinBaseAmount())
                 .min()
                 .orElse(0);
     }
 
-    public static long getMax(List<OfferListItem> offers) {
+    private static long getMax(List<OfferListItem> offers) {
         return offers.stream()
                 .mapToLong(e -> e.getOffer().getMinBaseAmount())
                 .max()
                 .orElse(0);
     }
-
 }

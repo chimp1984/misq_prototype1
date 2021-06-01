@@ -253,6 +253,7 @@ configure(project(':presentation')) {
 configure(project(':jfx')) {
     dependencies {
         implementation project(':i18n')
+        implementation project(':finance')
         implementation project(':presentation')
         implementation "org.openjfx:javafx-base:$javafxVersion:$os"
         implementation "org.openjfx:javafx-graphics:$javafxVersion:$os"

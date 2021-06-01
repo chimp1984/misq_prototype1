@@ -19,17 +19,27 @@ package misq.presentation.offer;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import misq.finance.offer.Offer;
+import misq.finance.offer.Offerbook;
+import misq.finance.swap.offer.SwapOffer;
 import misq.presentation.Controller;
+import misq.presentation.marketprice.MarketPriceService;
+import misq.presentation.marketprice.MockMarketPriceService;
 
 @Slf4j
-public class OfferbookController implements Controller {
+public class OfferbookController implements Controller, Offerbook.Listener, MockMarketPriceService.Listener {
     @Getter
     private final OfferbookModel model;
+    private final Offerbook offerbook;
+    private final MarketPriceService marketPriceService;
 
-    public OfferbookController(OfferbookModel model) {
+    public OfferbookController(OfferbookModel model, Offerbook offerbook, MarketPriceService marketPriceService) {
         this.model = model;
+        this.offerbook = offerbook;
+        this.marketPriceService = marketPriceService;
     }
 
+    @Override
     public void onCreateView() {
         model.initialize();
     }
@@ -37,12 +47,41 @@ public class OfferbookController implements Controller {
     @Override
     public void onViewAdded() {
         model.activate();
+        marketPriceService.addListener(this);
+        offerbook.addListener(this);
     }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // Domain events
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
     public void onViewRemoved() {
+        marketPriceService.removeListener(this);
+        offerbook.removeListener(this);
         model.deactivate();
     }
+
+    @Override
+    public void onOfferAdded(Offer offer) {
+        if (offer instanceof SwapOffer) {
+            model.addOffer((SwapOffer) offer);
+        }
+    }
+
+    @Override
+    public void onOfferRemoved(Offer offer) {
+        model.removeOffer((SwapOffer) offer);
+    }
+
+    @Override
+    public void onMarketPriceChanged(double marketPrice) {
+        model.setMarketPrice(marketPrice);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // View events
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     public void onSelectAskCurrency(String currency) {
         model.setSelectAskCurrency(currency);
@@ -64,4 +103,5 @@ public class OfferbookController implements Controller {
 
     public void onShowMakerDetails(OfferListItem item) {
     }
+
 }

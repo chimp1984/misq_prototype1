@@ -27,7 +27,7 @@ import java.util.concurrent.CopyOnWriteArraySet;
 @Slf4j
 public class MockMarketPriceService implements MarketPriceService {
     public interface Listener {
-        void onPriceUpdate(double value);
+        void onMarketPriceChanged(double marketPrice);
     }
 
     @Getter

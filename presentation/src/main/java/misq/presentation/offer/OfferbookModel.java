@@ -28,12 +28,10 @@ import javafx.collections.transformation.SortedList;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import misq.common.util.Tuple2;
-import misq.finance.offer.Offer;
 import misq.finance.offer.Offerbook;
 import misq.finance.swap.offer.SwapOffer;
 import misq.presentation.Model;
 import misq.presentation.marketprice.MarketPriceService;
-import misq.presentation.marketprice.MockMarketPriceService;
 
 import java.text.DecimalFormat;
 import java.util.List;
@@ -45,60 +43,35 @@ import java.util.stream.Collectors;
 
 @Slf4j
 public class OfferbookModel implements Model {
-    private final Offerbook.Listener offerBookListener;
     private final Offerbook offerbook;
     private final MarketPriceService marketPriceService;
-    @Getter
-    private final RangeFilterModel amountFilterModel;
 
-    @Getter
-    private final ObservableList<OfferListItem> offerItems = FXCollections.observableArrayList();
-    @Getter
+    // Exposed for filter model
+    final ObservableList<OfferListItem> offerItems = FXCollections.observableArrayList();
+    final Set<Predicate<OfferListItem>> listFilterPredicates = new CopyOnWriteArraySet<>();
+    Predicate<OfferListItem> currencyPredicate = e -> true;
+    String baseCurrency;
+
     private final FilteredList<OfferListItem> filteredItems = new FilteredList<>(offerItems);
+
+    // exposed for view
     @Getter
     private final SortedList<OfferListItem> sortedItems = new SortedList<>(filteredItems);
-
     @Getter
     private final StringProperty selectedAskCurrency = new SimpleStringProperty();
     @Getter
     private final StringProperty selectedBidCurrency = new SimpleStringProperty();
-
     @Getter
     private final DoubleProperty marketPrice = new SimpleDoubleProperty();
-
     @Getter
     private final ObservableList<String> currencies = FXCollections.observableArrayList("BTC", "USD", "EUR", "XMR", "USDT");
-    private final MockMarketPriceService.Listener marketPriceListener;
     @Getter
-    private final Set<Predicate<OfferListItem>> listFilterPredicates = new CopyOnWriteArraySet<>();
-    @Getter
-    private Predicate<OfferListItem> currencyPredicate = e -> true;
-    @Getter
-    private String baseCurrency;
+    private final RangeFilterModel amountFilterModel;
 
     public OfferbookModel(Offerbook offerbook, MarketPriceService marketPriceService) {
         this.offerbook = offerbook;
         this.marketPriceService = marketPriceService;
         amountFilterModel = new RangeFilterModel(this);
-
-        offerBookListener = new Offerbook.Listener() {
-            @Override
-            public void onOfferAdded(Offer offer) {
-                if (offer instanceof SwapOffer) {
-                    offerItems.add(toOfferListItem((SwapOffer) offer));
-                }
-            }
-
-            @Override
-            public void onOfferRemoved(Offer offer) {
-                offerItems.stream()
-                        .filter(e -> e.getOffer().equals(offer))
-                        .findAny()
-                        .ifPresent(offerItems::remove);
-            }
-        };
-
-        marketPriceListener = marketPrice::set;
     }
 
     @Override
@@ -106,6 +79,7 @@ public class OfferbookModel implements Model {
         selectedAskCurrency.set("BTC");
         selectedBidCurrency.set("USD");
         marketPrice.set(marketPriceService.getMarketPrice());
+        offerItems.clear();
         offerItems.addAll(offerbook.getOffers().stream()
                 .filter(e -> e instanceof SwapOffer)
                 .map(e -> (SwapOffer) e)
@@ -117,8 +91,6 @@ public class OfferbookModel implements Model {
 
     @Override
     public void activate() {
-        marketPriceService.addListener(marketPriceListener);
-        offerbook.addListener(offerBookListener);
         reset();
         Predicate<OfferListItem> predicate = item -> item.getOffer().getAskAsset().getCode().equals(selectedAskCurrency.get());
         setCurrencyPredicate(predicate);
@@ -127,17 +99,33 @@ public class OfferbookModel implements Model {
 
     @Override
     public void deactivate() {
-        marketPriceService.removeListener(marketPriceListener);
-        offerbook.removeListener(offerBookListener);
-
         amountFilterModel.deactivate();
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // API
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+    public void addOffer(SwapOffer offer) {
+        offerItems.add(toOfferListItem(offer));
+    }
+
+    public void removeOffer(SwapOffer offer) {
+        offerItems.stream()
+                .filter(e -> e.getOffer().equals(offer))
+                .findAny()
+                .ifPresent(offerItems::remove);
+    }
+
+    public void setMarketPrice(double marketPrice) {
+        this.marketPrice.set(marketPrice);
     }
 
     public void reset() {
         clearFilterPredicates();
         amountFilterModel.reset();
     }
-
 
     public void setSelectAskCurrency(String currency) {
         selectedAskCurrency.set(currency);
@@ -155,15 +143,11 @@ public class OfferbookModel implements Model {
         return new OfferListItem(offer, marketPrice);
     }
 
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // Package private
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public void setCurrencyPredicate(Predicate<OfferListItem> predicate) {
-        clearFilterPredicates();
-        listFilterPredicates.add(predicate);
-        currencyPredicate = predicate;
-        applyListFilterPredicates();
-    }
-
-    public void clearFilterPredicates() {
+    void clearFilterPredicates() {
         listFilterPredicates.clear();
 
         amountFilterModel.clearFilterPredicates();
@@ -178,6 +162,17 @@ public class OfferbookModel implements Model {
     void applyBaseCurrency() {
         filteredItems.stream().findAny().ifPresent(o -> baseCurrency = o.getOffer().getBaseCurrency());
     }
+
+    private void setCurrencyPredicate(Predicate<OfferListItem> predicate) {
+        clearFilterPredicates();
+        listFilterPredicates.add(predicate);
+        currencyPredicate = predicate;
+        applyListFilterPredicates();
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // Static
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     public static Tuple2<String, Double> getPriceTuple(double fixPrice, Optional<Double> marketBasedPrice, double marketPrice) {
         double percentage;

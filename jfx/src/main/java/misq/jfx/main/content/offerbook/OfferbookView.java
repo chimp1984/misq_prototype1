@@ -76,6 +76,7 @@ public class OfferbookView extends ViewWithModelAndController<VBox, OfferbookCon
     @Override
     protected void onViewRemoved() {
         super.onViewRemoved();
+        baseAmountSliderBox.onViewRemoved();
     }
 
 

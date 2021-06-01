@@ -28,14 +28,8 @@ import org.controlsfx.control.RangeSlider;
 public class RangeSliderBox extends Pane {
     private final RangeSlider slider;
     private final Label titleLabel, minLabel, maxLabel, lowLabel, highLabel;
-    private final OfferbookModel model;
-    private final OfferbookController controller;
-    private boolean highValueSet, lowValueSet;
 
     public RangeSliderBox(String title, int width, OfferbookModel model, OfferbookController controller) {
-        this.model = model;
-        this.controller = controller;
-        //setStyle("-fx-background-color: blue;");
         setPrefWidth(width);
 
         titleLabel = new Label(title);
@@ -50,8 +44,8 @@ public class RangeSliderBox extends Pane {
         getChildren().addAll(titleLabel, slider, minLabel, maxLabel, lowLabel, highLabel);
         setMaxHeight(50);
 
-        slider.highValueProperty().bindBidirectional(model.getAmountFilterModel().getHighPercentage());
         slider.lowValueProperty().bindBidirectional(model.getAmountFilterModel().getLowPercentage());
+        slider.highValueProperty().bindBidirectional(model.getAmountFilterModel().getHighPercentage());
         lowLabel.textProperty().bind(model.getAmountFilterModel().getLowFormattedAmount());
         highLabel.textProperty().bind(model.getAmountFilterModel().getHighFormattedAmount());
     }
@@ -71,5 +65,9 @@ public class RangeSliderBox extends Pane {
 
         titleLabel.layoutXProperty().bind(slider.widthProperty().subtract(titleLabel.widthProperty()).divide(2));
         titleLabel.layoutYProperty().bind(slider.layoutYProperty().subtract(45));
+    }
+
+    public void onViewRemoved() {
+        //todo unbind
     }
 }
