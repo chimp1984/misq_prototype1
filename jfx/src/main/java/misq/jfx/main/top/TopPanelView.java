@@ -23,7 +23,6 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
 import misq.jfx.common.View;
-import misq.jfx.main.top.marketprice.MarketPriceView;
 import misq.jfx.utils.ImageUtil;
 
 public class TopPanelView extends View<HBox> {
@@ -35,10 +34,8 @@ public class TopPanelView extends View<HBox> {
 
         ImageView logo = ImageUtil.getImageView("/images/logo_small.png");
 
-        MarketPriceView marketPriceView = new MarketPriceView();
-
         Pane spacer = new Pane();
         HBox.setHgrow(spacer, Priority.ALWAYS);
-        root.getChildren().addAll(logo, spacer /*,marketPriceView.getRoot()*/);
+        root.getChildren().addAll(logo, spacer);
     }
 }

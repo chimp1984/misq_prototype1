@@ -30,7 +30,7 @@ public class JfxLauncher {
         });
     }
 
-    public static CompletableFuture<ApplicationModel> launch() {
+    public static CompletableFuture<Boolean> launch() {
         new Thread(() -> {
             Thread.currentThread().setName("JfxLauncher");
             Application.launch(JfxApplication.class);

@@ -21,7 +21,7 @@ import javafx.geometry.Insets;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.layout.VBox;
 import misq.jfx.common.View;
-import misq.jfx.components.AutoTooltipToggleButton;
+import misq.jfx.components.controls.AutoTooltipToggleButton;
 import misq.jfx.main.MainView;
 import misq.jfx.main.content.accounts.AccountsView;
 import misq.jfx.main.content.createoffer.CreateOfferView;

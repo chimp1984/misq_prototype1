@@ -18,39 +18,38 @@
 package misq.jfx.common;
 
 import javafx.scene.Node;
-import lombok.Getter;
+import misq.jfx.MvcInjector;
+import misq.presentation.Controller;
+import misq.presentation.Model;
 
-public abstract class ViewWithModel<T extends Node, M extends ViewModel> extends View<T> implements LifeCycle {
-    @Getter
+public abstract class ViewWithModelAndController<T extends Node, C extends Controller, M extends Model> extends View<T> {
+    protected C controller;
     protected final M model;
 
-
-    public ViewWithModel(T root, M model) {
+    public ViewWithModelAndController(T root, Class<C> controllerClass) {
         super(root);
-        this.model = model;
+
+        model = MvcInjector.getModel(this.getClass());
+        try {
+            controller = controllerClass.getDeclaredConstructor(model.getClass()).newInstance(model);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
         if (root != null) {
             root.sceneProperty().addListener((ov, oldValue, newValue) -> {
                 if (oldValue == null && newValue != null) {
-                    model.onViewAdded();
                     onViewAdded();
                 } else if (oldValue != null && newValue == null) {
-                    model.onViewRemoved();
                     onViewRemoved();
                 }
             });
         }
     }
 
-    @Override
-    public void onConstructView(ViewModel viewModel) {
-    }
-
-    @Override
     public void onViewAdded() {
     }
 
-    @Override
     public void onViewRemoved() {
     }
 }

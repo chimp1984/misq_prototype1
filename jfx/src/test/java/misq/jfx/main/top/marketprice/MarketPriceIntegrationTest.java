@@ -27,7 +27,6 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotEquals;
 
 @Slf4j
 public class MarketPriceIntegrationTest {
@@ -41,7 +40,7 @@ public class MarketPriceIntegrationTest {
         TestApplicationLauncher.launch().whenComplete((application, throwable) -> {
             Pane root = application.root;
             MarketPriceView view = new MarketPriceView();
-            model = view.getModel();
+            model = view.getController();
             config = new MockMarketPriceConfig(model);
             config.presentation.period = 100;
             root.getChildren().add(view.getRoot());

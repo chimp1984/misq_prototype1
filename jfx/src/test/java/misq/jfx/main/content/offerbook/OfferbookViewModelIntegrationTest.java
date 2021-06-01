@@ -19,31 +19,20 @@ package misq.jfx.main.content.offerbook;
 
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
-import javafx.scene.layout.Pane;
-import misq.TestApplicationLauncher;
-import misq.jfx.utils.UserThread;
-
-import java.text.DecimalFormat;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
+import misq.presentation.offer.OfferbookModel;
 
 public class OfferbookViewModelIntegrationTest {
-    OfferbookViewModel model;
+    OfferbookModel model;
     private DoubleProperty marketPrice = new SimpleDoubleProperty();
 
    // @Test
-    public void testOffers() throws InterruptedException {
+   /* public void testOffers() throws InterruptedException {
         CountDownLatch latch = new CountDownLatch(1);
 
         TestApplicationLauncher.launch().whenComplete((application, throwable) -> {
             Pane root = application.root;
             OfferbookView view = new OfferbookView();
-            model = view.getModel();
+            model = view.getController();
             root.getChildren().add(view.getRoot());
 
             latch.countDown();
@@ -77,14 +66,14 @@ public class OfferbookViewModelIntegrationTest {
         double rand = new Random().nextInt(10000) / 10000d;
         double premium = 0.02 * rand;
         StringProperty price = new SimpleStringProperty(getFormattedMarketBasedPrice(premium, marketPrice.get()));
-      /*  OfferItem offerItem = new OfferItem(UUID.randomUUID().toString(),
+      *//*  OfferItem offerItem = new OfferItem(UUID.randomUUID().toString(),
                 premium,
                 "3213.22",
                 price,
                 "maker " + i,
                 "Zelle/Multisig",
                 marketPrice,
-                this::getFormattedMarketBasedPrice);*/
+                this::getFormattedMarketBasedPrice);*//*
         return null;
-    }
+    }*/
 }

@@ -15,8 +15,9 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package misq.jfx.main.content.offerbook;
+package misq.jfx.components.table;
 
-public interface AmountFormatter {
-    String get(long amount, String currencyCode);
+public interface VisibilityAware {
+    void setVisibility(boolean visibility);
+
 }

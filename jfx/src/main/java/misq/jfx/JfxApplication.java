@@ -32,21 +32,18 @@ import java.util.concurrent.CompletableFuture;
 
 @Slf4j
 public class JfxApplication extends Application {
-    public static final CompletableFuture<ApplicationModel> LAUNCH_APP_FUTURE = new CompletableFuture<>();
+    public static final CompletableFuture<Boolean> LAUNCH_APP_FUTURE = new CompletableFuture<>();
 
-    private final ApplicationModel applicationModel;
 
     private MainView mainView;
 
     public JfxApplication() {
-        applicationModel = new ApplicationModel(Thread.currentThread());
     }
 
     @Override
     public void start(Stage stage) {
         try {
-
-            LAUNCH_APP_FUTURE.complete(applicationModel);
+            LAUNCH_APP_FUTURE.complete(true);
             mainView = new MainView();
 
             Scene scene = new Scene(mainView.getRoot());

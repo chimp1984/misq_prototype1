@@ -18,19 +18,16 @@
 package misq.desktop;
 
 import lombok.extern.slf4j.Slf4j;
-import misq.desktop.offer.OfferbookDataModel;
-import misq.jfx.ApplicationModel;
+import misq.finance.offer.Offerbook;
 import misq.jfx.JfxLauncher;
-import misq.jfx.main.content.offerbook.OfferbookViewModel;
+import misq.jfx.MvcInjector;
+import misq.jfx.main.content.offerbook.OfferbookView;
 import misq.presentation.marketprice.MarketPriceService;
 import misq.presentation.marketprice.MockMarketPriceService;
-import misq.presentation.offer.Offerbook;
-import misq.presentation.offer.mock.MockNetworkService;
-import misq.presentation.offer.mock.NetworkService;
+import misq.presentation.offer.OfferbookModel;
 
 @Slf4j
 public class Desktop {
-    private ApplicationModel applicationModel;
 
     public Desktop() {
         launchApplication();
@@ -38,17 +35,19 @@ public class Desktop {
 
     private void launchApplication() {
         JfxLauncher.launch()
-                .whenComplete((applicationModel, throwable) -> {
-                    this.applicationModel = applicationModel;
+                .whenComplete((success, throwable) -> {
                     init();
                 });
     }
 
     private void init() {
-        NetworkService networkService = new MockNetworkService();
+        Offerbook.NetworkService networkService = new Offerbook.MockNetworkService();
         Offerbook offerbook = new Offerbook(networkService);
         MarketPriceService marketPriceService = new MockMarketPriceService();
-        OfferbookDataModel offerbookDataModel = new OfferbookDataModel(offerbook, marketPriceService);
-        applicationModel.connect(OfferbookViewModel.class, offerbookDataModel);
+
+        OfferbookModel offerbookModel = new OfferbookModel(offerbook, marketPriceService);
+        offerbookModel.init();
+
+        MvcInjector.glue(OfferbookView.class, offerbookModel);
     }
 }

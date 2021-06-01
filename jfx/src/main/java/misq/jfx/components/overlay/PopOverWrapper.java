@@ -15,10 +15,10 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package misq.jfx.components;
+package misq.jfx.components.overlay;
 
 
-import misq.jfx.components.controlsfx.control.PopOver;
+import misq.jfx.components.controls.controlsfx.control.PopOver;
 import misq.jfx.utils.UserThread;
 
 import java.util.concurrent.TimeUnit;

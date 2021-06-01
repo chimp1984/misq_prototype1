@@ -24,7 +24,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package misq.jfx.components.controlsfx.control;
+package misq.jfx.components.controls.controlsfx.control;
 
 import javafx.animation.FadeTransition;
 import javafx.beans.InvalidationListener;
@@ -45,7 +45,7 @@ import javafx.scene.input.MouseEvent;
 import javafx.stage.Window;
 import javafx.stage.WindowEvent;
 import javafx.util.Duration;
-import misq.jfx.components.controlsfx.skin.PopOverSkin;
+import misq.jfx.components.controls.controlsfx.skin.PopOverSkin;
 
 import static java.util.Objects.requireNonNull;
 import static javafx.scene.input.MouseEvent.MOUSE_CLICKED;

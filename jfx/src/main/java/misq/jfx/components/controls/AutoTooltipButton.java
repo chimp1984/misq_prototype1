@@ -15,42 +15,48 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package misq.jfx.components;
+package misq.jfx.components.controls;
 
+import com.jfoenix.controls.JFXButton;
+import com.jfoenix.skins.JFXButtonSkin;
 import javafx.scene.Node;
 import javafx.scene.control.Skin;
-import javafx.scene.control.ToggleButton;
-import javafx.scene.control.skin.ToggleButtonSkin;
-import misq.jfx.utils.TooltipUtil;
 
-public class AutoTooltipToggleButton extends ToggleButton {
+import static misq.jfx.utils.TooltipUtil.showTooltipIfTruncated;
 
-    public AutoTooltipToggleButton() {
+
+public class AutoTooltipButton extends JFXButton {
+
+    public AutoTooltipButton() {
         super();
     }
 
-    public AutoTooltipToggleButton(String text) {
-        super(text);
+    public AutoTooltipButton(String text) {
+        super(text.toUpperCase());
     }
 
-    public AutoTooltipToggleButton(String text, Node graphic) {
-        super(text, graphic);
+    public AutoTooltipButton(String text, Node graphic) {
+        super(text.toUpperCase(), graphic);
+    }
+
+    public void updateText(String text) {
+        setText(text.toUpperCase());
     }
 
     @Override
     protected Skin<?> createDefaultSkin() {
-        return new AutoTooltipToggleButtonSkin(this);
+        return new AutoTooltipButtonSkin(this);
     }
 
-    private class AutoTooltipToggleButtonSkin extends ToggleButtonSkin {
-        public AutoTooltipToggleButtonSkin(ToggleButton toggleButton) {
-            super(toggleButton);
+    private class AutoTooltipButtonSkin extends JFXButtonSkin {
+        public AutoTooltipButtonSkin(JFXButton button) {
+            super(button);
         }
 
         @Override
         protected void layoutChildren(double x, double y, double w, double h) {
             super.layoutChildren(x, y, w, h);
-            TooltipUtil.showTooltipIfTruncated(this, getSkinnable());
+            showTooltipIfTruncated(this, getSkinnable());
         }
     }
 }

@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package misq.jfx.common;
+package misq.presentation;
 
-public interface ViewModel extends LifeCycle {
+public interface Controller {
 }

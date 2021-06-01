@@ -15,10 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package misq.jfx.main.content.offerbook;
+package misq.presentation;
 
-import java.util.Optional;
-
-public interface QuoteAmountSupplier {
-    String get(long amount, Optional<Double> minAmountAsPercentage, Optional<Double> marketBasedPrice, double marketPrice, String quoteCurrencyCode);
+public interface Model {
 }

@@ -17,12 +17,11 @@
 
 package misq.jfx.main.content.createoffer;
 
-import javafx.scene.layout.VBox;
-import misq.jfx.common.ViewWithModel;
+import misq.jfx.main.content.ContentChildDummy;
 
-public class CreateOfferView extends ViewWithModel<VBox, CreateOfferViewModel> {
+public class CreateOfferView extends ContentChildDummy {
 
     public CreateOfferView() {
-        super(new VBox(), new CreateOfferViewModel());
+        super("CreateOfferView");
     }
 }

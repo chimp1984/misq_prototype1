@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package misq.jfx.components;
+package misq.jfx.components.controls;
 
 import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
@@ -23,7 +23,8 @@ import javafx.scene.Node;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableColumn;
 import javafx.scene.layout.HBox;
-import misq.jfx.components.controlsfx.control.PopOver;
+import misq.jfx.components.controls.controlsfx.control.PopOver;
+import misq.jfx.components.overlay.PopOverWrapper;
 
 public class AutoTooltipTableColumn<S, T> extends TableColumn<S, T> {
 

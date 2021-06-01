@@ -24,7 +24,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package misq.jfx.components.controlsfx.skin;
+package misq.jfx.components.controls.controlsfx.skin;
 
 import javafx.beans.InvalidationListener;
 import javafx.beans.Observable;
@@ -45,7 +45,7 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.shape.*;
 import javafx.stage.Window;
-import misq.jfx.components.controlsfx.control.PopOver;
+import misq.jfx.components.controls.controlsfx.control.PopOver;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -53,7 +53,7 @@ import java.util.List;
 import static java.lang.Double.MAX_VALUE;
 import static javafx.geometry.Pos.CENTER_LEFT;
 import static javafx.scene.control.ContentDisplay.GRAPHIC_ONLY;
-import static misq.jfx.components.controlsfx.control.PopOver.ArrowLocation.*;
+import static misq.jfx.components.controls.controlsfx.control.PopOver.ArrowLocation.*;
 
 public class PopOverSkin implements Skin<PopOver> {
 

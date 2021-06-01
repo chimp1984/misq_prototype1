@@ -15,12 +15,25 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package misq.presentation.offer.mock;
+package misq.jfx;
 
-public interface NetworkService {
-    void addListener(MockNetworkService.Listener listener);
+import lombok.extern.slf4j.Slf4j;
+import misq.jfx.common.View;
+import misq.presentation.Model;
 
-    void removeListener(MockNetworkService.Listener listener);
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
-    java.util.Map<String, misq.finance.offer.Offer> getData();
+// Just temp to have some simple injection feature...
+@Slf4j
+public class MvcInjector {
+    private final static Map<Class<? extends View>, Model> map = new ConcurrentHashMap<>();
+
+    public static void glue(Class<? extends View> clazz, Model model) {
+        map.put(clazz, model);
+    }
+
+    public static <M extends Model> M getModel(Class<? extends View> clazz) {
+        return (M) map.get(clazz);
+    }
 }

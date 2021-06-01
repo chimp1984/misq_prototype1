@@ -20,7 +20,10 @@ package misq.jfx.main.content.offerbook;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.StringProperty;
 import javafx.geometry.Insets;
-import javafx.scene.control.*;
+import javafx.scene.control.Label;
+import javafx.scene.control.TableCell;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
@@ -29,138 +32,134 @@ import javafx.scene.layout.VBox;
 import javafx.scene.text.TextAlignment;
 import javafx.util.Callback;
 import lombok.extern.slf4j.Slf4j;
-import misq.jfx.common.ViewWithModel;
-import misq.jfx.components.AutoTooltipButton;
-import misq.jfx.components.AutoTooltipSlideToggleButton;
-import misq.jfx.components.AutoTooltipTableColumn;
-import misq.jfx.components.AutocompleteComboBox;
+import misq.jfx.common.ViewWithModelAndController;
+import misq.jfx.components.controls.AutoTooltipButton;
+import misq.jfx.components.controls.AutoTooltipSlideToggleButton;
+import misq.jfx.components.controls.AutoTooltipTableColumn;
+import misq.jfx.components.controls.AutocompleteComboBox;
 import misq.jfx.main.MainView;
 import misq.jfx.main.content.createoffer.CreateOfferView;
 import misq.jfx.navigation.Navigation;
+import misq.presentation.offer.OfferListItem;
+import misq.presentation.offer.OfferbookController;
+import misq.presentation.offer.OfferbookModel;
 
 import java.util.Comparator;
 import java.util.Optional;
 import java.util.function.Function;
 
 @Slf4j
-public class OfferbookView extends ViewWithModel<VBox, OfferbookViewModel> {
-    private final TableView<OfferItem> tableView;
-    private final RangeSliderBox /*baseAmountSliderBox, priceSliderBox, */quoteAmountSliderBox;
-
+public class OfferbookView extends ViewWithModelAndController<VBox, OfferbookController, OfferbookModel> {
+    private TableView<OfferListItem> tableView;
+    private RangeSliderBox baseAmountSliderBox, priceSliderBox;
+    private AutocompleteComboBox<String> askCurrencyComboBox, bidCurrencyComboBox;
+    private AutoTooltipButton flipButton;
+    private AutoTooltipSlideToggleButton showAmountPriceFilterToggle;
+    private HBox amountPriceFilterBox;
+    private AutoTooltipButton createOfferButton;
 
     public OfferbookView() {
-        super(new VBox(), new OfferbookViewModel());
+        super(new VBox(), OfferbookController.class);
 
+        setupView();
+        configModel();
+        configController();
+    }
 
+    private void setupView() {
         Label askCurrencyLabel = new Label("I want (ask):");
         askCurrencyLabel.setPadding(new Insets(4, 8, 0, 0));
 
-        AutocompleteComboBox<String> askCurrency = new AutocompleteComboBox<>();
-        askCurrency.setAutocompleteItems(model.currencies);
-        askCurrency.setOnAction(e -> model.onAskCurrencySelected(askCurrency.getSelectionModel().getSelectedItem()));
-        askCurrency.getEditor().getStyleClass().add("combo-box-editor-bold");
-        askCurrency.getSelectionModel().select(0);
-        model.onAskCurrencySelected(askCurrency.getSelectionModel().getSelectedItem());
+        askCurrencyComboBox = new AutocompleteComboBox<>();
+        askCurrencyComboBox.getEditor().getStyleClass().add("combo-box-editor-bold");
 
-        Button flipButton = new AutoTooltipButton("<- Flip ->");
+        flipButton = new AutoTooltipButton("<- Flip ->");
 
         Label bidCurrencyLabel = new Label("I give (bid):");
         bidCurrencyLabel.setPadding(new Insets(4, 8, 0, 60));
-        AutocompleteComboBox<String> bidCurrency = new AutocompleteComboBox<>();
-        bidCurrency.setAutocompleteItems(model.currencies);
-        bidCurrency.setOnAction(e -> model.onBidCurrencySelected(bidCurrency.getSelectionModel().getSelectedItem()));
-        bidCurrency.getEditor().getStyleClass().add("combo-box-editor-bold");
-        bidCurrency.getSelectionModel().select(1);
-        model.onBidCurrencySelected(bidCurrency.getSelectionModel().getSelectedItem());
-
+        bidCurrencyComboBox = new AutocompleteComboBox<>();
+        bidCurrencyComboBox.getEditor().getStyleClass().add("combo-box-editor-bold");
 
         HBox.setMargin(flipButton, new Insets(-2, 0, 0, 60));
-        flipButton.setOnAction(e -> {
-            String ask = askCurrency.getSelectionModel().getSelectedItem();
-            String bid = bidCurrency.getSelectionModel().getSelectedItem();
-            askCurrency.getSelectionModel().select(bid);
-            bidCurrency.getSelectionModel().select(ask);
-        });
 
         Pane spacer = new Pane();
         HBox.setHgrow(spacer, Priority.ALWAYS);
 
-        AutoTooltipButton createOfferButton = new AutoTooltipButton("Create offer");
-        createOfferButton.setOnAction(e -> Navigation.navigateTo(MainView.class, CreateOfferView.class));
+        createOfferButton = new AutoTooltipButton("Create offer");
         HBox.setMargin(createOfferButton, new Insets(20, 20, 20, 20));
 
         HBox currencySelectionBox = new HBox();
         currencySelectionBox.setMinHeight(70);
         currencySelectionBox.setMaxHeight(currencySelectionBox.getMinHeight());
-        currencySelectionBox.getChildren().addAll(askCurrencyLabel, askCurrency, flipButton, bidCurrencyLabel, bidCurrency, spacer, createOfferButton);
+        currencySelectionBox.getChildren().addAll(askCurrencyLabel, askCurrencyComboBox, flipButton, bidCurrencyLabel,
+                bidCurrencyComboBox, spacer, createOfferButton);
 
-        AutoTooltipSlideToggleButton amountPriceFilterToggle = new AutoTooltipSlideToggleButton("Filter by amount and price");
-        amountPriceFilterToggle.setTextAlignment(TextAlignment.LEFT);
+        showAmountPriceFilterToggle = new AutoTooltipSlideToggleButton("Filter by amount and price");
+        showAmountPriceFilterToggle.setTextAlignment(TextAlignment.LEFT);
 
-        HBox amountPriceFilterBox = new HBox();
+        amountPriceFilterBox = new HBox();
         amountPriceFilterBox.setSpacing(80);
         amountPriceFilterBox.setPadding(new Insets(50, 0, 0, 0));
-        amountPriceFilterBox.visibleProperty().bind(amountPriceFilterToggle.selectedProperty());
-        amountPriceFilterToggle.setSelected(true);
 
-      /*  baseAmountSliderBox = new RangeSliderBox("Filter by BTC amount",
-                300,
-                model.lowBaseAmount,
-                model.highBaseAmount,
-                model.getFilteredItems(),
-                model::getSmallestBaseAmount,
-                model::getLargestBaseAmount,
-                model::getFormattedBaseAmount);
-
-        priceSliderBox = new RangeSliderBox("Filter by price",
-                300,
-                model.lowPrice,
-                model.highPrice,
-                model.getFilteredItems(),
-                model::getLowestPrice,
-                model::getHighestPrice,
-                model::getFormattedPrice);*/
-
-        quoteAmountSliderBox = new RangeSliderBox("Filter by USD amount",
-                300,
-                model.lowQuoteAmount,
-                model.highQuoteAmount,
-                model.getFilteredItems(),
-                model::getSmallestQuoteAmount,
-                model::getLargestQuoteAmount,
-                model::getFormattedQuoteAmount);
-
-        amountPriceFilterBox.getChildren().addAll(/*baseAmountSliderBox, priceSliderBox,*/ quoteAmountSliderBox);
-
+        baseAmountSliderBox = new RangeSliderBox("Filter by BTC amount", 300, model, controller);
+        priceSliderBox = new RangeSliderBox("Filter by price", 300, model, controller);
+        amountPriceFilterBox.getChildren().addAll(baseAmountSliderBox, priceSliderBox);
 
         tableView = new TableView<>();
         VBox.setVgrow(tableView, Priority.ALWAYS);
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-        //tableView.setTableMenuButtonVisible(true);
 
-        tableView.setItems(model.sortedItems);
-        model.sortedItems.comparatorProperty().bind(tableView.comparatorProperty());
-        addValueColumn("Offered amount", OfferItem::getBaseAmountWithMinAmount, Optional.of(OfferItem::compareBaseAmount));
-        addPropertyColumn("Price", OfferItem::getPrice, Optional.of(OfferItem::comparePrice));
-        addPropertyColumn("Amount to pay", OfferItem::getQuoteAmount, Optional.of(OfferItem::compareQuoteAmount));
-        addValueColumn("Details", OfferItem::getTransferOptions, Optional.empty());
-        addMakerColumn("Maker", OfferItem::getMakerInfo);
+        addValueColumn("Offered amount", OfferListItem::getBaseAmountWithMinAmount, Optional.of(OfferListItem::compareBaseAmount));
+        addPropertyColumn("Price", OfferListItem::getPrice, Optional.of(OfferListItem::comparePrice));
+        addPropertyColumn("Amount to pay", OfferListItem::getQuoteAmount, Optional.of(OfferListItem::compareQuoteAmount));
+        addValueColumn("Details", OfferListItem::getTransferOptions, Optional.empty());
+        addMakerColumn("Maker");
         addTakeOfferColumn("");
 
-        model.marketPrice.addListener(observable -> tableView.sort());
+        root.getChildren().addAll(currencySelectionBox, showAmountPriceFilterToggle, amountPriceFilterBox, tableView);
+
+    }
+
+    private void configModel() {
+        askCurrencyComboBox.setAutocompleteItems(model.getCurrencies());
+        askCurrencyComboBox.getSelectionModel().select(model.getSelectedAskCurrency().get());
+
+        bidCurrencyComboBox.setAutocompleteItems(model.getCurrencies());
+        bidCurrencyComboBox.getSelectionModel().select(model.getSelectedBidCurrency().get());
+
+        amountPriceFilterBox.visibleProperty().bind(model.getAmountPriceFilterVisible());
+        showAmountPriceFilterToggle.selectedProperty().bind(model.getAmountPriceFilterVisible());
+
+        model.getSortedItems().comparatorProperty().bind(tableView.comparatorProperty());
+        model.getMarketPrice().addListener(observable -> tableView.sort());
+        tableView.setItems(model.getSortedItems());
         tableView.sort();
-        root.getChildren().addAll(currencySelectionBox, amountPriceFilterToggle, amountPriceFilterBox, tableView);
+    }
+
+    private void configController() {
+        flipButton.setOnAction(e -> {
+            String ask = askCurrencyComboBox.getSelectionModel().getSelectedItem();
+            String bid = bidCurrencyComboBox.getSelectionModel().getSelectedItem();
+            askCurrencyComboBox.getSelectionModel().select(bid);
+            bidCurrencyComboBox.getSelectionModel().select(ask);
+
+        });
+        askCurrencyComboBox.setOnAction(e -> controller.onSelectAskCurrency(askCurrencyComboBox.getSelectionModel().getSelectedItem()));
+        bidCurrencyComboBox.setOnAction(e -> controller.onSelectBidCurrency(bidCurrencyComboBox.getSelectionModel().getSelectedItem()));
+        createOfferButton.setOnAction(e -> {
+            controller.onCreateOffer();
+            Navigation.navigateTo(MainView.class, CreateOfferView.class);
+        });
     }
 
     @Override
     public void onViewAdded() {
-       /* baseAmountSliderBox.onViewAdded();
-        priceSliderBox.onViewAdded();*/
-        quoteAmountSliderBox.onViewAdded();
+        baseAmountSliderBox.onViewAdded();
+        priceSliderBox.onViewAdded();
     }
 
-    private void addMakerColumn(String header, Function<OfferItem, String> valueSupplier) {
-        AutoTooltipTableColumn<OfferItem, OfferItem> column = new AutoTooltipTableColumn<>(header) {
+    private void addMakerColumn(String header) {
+        AutoTooltipTableColumn<OfferListItem, OfferListItem> column = new AutoTooltipTableColumn<>(header) {
             {
                 setMinWidth(125);
             }
@@ -169,8 +168,8 @@ public class OfferbookView extends ViewWithModel<VBox, OfferbookViewModel> {
         column.setCellFactory(
                 new Callback<>() {
                     @Override
-                    public TableCell<OfferItem, OfferItem> call(
-                            TableColumn<OfferItem, OfferItem> column) {
+                    public TableCell<OfferListItem, OfferListItem> call(
+                            TableColumn<OfferListItem, OfferListItem> column) {
                         return new TableCell<>() {
                             ImageView iconView = new ImageView();
                             AutoTooltipButton button = new AutoTooltipButton("Show details");
@@ -183,10 +182,9 @@ public class OfferbookView extends ViewWithModel<VBox, OfferbookViewModel> {
                             }
 
                             @Override
-                            public void updateItem(final OfferItem item, boolean empty) {
+                            public void updateItem(final OfferListItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null && !empty) {
-                                    // setText(valueSupplier.apply(item));
                                     button.setOnAction(e -> onTakeOffer(item));
                                     setPadding(new Insets(0, 15, 0, 0));
                                     setGraphic(button);
@@ -202,7 +200,7 @@ public class OfferbookView extends ViewWithModel<VBox, OfferbookViewModel> {
     }
 
     private void addTakeOfferColumn(String header) {
-        AutoTooltipTableColumn<OfferItem, OfferItem> column = new AutoTooltipTableColumn<>(header) {
+        AutoTooltipTableColumn<OfferListItem, OfferListItem> column = new AutoTooltipTableColumn<>(header) {
             {
                 setMinWidth(125);
             }
@@ -211,8 +209,8 @@ public class OfferbookView extends ViewWithModel<VBox, OfferbookViewModel> {
         column.setCellFactory(
                 new Callback<>() {
                     @Override
-                    public TableCell<OfferItem, OfferItem> call(
-                            TableColumn<OfferItem, OfferItem> column) {
+                    public TableCell<OfferListItem, OfferListItem> call(
+                            TableColumn<OfferListItem, OfferListItem> column) {
                         return new TableCell<>() {
                             ImageView iconView = new ImageView();
                             AutoTooltipButton button = new AutoTooltipButton("Take offer");
@@ -225,7 +223,7 @@ public class OfferbookView extends ViewWithModel<VBox, OfferbookViewModel> {
                             }
 
                             @Override
-                            public void updateItem(final OfferItem item, boolean empty) {
+                            public void updateItem(final OfferListItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null && !empty) {
                                     // setText(valueSupplier.apply(item));
@@ -243,12 +241,12 @@ public class OfferbookView extends ViewWithModel<VBox, OfferbookViewModel> {
         tableView.getColumns().add(column);
     }
 
-    private void onTakeOffer(OfferItem item) {
+    private void onTakeOffer(OfferListItem item) {
 
     }
 
-    private void addValueColumn(String header, Function<OfferItem, String> displayStringSupplier, Optional<Comparator<OfferItem>> optionalComparator) {
-        AutoTooltipTableColumn<OfferItem, OfferItem> column = new AutoTooltipTableColumn<>(header) {
+    private void addValueColumn(String header, Function<OfferListItem, String> displayStringSupplier, Optional<Comparator<OfferListItem>> optionalComparator) {
+        AutoTooltipTableColumn<OfferListItem, OfferListItem> column = new AutoTooltipTableColumn<>(header) {
             {
                 setMinWidth(125);
             }
@@ -257,11 +255,11 @@ public class OfferbookView extends ViewWithModel<VBox, OfferbookViewModel> {
         column.setCellFactory(
                 new Callback<>() {
                     @Override
-                    public TableCell<OfferItem, OfferItem> call(
-                            TableColumn<OfferItem, OfferItem> column) {
+                    public TableCell<OfferListItem, OfferListItem> call(
+                            TableColumn<OfferListItem, OfferListItem> column) {
                         return new TableCell<>() {
                             @Override
-                            public void updateItem(final OfferItem item, boolean empty) {
+                            public void updateItem(final OfferListItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null && !empty) {
                                     setText(displayStringSupplier.apply(item));
@@ -280,8 +278,8 @@ public class OfferbookView extends ViewWithModel<VBox, OfferbookViewModel> {
         tableView.getColumns().add(column);
     }
 
-    private void addPropertyColumn(String header, Function<OfferItem, StringProperty> valueSupplier, Optional<Comparator<OfferItem>> optionalComparator) {
-        AutoTooltipTableColumn<OfferItem, OfferItem> column = new AutoTooltipTableColumn<>(header) {
+    private void addPropertyColumn(String header, Function<OfferListItem, StringProperty> valueSupplier, Optional<Comparator<OfferListItem>> optionalComparator) {
+        AutoTooltipTableColumn<OfferListItem, OfferListItem> column = new AutoTooltipTableColumn<>(header) {
             {
                 setMinWidth(125);
             }
@@ -290,13 +288,13 @@ public class OfferbookView extends ViewWithModel<VBox, OfferbookViewModel> {
         column.setCellFactory(
                 new Callback<>() {
                     @Override
-                    public TableCell<OfferItem, OfferItem> call(
-                            TableColumn<OfferItem, OfferItem> column) {
+                    public TableCell<OfferListItem, OfferListItem> call(
+                            TableColumn<OfferListItem, OfferListItem> column) {
                         return new TableCell<>() {
-                            OfferItem previousItem;
+                            OfferListItem previousItem;
 
                             @Override
-                            public void updateItem(final OfferItem item, boolean empty) {
+                            public void updateItem(final OfferListItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null && !empty) {
                                     if (previousItem != null) {

@@ -1,4 +1,4 @@
-package misq.jfx.components;
+package misq.jfx.components.controls;
 
 import com.jfoenix.controls.JFXToggleButton;
 import com.jfoenix.skins.JFXToggleButtonSkin;
