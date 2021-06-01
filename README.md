@@ -25,3 +25,6 @@ To ignore tests use the phrase `Integration` in the test class name (e.g `TorInt
     }
 ```
 to the module config. This is useful for tests which would require a custom setup (e.g. require I2P installation) and/or take a long time for running (e.g. starting tor/i2p)
+
+### Importing as dependency
+If building on top of the Misq codebase, Misq and its modules can be added as a project dependency. See https://jitpack.io/#chimp1984/misq
