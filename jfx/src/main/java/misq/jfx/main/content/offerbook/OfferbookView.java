@@ -70,7 +70,7 @@ public class OfferbookView extends ViewWithModelAndController<VBox, OfferbookCon
     public void onViewAdded() {
         super.onViewAdded();
         baseAmountSliderBox.onViewAdded();
-        priceSliderBox.onViewAdded();
+        // priceSliderBox.onViewAdded();
     }
 
     @Override
@@ -116,8 +116,8 @@ public class OfferbookView extends ViewWithModelAndController<VBox, OfferbookCon
         amountPriceFilterBox.setPadding(new Insets(50, 0, 0, 0));
 
         baseAmountSliderBox = new RangeSliderBox("Filter by BTC amount", 300, model, controller);
-        priceSliderBox = new RangeSliderBox("Filter by price", 300, model, controller);
-        amountPriceFilterBox.getChildren().addAll(baseAmountSliderBox, priceSliderBox);
+        // priceSliderBox = new RangeSliderBox("Filter by price", 300, model, controller);
+        amountPriceFilterBox.getChildren().addAll(baseAmountSliderBox/*, priceSliderBox*/);
 
         tableView = new TableView<>();
         VBox.setVgrow(tableView, Priority.ALWAYS);
@@ -142,8 +142,8 @@ public class OfferbookView extends ViewWithModelAndController<VBox, OfferbookCon
         bidCurrencyComboBox.setAutocompleteItems(model.getCurrencies());
         bidCurrencyComboBox.getSelectionModel().select(model.getSelectedBidCurrency().get());
 
-        amountPriceFilterBox.visibleProperty().bind(model.getAmountPriceFilterVisible());
-        showAmountPriceFilterToggle.selectedProperty().bind(model.getAmountPriceFilterVisible());
+        amountPriceFilterBox.visibleProperty().bind(model.getAmountFilterModel().getVisible());
+        showAmountPriceFilterToggle.selectedProperty().bind(model.getAmountFilterModel().getVisible());
 
         model.getSortedItems().comparatorProperty().bind(tableView.comparatorProperty());
         model.getMarketPrice().addListener(observable -> tableView.sort());
@@ -154,11 +154,11 @@ public class OfferbookView extends ViewWithModelAndController<VBox, OfferbookCon
     @Override
     protected void configController() {
         flipButton.setOnAction(e -> {
+            controller.onFlipCurrencies();
             String ask = askCurrencyComboBox.getSelectionModel().getSelectedItem();
             String bid = bidCurrencyComboBox.getSelectionModel().getSelectedItem();
             askCurrencyComboBox.getSelectionModel().select(bid);
             bidCurrencyComboBox.getSelectionModel().select(ask);
-
         });
         askCurrencyComboBox.setOnAction(e -> controller.onSelectAskCurrency(askCurrencyComboBox.getSelectionModel().getSelectedItem()));
         bidCurrencyComboBox.setOnAction(e -> controller.onSelectBidCurrency(bidCurrencyComboBox.getSelectionModel().getSelectedItem()));

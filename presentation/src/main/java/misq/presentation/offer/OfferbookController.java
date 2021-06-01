@@ -21,8 +21,6 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import misq.presentation.Controller;
 
-import java.util.function.Predicate;
-
 @Slf4j
 public class OfferbookController implements Controller {
     @Getter
@@ -47,19 +45,15 @@ public class OfferbookController implements Controller {
     }
 
     public void onSelectAskCurrency(String currency) {
-        model.getSelectedAskCurrency().set(currency);
-        Predicate<OfferListItem> predicate = item -> item.getOffer().getAskAsset().getCode().equals(currency);
-        model.setCurrencyPredicate(predicate);
-        model.applyListFilterPredicates();
-        applyBaseCurrency();
+        model.setSelectAskCurrency(currency);
     }
 
     public void onSelectBidCurrency(String currency) {
-        model.getSelectedBidCurrency().set(currency);
-        Predicate<OfferListItem> predicate = item -> item.getOffer().getBidAsset().getCode().equals(currency);
-        model.setCurrencyPredicate(predicate);
-        model.applyListFilterPredicates();
-        applyBaseCurrency();
+        model.setSelectBidCurrency(currency);
+    }
+
+    public void onFlipCurrencies() {
+        model.reset();
     }
 
     public void onCreateOffer() {
@@ -69,26 +63,5 @@ public class OfferbookController implements Controller {
     }
 
     public void onShowMakerDetails(OfferListItem item) {
-    }
-
-    public void onLowBaseAmountFilterChange(double percentage) {
-        long value = model.lowBaseAmountPercentToValue(percentage);
-        Predicate<OfferListItem> predicate = item -> item.getOffer().getBaseAsset().getAmount() >= value;
-        model.setLowBaseAmountPredicate(predicate);
-        model.applyListFilterPredicates();
-        applyBaseCurrency();
-    }
-
-    public void onHighBaseAmountFilterChange(double percentage) {
-        long value = model.highBaseAmountPercentToValue(percentage);
-        Predicate<OfferListItem> predicate = item -> item.getOffer().getMinBaseAmount() <= value;
-        model.setHighBaseAmountPredicate(predicate);
-        model.applyListFilterPredicates();
-        applyBaseCurrency();
-    }
-
-
-    private void applyBaseCurrency() {
-        model.getFilteredItems().stream().findAny().ifPresent(o -> model.setBaseCurrency(o.getOffer().getBaseCurrency()));
     }
 }

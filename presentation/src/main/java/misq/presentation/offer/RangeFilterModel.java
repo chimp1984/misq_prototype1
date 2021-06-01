@@ -1,0 +1,155 @@
+/*
+ * This file is part of Bisq.
+ *
+ * Bisq is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at
+ * your option) any later version.
+ *
+ * Bisq is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
+ * License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
+ */
+
+package misq.presentation.offer;
+
+import javafx.beans.property.*;
+import javafx.beans.value.ChangeListener;
+import javafx.collections.transformation.FilteredList;
+import lombok.Getter;
+import misq.presentation.formatters.AmountFormatter;
+
+import java.util.List;
+import java.util.function.Predicate;
+
+public class RangeFilterModel {
+    private final OfferbookModel model;
+    @Getter
+    private final BooleanProperty visible = new SimpleBooleanProperty();
+    @Getter
+    private final DoubleProperty lowPercentage = new SimpleDoubleProperty();
+    @Getter
+    private final DoubleProperty highPercentage = new SimpleDoubleProperty();
+    @Getter
+    private final StringProperty lowFormattedAmount = new SimpleStringProperty();
+    @Getter
+    private final StringProperty highFormattedAmount = new SimpleStringProperty();
+
+    private long min;
+    private long max;
+    private Predicate<OfferListItem> lowPredicate = e -> true;
+    private Predicate<OfferListItem> highPredicate = e -> true;
+    private final ChangeListener<Number> lowPercentageListener;
+    private final ChangeListener<Number> highPercentageListener;
+
+    public RangeFilterModel(OfferbookModel model) {
+        this.model = model;
+        lowPercentageListener = (observable, oldValue, newValue) -> {
+            long value = lowBaseAmountPercentToValue((double) newValue);
+            Predicate<OfferListItem> predicate = item -> item.getOffer().getBaseAsset().getAmount() >= value;
+            setLowBaseAmountPredicate(predicate);
+            model.applyListFilterPredicates();
+            model.applyBaseCurrency();
+        };
+        highPercentageListener = (observable, oldValue, newValue) -> {
+            long value = highBaseAmountPercentToValue((double) newValue);
+            Predicate<OfferListItem> predicate = item -> item.getOffer().getMinBaseAmount() <= value;
+            setHighBaseAmountPredicate(predicate);
+            model.applyListFilterPredicates();
+            model.applyBaseCurrency();
+        };
+    }
+
+    public void initialize() {
+        visible.set(true);
+        applyMinBaseAmountValue();
+        applyMaxBaseAmountValue();
+    }
+
+    public void activate() {
+        lowPercentage.addListener(lowPercentageListener);
+        highPercentage.addListener(highPercentageListener);
+    }
+
+    public void deactivate() {
+        getLowPercentage().removeListener(lowPercentageListener);
+        getHighPercentage().removeListener(highPercentageListener);
+    }
+
+    public void reset() {
+        clearFilterPredicates();
+        applyMinBaseAmountValue();
+        applyMaxBaseAmountValue();
+        lowBaseAmountPercentToValue(0);
+        highBaseAmountPercentToValue(100);
+        lowPercentage.set(0);
+        highPercentage.set(100);
+    }
+
+    public void clearFilterPredicates() {
+        lowPredicate = e -> true;
+        highPredicate = e -> true;
+    }
+
+
+    public void applyMinBaseAmountValue() {
+        FilteredList<OfferListItem> tempList = new FilteredList<>(model.getOfferItems());
+        tempList.setPredicate(model.getCurrencyPredicate());
+        min = getMin(tempList);
+    }
+
+    public void applyMaxBaseAmountValue() {
+        FilteredList<OfferListItem> tempList = new FilteredList<>(model.getOfferItems());
+        tempList.setPredicate(model.getCurrencyPredicate());
+        max = getMax(tempList);
+    }
+
+    public long lowBaseAmountPercentToValue(double value) {
+        long low = min + Math.round((max - min) * value / 100d);
+        lowFormattedAmount.set(AmountFormatter.formatAmount(low, model.getBaseCurrency()));
+        return low;
+    }
+
+    public long highBaseAmountPercentToValue(double value) {
+        long high = Math.round(max * value / 100d);
+        highFormattedAmount.set(AmountFormatter.formatAmount(high, model.getBaseCurrency()));
+        return high;
+    }
+
+    public void setLowBaseAmountPredicate(Predicate<OfferListItem> predicate) {
+        model.clearFilterPredicates();
+        model.getListFilterPredicates().add(model.getCurrencyPredicate());
+        model.getListFilterPredicates().add(predicate);
+        model.getListFilterPredicates().add(highPredicate);
+        lowPredicate = predicate;
+        model.applyListFilterPredicates();
+    }
+
+    public void setHighBaseAmountPredicate(Predicate<OfferListItem> predicate) {
+        model.clearFilterPredicates();
+        model.getListFilterPredicates().add(model.getCurrencyPredicate());
+        model.getListFilterPredicates().add(predicate);
+        model.getListFilterPredicates().add(lowPredicate);
+        highPredicate = predicate;
+        model.applyListFilterPredicates();
+    }
+
+    public static long getMin(List<OfferListItem> offers) {
+        return offers.stream()
+                .mapToLong(e -> e.getOffer().getMinBaseAmount())
+                .min()
+                .orElse(0);
+    }
+
+    public static long getMax(List<OfferListItem> offers) {
+        return offers.stream()
+                .mapToLong(e -> e.getOffer().getMinBaseAmount())
+                .max()
+                .orElse(0);
+    }
+
+}

@@ -17,11 +17,9 @@
 
 package misq.jfx.main.content.offerbook;
 
-import javafx.beans.InvalidationListener;
 import javafx.scene.control.Label;
 import javafx.scene.layout.Pane;
 import lombok.extern.slf4j.Slf4j;
-import misq.presentation.formatters.AmountFormatter;
 import misq.presentation.offer.OfferbookController;
 import misq.presentation.offer.OfferbookModel;
 import org.controlsfx.control.RangeSlider;
@@ -32,7 +30,6 @@ public class RangeSliderBox extends Pane {
     private final Label titleLabel, minLabel, maxLabel, lowLabel, highLabel;
     private final OfferbookModel model;
     private final OfferbookController controller;
-    private final InvalidationListener filteredItemsListener;
     private boolean highValueSet, lowValueSet;
 
     public RangeSliderBox(String title, int width, OfferbookModel model, OfferbookController controller) {
@@ -52,7 +49,11 @@ public class RangeSliderBox extends Pane {
         slider.prefWidthProperty().bind(this.prefWidthProperty());
         getChildren().addAll(titleLabel, slider, minLabel, maxLabel, lowLabel, highLabel);
         setMaxHeight(50);
-        filteredItemsListener = observable -> update();
+
+        slider.highValueProperty().bindBidirectional(model.getAmountFilterModel().getHighPercentage());
+        slider.lowValueProperty().bindBidirectional(model.getAmountFilterModel().getLowPercentage());
+        lowLabel.textProperty().bind(model.getAmountFilterModel().getLowFormattedAmount());
+        highLabel.textProperty().bind(model.getAmountFilterModel().getHighFormattedAmount());
     }
 
     public void onViewAdded() {
@@ -70,43 +71,5 @@ public class RangeSliderBox extends Pane {
 
         titleLabel.layoutXProperty().bind(slider.widthProperty().subtract(titleLabel.widthProperty()).divide(2));
         titleLabel.layoutYProperty().bind(slider.layoutYProperty().subtract(45));
-
-        model.getFilteredItems().addListener(filteredItemsListener);
-        update();
-    }
-
-    private void update() {
-        updateMin();
-        updateMax();
-    }
-
-    protected void updateMin() {
-        long minValue = model.getMinBaseAmountValue();
-        lowLabel.setText(AmountFormatter.formatAmount(minValue, model.getBaseCurrency()));
-
-        if (!lowValueSet) {
-            lowValueSet = true;
-            slider.lowValueProperty().addListener((observable, oldValue, newValue) -> {
-                model.getFilteredItems().removeListener(filteredItemsListener);
-                controller.onLowBaseAmountFilterChange((double) newValue);
-                lowLabel.setText(AmountFormatter.formatAmount(model.getLowBaseAmountValue(), model.getBaseCurrency()));
-                model.getFilteredItems().addListener(filteredItemsListener);
-            });
-        }
-    }
-
-    protected void updateMax() {
-        long maxValue = model.getMaxBaseAmountValue();
-        highLabel.setText(AmountFormatter.formatAmount(maxValue, model.getBaseCurrency()));
-
-        if (!highValueSet) {
-            highValueSet = true;
-            slider.highValueProperty().addListener((observable, oldValue, newValue) -> {
-                model.getFilteredItems().removeListener(filteredItemsListener);
-                controller.onHighBaseAmountFilterChange((double) newValue);
-                highLabel.setText(AmountFormatter.formatAmount(model.getHighBaseAmountValue(), model.getBaseCurrency()));
-                model.getFilteredItems().addListener(filteredItemsListener);
-            });
-        }
     }
 }
