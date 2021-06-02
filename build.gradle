@@ -21,6 +21,7 @@ configure(rootProject) {
 
 configure(subprojects) {
     apply plugin: 'java'
+    apply plugin: 'maven-publish' // Needed for jitpack build, see https://jitpack.io/docs/BUILDING/
     apply plugin: 'com.google.osdetector'
 
     sourceCompatibility = 1.10
@@ -83,6 +84,14 @@ configure(subprojects) {
 
     tasks.withType(JavaCompile) {
         options.encoding = 'UTF-8'
+    }
+
+    publishing {
+        publications {
+            myDistribution(MavenPublication) {
+                artifact jar
+            }
+        }
     }
 }
 
