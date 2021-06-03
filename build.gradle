@@ -102,6 +102,7 @@ configure([project(':common'),
            project(':listing'),
            project(':finance'),
            project(':i18n'),
+           project(':api'),
            project(':presentation'),
            project(':jfx'),
            project(':desktop'),
@@ -246,11 +247,23 @@ configure(project(':i18n')) {
     }
 }
 
+configure(project(':api')) {
+    dependencies {
+        implementation project(':common')
+        implementation project(':i18n')
+        implementation project(':finance')
+    }
+    test {
+        exclude '**/**Integration*'
+    }
+}
+
 configure(project(':presentation')) {
     dependencies {
         implementation project(':common')
         implementation project(':i18n')
         implementation project(':finance')
+        implementation project(':api')
 
         implementation "org.openjfx:javafx-base:$javafxVersion:$os"
     }
@@ -261,9 +274,11 @@ configure(project(':presentation')) {
 
 configure(project(':jfx')) {
     dependencies {
+        implementation project(':common')
         implementation project(':i18n')
         implementation project(':finance')
         implementation project(':presentation')
+        implementation project(':api')
         implementation "org.openjfx:javafx-base:$javafxVersion:$os"
         implementation "org.openjfx:javafx-graphics:$javafxVersion:$os"
         implementation "org.openjfx:javafx-controls:$javafxVersion:$os"
@@ -300,7 +315,7 @@ configure(project(':desktop')) {
         implementation project(':common')
         implementation project(':i18n')
         implementation project(':finance')
-        implementation project(':presentation')
+        implementation project(':api')
         implementation project(':jfx')
     }
 }

@@ -26,5 +26,29 @@ public abstract class View<T extends Node> {
 
     public View(T root) {
         this.root = root;
+        if (root != null) {
+            root.sceneProperty().addListener((ov, oldValue, newValue) -> {
+                if (oldValue == null && newValue != null) {
+                    onAddedToStage();
+                } else if (oldValue != null && newValue == null) {
+                    onRemovedFromStage();
+                }
+            });
+        }
+    }
+
+    protected void onAddedToStage() {
+    }
+
+    protected void onRemovedFromStage() {
+    }
+
+    protected void setupView() {
+    }
+
+    protected void configModel() {
+    }
+
+    protected void configController() {
     }
 }

@@ -27,12 +27,11 @@ import misq.jfx.common.View;
 import misq.jfx.main.content.ContentView;
 import misq.jfx.main.left.NavigationView;
 import misq.jfx.main.top.TopPanelView;
-import misq.jfx.navigation.Navigation;
 import misq.jfx.utils.ImageUtil;
 
 public class MainView extends View<StackPane> {
 
-    public MainView() {
+    public MainView(MainViewModel model, MainViewController controller, ContentView contentView, NavigationView navigationView) {
         super(new StackPane());
 
         root.getStyleClass().add("content-pane");
@@ -52,11 +51,8 @@ public class MainView extends View<StackPane> {
         VBox.setVgrow(leftNavAndContentBox, Priority.ALWAYS);
         rootContainer.getChildren().addAll(topPanelView.getRoot(), leftNavAndContentBox);
 
-        ContentView contentView = new ContentView();
         HBox.setHgrow(contentView.getRoot(), Priority.ALWAYS);
-        NavigationView navigationView = new NavigationView();
-        leftNavAndContentBox.getChildren().addAll(navigationView.getRoot(), contentView.getRoot());
 
-        Navigation.navigateToPreviousVisitedView();
+        leftNavAndContentBox.getChildren().addAll(navigationView.getRoot(), contentView.getRoot());
     }
 }

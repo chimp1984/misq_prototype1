@@ -32,24 +32,21 @@ import javafx.scene.layout.VBox;
 import javafx.scene.text.TextAlignment;
 import javafx.util.Callback;
 import lombok.extern.slf4j.Slf4j;
-import misq.jfx.common.ViewWithModelAndController;
+import misq.jfx.common.View;
 import misq.jfx.components.controls.AutoTooltipButton;
 import misq.jfx.components.controls.AutoTooltipSlideToggleButton;
 import misq.jfx.components.controls.AutoTooltipTableColumn;
 import misq.jfx.components.controls.AutocompleteComboBox;
-import misq.jfx.main.MainView;
-import misq.jfx.main.content.createoffer.CreateOfferView;
-import misq.jfx.navigation.Navigation;
 import misq.presentation.offer.OfferListItem;
-import misq.presentation.offer.OfferbookController;
-import misq.presentation.offer.OfferbookModel;
 
 import java.util.Comparator;
 import java.util.Optional;
 import java.util.function.Function;
 
 @Slf4j
-public class OfferbookView extends ViewWithModelAndController<VBox, OfferbookController, OfferbookModel> {
+public class OfferbookView extends View<VBox> {
+    private final OfferbookModel model;
+    private final OfferbookController controller;
     private TableView<OfferListItem> tableView;
     private RangeSliderBox baseAmountSliderBox, priceSliderBox;
     private AutocompleteComboBox<String> askCurrencyComboBox, bidCurrencyComboBox;
@@ -58,8 +55,10 @@ public class OfferbookView extends ViewWithModelAndController<VBox, OfferbookCon
     private HBox amountPriceFilterBox;
     private AutoTooltipButton createOfferButton;
 
-    public OfferbookView() {
+    public OfferbookView(OfferbookModel model, OfferbookController controller) {
         super(new VBox());
+        this.model = model;
+        this.controller = controller;
 
         setupView();
         configModel();
@@ -67,15 +66,16 @@ public class OfferbookView extends ViewWithModelAndController<VBox, OfferbookCon
     }
 
     @Override
-    public void onViewAdded() {
-        super.onViewAdded();
+    public void onAddedToStage() {
+        controller.onViewAdded();
+
         baseAmountSliderBox.onViewAdded();
         // priceSliderBox.onViewAdded();
     }
 
     @Override
-    protected void onViewRemoved() {
-        super.onViewRemoved();
+    protected void onRemovedFromStage() {
+        controller.onViewRemoved();
         baseAmountSliderBox.onViewRemoved();
     }
 
@@ -132,7 +132,6 @@ public class OfferbookView extends ViewWithModelAndController<VBox, OfferbookCon
         addTakeOfferColumn("");
 
         root.getChildren().addAll(currencySelectionBox, showAmountPriceFilterToggle, amountPriceFilterBox, tableView);
-
     }
 
     @Override
@@ -165,7 +164,7 @@ public class OfferbookView extends ViewWithModelAndController<VBox, OfferbookCon
         bidCurrencyComboBox.setOnAction(e -> controller.onSelectBidCurrency(bidCurrencyComboBox.getSelectionModel().getSelectedItem()));
         createOfferButton.setOnAction(e -> {
             controller.onCreateOffer();
-            Navigation.navigateTo(MainView.class, CreateOfferView.class);
+            // Navigation.navigateTo(MainView.class, CreateOfferView.class);
         });
     }
 

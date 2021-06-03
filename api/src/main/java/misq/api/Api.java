@@ -15,17 +15,21 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package misq.jfx.main.content.createoffer;
+package misq.api;
 
-import javafx.scene.control.Label;
-import javafx.scene.layout.StackPane;
-import misq.jfx.common.View;
+import lombok.Getter;
+import misq.finance.offer.OfferbookRepository;
+import misq.marketprice.MarketPriceService;
 
-public class CreateOfferView extends View<StackPane> {
+@Getter
+public class Api {
+    private final OfferbookRepository.MockNetworkService networkService;
+    private final OfferbookRepository offerbookRepository;
+    private final MarketPriceService marketPriceService;
 
-    public CreateOfferView(CreateOfferModel model, CreateOfferController controller) {
-        super(new StackPane());
-
-        root.getChildren().add(new Label(this.getClass().getSimpleName()));
+    public Api() {
+        networkService = new OfferbookRepository.MockNetworkService();
+        offerbookRepository = new OfferbookRepository(networkService);
+        marketPriceService = new MarketPriceService();
     }
 }

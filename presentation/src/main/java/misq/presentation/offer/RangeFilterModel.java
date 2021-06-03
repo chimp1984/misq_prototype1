@@ -27,7 +27,7 @@ import java.util.List;
 import java.util.function.Predicate;
 
 public class RangeFilterModel {
-    private final OfferbookModel model;
+    private final OfferbookEntity model;
     @Getter
     private final BooleanProperty visible = new SimpleBooleanProperty();
     @Getter
@@ -46,7 +46,7 @@ public class RangeFilterModel {
     private final ChangeListener<Number> lowPercentageListener;
     private final ChangeListener<Number> highPercentageListener;
 
-    public RangeFilterModel(OfferbookModel model) {
+    public RangeFilterModel(OfferbookEntity model) {
         this.model = model;
 
         lowPercentageListener = (observable, oldValue, newValue) -> {

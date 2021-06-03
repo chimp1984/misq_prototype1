@@ -27,11 +27,11 @@ import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import misq.api.Api;
 import misq.common.util.Tuple2;
-import misq.finance.offer.Offerbook;
+import misq.finance.offer.OfferbookRepository;
 import misq.finance.swap.offer.SwapOffer;
-import misq.presentation.Model;
-import misq.presentation.marketprice.MarketPriceService;
+import misq.marketprice.MarketPriceService;
 
 import java.text.DecimalFormat;
 import java.util.List;
@@ -42,8 +42,8 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 @Slf4j
-public class OfferbookModel implements Model {
-    private final Offerbook offerbook;
+public class OfferbookEntity {
+    private final OfferbookRepository offerbookRepository;
     private final MarketPriceService marketPriceService;
 
     // Exposed for filter model
@@ -68,19 +68,18 @@ public class OfferbookModel implements Model {
     @Getter
     private final RangeFilterModel amountFilterModel;
 
-    public OfferbookModel(Offerbook offerbook, MarketPriceService marketPriceService) {
-        this.offerbook = offerbook;
-        this.marketPriceService = marketPriceService;
+    public OfferbookEntity(Api api) {
+        this.offerbookRepository = api.getOfferbookRepository();
+        this.marketPriceService = api.getMarketPriceService();
         amountFilterModel = new RangeFilterModel(this);
     }
 
-    @Override
     public void initialize() {
         selectedAskCurrency.set("BTC");
         selectedBidCurrency.set("USD");
         marketPrice.set(marketPriceService.getMarketPrice());
         offerItems.clear();
-        offerItems.addAll(offerbook.getOffers().stream()
+        offerItems.addAll(offerbookRepository.getOffers().stream()
                 .filter(e -> e instanceof SwapOffer)
                 .map(e -> (SwapOffer) e)
                 .map(this::toOfferListItem)
@@ -89,7 +88,6 @@ public class OfferbookModel implements Model {
         amountFilterModel.initialize();
     }
 
-    @Override
     public void activate() {
         reset();
         Predicate<OfferListItem> predicate = item -> item.getOffer().getAskAsset().getCode().equals(selectedAskCurrency.get());
@@ -97,7 +95,6 @@ public class OfferbookModel implements Model {
         amountFilterModel.activate();
     }
 
-    @Override
     public void deactivate() {
         amountFilterModel.deactivate();
     }
@@ -169,6 +166,7 @@ public class OfferbookModel implements Model {
         currencyPredicate = predicate;
         applyListFilterPredicates();
     }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Static

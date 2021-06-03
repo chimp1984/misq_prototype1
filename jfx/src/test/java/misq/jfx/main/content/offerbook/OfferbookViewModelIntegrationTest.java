@@ -19,10 +19,10 @@ package misq.jfx.main.content.offerbook;
 
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
-import misq.presentation.offer.OfferbookModel;
+import misq.presentation.offer.OfferbookEntity;
 
 public class OfferbookViewModelIntegrationTest {
-    OfferbookModel model;
+    OfferbookEntity model;
     private DoubleProperty marketPrice = new SimpleDoubleProperty();
 
    // @Test

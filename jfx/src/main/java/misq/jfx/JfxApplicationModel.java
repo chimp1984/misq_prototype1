@@ -17,24 +17,16 @@
 
 package misq.jfx;
 
-import javafx.application.Application;
-import lombok.extern.slf4j.Slf4j;
+import javafx.beans.property.DoubleProperty;
+import javafx.beans.property.SimpleDoubleProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 
-import java.util.concurrent.CompletableFuture;
+public class JfxApplicationModel {
+    DoubleProperty minHeightProperty = new SimpleDoubleProperty(1000);
+    DoubleProperty minWidthProperty = new SimpleDoubleProperty(1000);
+    StringProperty titleProperty = new SimpleStringProperty("Misq");
 
-@Slf4j
-public class JfxLauncher {
-    public static void main(String[] args) {
-        JfxLauncher.launch().whenComplete((application, throwable) -> {
-            log.error("App launched {}", application);
-        });
-    }
-
-    public static CompletableFuture<Boolean> launch() {
-        new Thread(() -> {
-            Thread.currentThread().setName("JfxLauncher");
-            Application.launch(JfxApplication.class);
-        }).start();
-        return JfxApplication.LAUNCH_APP_FUTURE;
+    public JfxApplicationModel() {
     }
 }

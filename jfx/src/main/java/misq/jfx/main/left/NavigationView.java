@@ -20,39 +20,39 @@ package misq.jfx.main.left;
 import javafx.geometry.Insets;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.layout.VBox;
+import misq.jfx.common.Controller;
 import misq.jfx.common.View;
 import misq.jfx.components.controls.AutoTooltipToggleButton;
-import misq.jfx.main.MainView;
-import misq.jfx.main.content.accounts.AccountsView;
-import misq.jfx.main.content.createoffer.CreateOfferView;
-import misq.jfx.main.content.funds.FundsView;
-import misq.jfx.main.content.markets.MarketsView;
-import misq.jfx.main.content.offerbook.OfferbookView;
-import misq.jfx.main.content.settings.SettingsView;
-import misq.jfx.main.content.trades.TradesView;
-import misq.jfx.navigation.Navigation;
+import misq.jfx.main.content.createoffer.CreateOfferController;
+import misq.jfx.main.content.markets.MarketsController;
+import misq.jfx.main.content.offerbook.OfferbookController;
 
 public class NavigationView extends View<VBox> {
     private final ToggleGroup navButtons = new ToggleGroup();
+    private final NavigationViewModel model;
+    private final NavigationViewController controller;
 
-    public NavigationView() {
+    public NavigationView(NavigationViewModel model, NavigationViewController controller) {
         super(new VBox());
+        this.model = model;
+        this.controller = controller;
 
         root.setMaxWidth(337);
         root.setMinWidth(337);
         root.setPadding(new Insets(0, 0, 0, 20));
 
-        NavButton markets = new NavButton(MarketsView.class, "Markets");
-        NavButton offerBook = new NavButton(OfferbookView.class, "Offerbook");
-        NavButton createOffer = new NavButton(CreateOfferView.class, "Create offer");
-        NavButton trades = new NavButton(TradesView.class, "Trades");
-        NavButton funds = new NavButton(FundsView.class, "Funds");
-        NavButton accounts = new NavButton(AccountsView.class, "Accounts");
-        NavButton settings = new NavButton(SettingsView.class, "SettingsView");
 
-        root.getChildren().addAll(markets, offerBook, createOffer, trades, funds, accounts, settings);
+        NavButton markets = new NavButton(MarketsController.class, "Markets");
+        NavButton offerBook = new NavButton(OfferbookController.class, "Offerbook");
+        NavButton createOffer = new NavButton(CreateOfferController.class, "Create offer");
+      /*   NavButton trades = new NavButton(TradesViewController.class, "Trades");
+        NavButton funds = new NavButton(FundsViewController.class, "Funds");
+        NavButton accounts = new NavButton(AccountsViewController.class, "Accounts");
+        NavButton settings = new NavButton(SettingsViewController.class, "SettingsView");*/
 
-        Navigation.addListener((viewPath, data) -> {
+        root.getChildren().addAll(markets, offerBook, createOffer /*,trades, funds, accounts, settings*/);
+
+      /*  Navigation.addListener((viewPath, data) -> {
             if (viewPath.size() != 2 || viewPath.indexOf(MainView.class) != 0) {
                 return;
             }
@@ -61,22 +61,22 @@ public class NavigationView extends View<VBox> {
             navButtons.getToggles().stream()
                     .filter(toggle -> tip == ((NavButton) toggle).target)
                     .forEach(toggle -> toggle.setSelected(true));
-        });
+        });*/
 
 
     }
 
 
     private class NavButton extends AutoTooltipToggleButton {
-        final Class<? extends View> target;
+        final Class<? extends Controller> target;
 
-        NavButton(Class<? extends View> target, String title) {
+        NavButton(Class<? extends Controller> target, String title) {
             super(title);
             this.target = target;
             this.setToggleGroup(navButtons);
             this.getStyleClass().add("navigation-button");
             this.selectedProperty().addListener((ov, oldValue, newValue) -> this.setMouseTransparent(newValue));
-            this.setOnAction(e -> Navigation.navigateTo(MainView.class, target));
+            this.setOnAction(e -> controller.onShowView(target));
         }
     }
 }

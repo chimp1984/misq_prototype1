@@ -20,10 +20,9 @@ package misq.jfx.main.content.offerbook;
 import javafx.scene.control.Label;
 import javafx.scene.layout.Pane;
 import lombok.extern.slf4j.Slf4j;
-import misq.presentation.offer.OfferbookController;
-import misq.presentation.offer.OfferbookModel;
 import org.controlsfx.control.RangeSlider;
 
+// Sub view which is using a custom sub model
 @Slf4j
 public class RangeSliderBox extends Pane {
     private final RangeSlider slider;

@@ -56,12 +56,12 @@ public class OfferListItem implements Comparable<OfferListItem> {
     }
 
     private void updatedPriceAndAmount() {
-        Tuple2<String, Double> priceTuple = OfferbookModel.getPriceTuple(offer.getFixPrice(),
+        Tuple2<String, Double> priceTuple = OfferbookEntity.getPriceTuple(offer.getFixPrice(),
                 offer.getMarketBasedPrice(),
                 marketPrice.get());
         price.set(priceTuple.first);
         priceAsDouble.set(priceTuple.second);
-        quoteAmount.set(OfferbookModel.getFormattedQuoteAmount(offer.getBaseAsset().getAmount(),
+        quoteAmount.set(OfferbookEntity.getFormattedQuoteAmount(offer.getBaseAsset().getAmount(),
                 offer.getMinAmountAsPercentage(),
                 offer.getMarketBasedPrice(),
                 marketPrice.get(),

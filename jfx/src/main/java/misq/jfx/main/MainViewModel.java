@@ -15,14 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package misq.presentation;
+package misq.jfx.main;
 
-public interface Controller {
-    <M extends Model> M getModel();
-
-    void onCreateView();
-
-    void onViewAdded();
-
-    void onViewRemoved();
+public class MainViewModel {
 }

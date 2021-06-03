@@ -17,11 +17,28 @@
 
 package misq.jfx.main.content.markets;
 
-import misq.jfx.main.content.ContentChildDummy;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.layout.HBox;
+import misq.jfx.common.View;
 
-public class MarketsView extends ContentChildDummy {
+public class MarketsView extends View<HBox> {
+    private final Label label;
+    private final Button button;
+    private MarketsModel model;
+    private final MarketsController controller;
 
-    public MarketsView() {
-        super("MarketsView");
+    public MarketsView(MarketsModel model, MarketsController controller) {
+        super(new HBox());
+        this.model = model;
+        this.controller = controller;
+
+        root.setSpacing(20);
+        label = new Label();
+        button = new Button("Update price");
+        root.getChildren().addAll(label, button);
+
+        label.textProperty().bind(model.formattedMarketPrice);
+        button.setOnAction(e -> controller.onRefresh());
     }
 }

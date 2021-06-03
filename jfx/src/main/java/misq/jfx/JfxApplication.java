@@ -25,78 +25,52 @@ import javafx.stage.Stage;
 import lombok.extern.slf4j.Slf4j;
 import misq.jfx.main.MainView;
 import misq.jfx.utils.KeyCodeUtils;
-import misq.jfx.utils.UncaughtExceptionHandler;
-import misq.jfx.utils.UserThread;
 
 import java.util.concurrent.CompletableFuture;
 
 @Slf4j
 public class JfxApplication extends Application {
-    public static final CompletableFuture<Boolean> LAUNCH_APP_FUTURE = new CompletableFuture<>();
+    public static final CompletableFuture<JfxApplication> LAUNCH_APP_FUTURE = new CompletableFuture<>();
+    private JfxApplicationController controller;
+    private JfxApplicationModel model;
 
-
-    private MainView mainView;
+    private Stage stage;
 
     public JfxApplication() {
     }
 
     @Override
     public void start(Stage stage) {
-        try {
-            LAUNCH_APP_FUTURE.complete(true);
-            mainView = new MainView();
+        this.stage = stage;
+        LAUNCH_APP_FUTURE.complete(this);
+    }
 
+    public void initialize(JfxApplicationModel model, JfxApplicationController controller, MainView mainView) {
+        this.controller = controller;
+        this.model = model;
+        try {
             Scene scene = new Scene(mainView.getRoot());
             scene.getStylesheets().setAll(getClass().getResource("/misq.css").toExternalForm(),
                     getClass().getResource("/bisq.css").toExternalForm(),
                     getClass().getResource("/theme-dark.css").toExternalForm());
 
             stage.setScene(scene);
-            stage.setMinWidth(1000);
-            stage.setMinHeight(1000);
-            stage.setTitle("Misq");
+            stage.minHeightProperty().bind(model.minHeightProperty);
+            stage.minWidthProperty().bind(model.minWidthProperty);
+            stage.titleProperty().bind(model.titleProperty);
             stage.setOnCloseRequest(event -> {
                 event.consume();
-                stop();
+                controller.onQuit();
             });
             scene.addEventHandler(KeyEvent.KEY_RELEASED, keyEvent -> {
                 if (KeyCodeUtils.isCtrlPressed(KeyCode.W, keyEvent) ||
                         KeyCodeUtils.isCtrlPressed(KeyCode.Q, keyEvent)) {
-                    stop();
+                    controller.onQuit();
                 }
             });
             stage.show();
         } catch (Exception exception) {
             exception.printStackTrace();
         }
-    }
-
-    @Override
-    public void stop() {
-        System.exit(0);
-    }
-
-    public static void setupUncaughtExceptionHandler(UncaughtExceptionHandler uncaughtExceptionHandler) {
-        Thread.UncaughtExceptionHandler handler = (thread, throwable) -> {
-            // Might come from another thread
-            if (throwable.getCause() != null && throwable.getCause().getCause() != null) {
-                log.error(throwable.getMessage());
-            } else if (throwable instanceof ClassCastException &&
-                    "sun.awt.image.BufImgSurfaceData cannot be cast to sun.java2d.xr.XRSurfaceData".equals(throwable.getMessage())) {
-                log.warn(throwable.getMessage());
-            } else if (throwable instanceof UnsupportedOperationException &&
-                    "The system tray is not supported on the current platform.".equals(throwable.getMessage())) {
-                log.warn(throwable.getMessage());
-            } else {
-                log.error("Uncaught Exception from thread " + Thread.currentThread().getName());
-                log.error("throwableMessage= " + throwable.getMessage());
-                log.error("throwableClass= " + throwable.getClass());
-                // log.error("Stack trace:\n" + ExceptionUtils.getStackTrace(throwable));
-                throwable.printStackTrace();
-                UserThread.execute(() -> uncaughtExceptionHandler.handleUncaughtException(throwable, false));
-            }
-        };
-        Thread.setDefaultUncaughtExceptionHandler(handler);
-        Thread.currentThread().setUncaughtExceptionHandler(handler);
     }
 }

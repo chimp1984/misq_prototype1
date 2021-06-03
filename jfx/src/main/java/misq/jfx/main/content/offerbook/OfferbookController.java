@@ -15,52 +15,60 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package misq.presentation.offer;
+package misq.jfx.main.content.offerbook;
 
 import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
+import misq.api.Api;
 import misq.finance.offer.Offer;
-import misq.finance.offer.Offerbook;
+import misq.finance.offer.OfferbookRepository;
 import misq.finance.swap.offer.SwapOffer;
-import misq.presentation.Controller;
-import misq.presentation.marketprice.MarketPriceService;
-import misq.presentation.marketprice.MockMarketPriceService;
+import misq.jfx.common.Controller;
+import misq.jfx.main.content.ContentViewController;
+import misq.jfx.main.content.createoffer.CreateOfferController;
+import misq.marketprice.MarketPriceService;
+import misq.presentation.offer.OfferListItem;
 
-@Slf4j
-public class OfferbookController implements Controller, Offerbook.Listener, MockMarketPriceService.Listener {
+// As all controllers are created we do not do anything in the constructors beside assigning fields.
+// initialize starts  MVC group up. onViewAdded is called when the view got added to the stage.
+// onViewRemoved when the view got removed from the stage.
+public class OfferbookController implements MarketPriceService.Listener, OfferbookRepository.Listener, Controller {
+    private OfferbookModel model;
     @Getter
-    private final OfferbookModel model;
-    private final Offerbook offerbook;
-    private final MarketPriceService marketPriceService;
+    private OfferbookView view;
+    @Getter
+    private final Api api;
+    private final ContentViewController contentViewController;
 
-    public OfferbookController(OfferbookModel model, Offerbook offerbook, MarketPriceService marketPriceService) {
-        this.model = model;
-        this.offerbook = offerbook;
-        this.marketPriceService = marketPriceService;
+    public OfferbookController(Api api, ContentViewController contentViewController) {
+        this.api = api;
+        this.contentViewController = contentViewController;
     }
 
     @Override
-    public void onCreateView() {
+    public void initialize() {
+        this.model = new OfferbookModel(api);
         model.initialize();
+        this.view = new OfferbookView(model, this);
     }
 
     @Override
     public void onViewAdded() {
         model.activate();
-        marketPriceService.addListener(this);
-        offerbook.addListener(this);
+        api.getMarketPriceService().addListener(this);
+        api.getOfferbookRepository().addListener(this);
     }
+
+    @Override
+    public void onViewRemoved() {
+        api.getMarketPriceService().removeListener(this);
+        api.getOfferbookRepository().removeListener(this);
+        model.deactivate();
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Domain events
     ///////////////////////////////////////////////////////////////////////////////////////////////////
-
-    @Override
-    public void onViewRemoved() {
-        marketPriceService.removeListener(this);
-        offerbook.removeListener(this);
-        model.deactivate();
-    }
 
     @Override
     public void onOfferAdded(Offer offer) {
@@ -71,13 +79,16 @@ public class OfferbookController implements Controller, Offerbook.Listener, Mock
 
     @Override
     public void onOfferRemoved(Offer offer) {
-        model.removeOffer((SwapOffer) offer);
+        if (offer instanceof SwapOffer) {
+            model.removeOffer((SwapOffer) offer);
+        }
     }
 
     @Override
     public void onMarketPriceChanged(double marketPrice) {
         model.setMarketPrice(marketPrice);
     }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // View events
@@ -96,6 +107,7 @@ public class OfferbookController implements Controller, Offerbook.Listener, Mock
     }
 
     public void onCreateOffer() {
+        contentViewController.onNavigationRequest(CreateOfferController.class);
     }
 
     public void onTakeOffer(OfferListItem item) {
@@ -103,5 +115,4 @@ public class OfferbookController implements Controller, Offerbook.Listener, Mock
 
     public void onShowMakerDetails(OfferListItem item) {
     }
-
 }

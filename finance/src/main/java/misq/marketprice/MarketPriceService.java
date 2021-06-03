@@ -15,17 +15,19 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package misq.presentation.marketprice;
+package misq.marketprice;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Random;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
-public class MockMarketPriceService implements MarketPriceService {
+public class MarketPriceService {
     public interface Listener {
         void onMarketPriceChanged(double marketPrice);
     }
@@ -33,9 +35,16 @@ public class MockMarketPriceService implements MarketPriceService {
     @Getter
     private double marketPrice;
 
-    private final Set<MockMarketPriceService.Listener> listeners = new CopyOnWriteArraySet<>();
+    private final Set<MarketPriceService.Listener> listeners = new CopyOnWriteArraySet<>();
 
-    public MockMarketPriceService() {
+    public CompletableFuture<Integer> requestPriceUpdate() {
+        CompletableFuture<Integer> future = new CompletableFuture<>();
+        CompletableFuture.delayedExecutor(300, TimeUnit.MILLISECONDS)
+                .execute(() -> future.complete(new Random().nextInt(5000000)));
+        return future;
+    }
+
+    public MarketPriceService() {
         marketPrice = 50000 + new Random().nextInt(10000) / 10000d;
      /*   new Timer().scheduleAtFixedRate(new TimerTask() {
             @Override
@@ -47,13 +56,11 @@ public class MockMarketPriceService implements MarketPriceService {
         }, 0, 1000);*/
     }
 
-    @Override
-    public void addListener(MockMarketPriceService.Listener listener) {
+    public void addListener(MarketPriceService.Listener listener) {
         listeners.add(listener);
     }
 
-    @Override
-    public void removeListener(MockMarketPriceService.Listener listener) {
+    public void removeListener(MarketPriceService.Listener listener) {
         listeners.remove(listener);
     }
 }

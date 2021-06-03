@@ -17,22 +17,35 @@
 
 package misq.jfx.main.content;
 
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.collections.ObservableList;
 import javafx.scene.Node;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import lombok.extern.slf4j.Slf4j;
 import misq.jfx.common.View;
-import misq.jfx.main.MainView;
-import misq.jfx.navigation.Navigation;
-import misq.jfx.navigation.ViewLoader;
 
 @Slf4j
 public class ContentView extends View<HBox> {
-    public ContentView() {
-        super(new HBox());
+    private final ContentViewModel model;
+    private final ContentViewController controller;
 
-        Navigation.addListener((viewPath, data) -> {
+    public ContentView(ContentViewModel model, ContentViewController controller) {
+        super(new HBox());
+        this.model = model;
+        this.controller = controller;
+
+        model.view.addListener(new ChangeListener<View<? extends Node>>() {
+            @Override
+            public void changed(ObservableValue<? extends View<? extends Node>> observable, View<? extends Node> oldValue, View<? extends Node> newValue) {
+                HBox.setHgrow(newValue.getRoot(), Priority.ALWAYS);
+                ObservableList<Node> children = root.getChildren();
+                children.setAll(newValue.getRoot());
+            }
+        });
+
+     /*   Navigation.addListener((viewPath, data) -> {
             if (viewPath.size() != 2 || viewPath.indexOf(MainView.class) != 0)
                 return;
 
@@ -48,6 +61,6 @@ public class ContentView extends View<HBox> {
             } catch (Exception e) {
                 e.printStackTrace();
             }
-        });
+        });*/
     }
 }

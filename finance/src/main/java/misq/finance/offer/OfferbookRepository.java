@@ -34,9 +34,7 @@ import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.stream.Collectors;
 
 @Slf4j
-public class Offerbook {
-
-
+public class OfferbookRepository {
     public interface Listener {
         void onOfferAdded(Offer offer);
 
@@ -49,7 +47,7 @@ public class Offerbook {
 
     private final NetworkService networkService;
 
-    public Offerbook(NetworkService networkService) {
+    public OfferbookRepository(NetworkService networkService) {
         this.networkService = networkService;
 
         offers.addAll(networkService.getData().values());

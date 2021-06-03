@@ -18,37 +18,18 @@
 package misq.desktop;
 
 import lombok.extern.slf4j.Slf4j;
-import misq.finance.offer.Offerbook;
-import misq.jfx.JfxLauncher;
-import misq.jfx.MvcInjector;
-import misq.jfx.main.content.offerbook.OfferbookView;
-import misq.presentation.marketprice.MarketPriceService;
-import misq.presentation.marketprice.MockMarketPriceService;
-import misq.presentation.offer.OfferbookController;
-import misq.presentation.offer.OfferbookModel;
+import misq.api.Api;
+import misq.jfx.JfxApplicationController;
 
 @Slf4j
 public class Desktop {
+    private final JfxApplicationController jfxApplicationController;
 
     public Desktop() {
-        launchApplication();
-    }
-
-    private void launchApplication() {
-        JfxLauncher.launch()
-                .whenComplete((success, throwable) -> {
-                    initialize();
-                });
-    }
-
-    private void initialize() {
-        Offerbook.NetworkService networkService = new Offerbook.MockNetworkService();
-        Offerbook offerbook = new Offerbook(networkService);
-        MarketPriceService marketPriceService = new MockMarketPriceService();
-
-        // Probably we will need some DI framework for wiring up the view with its controller and model
-        OfferbookModel offerbookModel = new OfferbookModel(offerbook, marketPriceService);
-        OfferbookController offerbookController = new OfferbookController(offerbookModel, offerbook, marketPriceService);
-        MvcInjector.glue(OfferbookView.class, offerbookController);
+        Api api = new Api();
+        jfxApplicationController = new JfxApplicationController(api);
+        jfxApplicationController.launchApplication().whenComplete((success, throwable) -> {
+            log.info("JfxApplication initialized");
+        });
     }
 }

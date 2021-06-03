@@ -15,12 +15,17 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package misq.presentation.marketprice;
+package misq.jfx.main.content;
 
-public interface MarketPriceService {
-    void addListener(MockMarketPriceService.Listener listener);
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleObjectProperty;
+import javafx.scene.Node;
+import misq.jfx.common.View;
 
-    void removeListener(MockMarketPriceService.Listener listener);
+public class ContentViewModel {
+    ObjectProperty<View<? extends Node>> view = new SimpleObjectProperty<>();
 
-    double getMarketPrice();
+    public void selectView(View<? extends Node> view) {
+        this.view.set(view);
+    }
 }

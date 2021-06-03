@@ -15,12 +15,30 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package misq.presentation;
+package misq.jfx.main.content.createoffer;
 
-public interface Model {
-    void initialize();
+import lombok.Getter;
+import misq.jfx.common.Controller;
 
-    void activate();
+public class CreateOfferController implements Controller {
+    private CreateOfferModel model;
+    @Getter
+    private CreateOfferView view;
 
-    void deactivate();
+    public CreateOfferController() {
+    }
+
+    @Override
+    public void initialize() {
+        this.model = new CreateOfferModel();
+        this.view = new CreateOfferView(model, this);
+    }
+
+    @Override
+    public void onViewAdded() {
+    }
+
+    @Override
+    public void onViewRemoved() {
+    }
 }

@@ -15,25 +15,15 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package misq.jfx;
+package misq.jfx.main.content.markets;
 
-import lombok.extern.slf4j.Slf4j;
-import misq.jfx.common.View;
-import misq.presentation.Controller;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+public class MarketsModel {
+    StringProperty formattedMarketPrice = new SimpleStringProperty("N/A");
 
-// Just temp to have some simple injection feature...
-@Slf4j
-public class MvcInjector {
-    private final static Map<Class<? extends View>, Controller> map = new ConcurrentHashMap<>();
-
-    public static void glue(Class<? extends View> clazz, Controller controller) {
-        map.put(clazz, controller);
-    }
-
-    public static <M extends Controller> M getController(Class<? extends View> clazz) {
-        return (M) map.get(clazz);
+    public void setMarketPrice(int marketPrice) {
+        formattedMarketPrice.set(marketPrice / 100d + " BTC/USD");
     }
 }

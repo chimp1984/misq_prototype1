@@ -15,17 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package misq.jfx.main.content.createoffer;
+package misq.jfx.main.left;
 
-import javafx.scene.control.Label;
-import javafx.scene.layout.StackPane;
-import misq.jfx.common.View;
-
-public class CreateOfferView extends View<StackPane> {
-
-    public CreateOfferView(CreateOfferModel model, CreateOfferController controller) {
-        super(new StackPane());
-
-        root.getChildren().add(new Label(this.getClass().getSimpleName()));
-    }
+public class NavigationViewModel {
 }
