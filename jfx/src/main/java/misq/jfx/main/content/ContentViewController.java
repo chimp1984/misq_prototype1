@@ -22,9 +22,9 @@ import lombok.extern.slf4j.Slf4j;
 import misq.api.Api;
 import misq.jfx.common.Controller;
 import misq.jfx.common.View;
-import misq.jfx.main.content.createoffer.CreateOfferController;
 import misq.jfx.main.content.markets.MarketsController;
 import misq.jfx.main.content.offerbook.OfferbookController;
+import misq.jfx.overlay.OverlayController;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -32,13 +32,15 @@ import java.util.concurrent.ConcurrentHashMap;
 @Slf4j
 public class ContentViewController implements Controller {
     private final Api api;
+    private final OverlayController overlayController;
     private final Map<Class<? extends Controller>, Controller> map = new ConcurrentHashMap<>();
     private ContentViewModel model;
     @Getter
     private ContentView view;
 
-    public ContentViewController(Api api) {
+    public ContentViewController(Api api, OverlayController overlayController) {
         this.api = api;
+        this.overlayController = overlayController;
         initialize();
     }
 
@@ -48,8 +50,7 @@ public class ContentViewController implements Controller {
         this.view = new ContentView(model, this);
 
         addController(new MarketsController(api));
-        addController(new OfferbookController(api, this));
-        addController(new CreateOfferController());
+        addController(new OfferbookController(api, this, overlayController));
     }
 
     @Override

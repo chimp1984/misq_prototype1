@@ -21,6 +21,7 @@ import javafx.application.Application;
 import lombok.extern.slf4j.Slf4j;
 import misq.api.Api;
 import misq.jfx.main.MainViewController;
+import misq.jfx.overlay.OverlayController;
 import misq.jfx.utils.UncaughtExceptionHandler;
 import misq.jfx.utils.UserThread;
 
@@ -32,6 +33,7 @@ public class JfxApplicationController {
     private final JfxApplicationModel model;
     private JfxApplication jfxApplication;
     private MainViewController mainViewController;
+    private OverlayController overlayController;
 
     public JfxApplicationController(Api api) {
         this.api = api;
@@ -43,8 +45,7 @@ public class JfxApplicationController {
         JfxApplication.LAUNCH_APP_FUTURE.whenComplete((jfxApplication, throwable) -> {
             if (jfxApplication != null) {
                 this.jfxApplication = jfxApplication;
-                mainViewController = new MainViewController(api);
-                jfxApplication.initialize(model, this, mainViewController.getView());
+                initialize();
                 future.complete(true);
             } else {
                 throwable.printStackTrace();
@@ -55,6 +56,15 @@ public class JfxApplicationController {
             Application.launch(JfxApplication.class); //blocks until app closed
         }).start();
         return future;
+    }
+
+    private void initialize() {
+        overlayController = new OverlayController();
+        mainViewController = new MainViewController(api, overlayController);
+        mainViewController.initialize();
+        jfxApplication.initialize(model, this, mainViewController.getView());
+        // Now the scene is available
+        overlayController.initialize(jfxApplication.getScene());
     }
 
     public void onQuit() {

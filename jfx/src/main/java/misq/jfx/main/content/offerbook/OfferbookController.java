@@ -25,6 +25,7 @@ import misq.finance.swap.offer.SwapOffer;
 import misq.jfx.common.Controller;
 import misq.jfx.main.content.ContentViewController;
 import misq.jfx.main.content.createoffer.CreateOfferController;
+import misq.jfx.overlay.OverlayController;
 import misq.marketprice.MarketPriceService;
 import misq.presentation.offer.OfferListItem;
 
@@ -38,10 +39,12 @@ public class OfferbookController implements MarketPriceService.Listener, Offerbo
     @Getter
     private final Api api;
     private final ContentViewController contentViewController;
+    private final OverlayController overlayController;
 
-    public OfferbookController(Api api, ContentViewController contentViewController) {
+    public OfferbookController(Api api, ContentViewController contentViewController, OverlayController overlayController) {
         this.api = api;
         this.contentViewController = contentViewController;
+        this.overlayController = overlayController;
     }
 
     @Override
@@ -107,7 +110,7 @@ public class OfferbookController implements MarketPriceService.Listener, Offerbo
     }
 
     public void onCreateOffer() {
-        contentViewController.onNavigationRequest(CreateOfferController.class);
+        overlayController.show(new CreateOfferController());
     }
 
     public void onTakeOffer(OfferListItem item) {

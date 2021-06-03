@@ -15,18 +15,32 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package misq.jfx;
+package misq.jfx.overlay;
 
-import javafx.beans.property.DoubleProperty;
-import javafx.beans.property.SimpleDoubleProperty;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
+import javafx.scene.Scene;
+import lombok.extern.slf4j.Slf4j;
+import misq.jfx.common.Controller;
+import misq.jfx.common.View;
 
-public class JfxApplicationModel {
-    DoubleProperty minWidthProperty = new SimpleDoubleProperty(1000);
-    DoubleProperty minHeightProperty = new SimpleDoubleProperty(1000);
-    StringProperty titleProperty = new SimpleStringProperty("Misq");
+@Slf4j
+public class OverlayController {
+    private OverlayModel model;
 
-    public JfxApplicationModel() {
+    public OverlayController() {
+    }
+
+    public void initialize(Scene parentScene) {
+        model = new OverlayModel();
+        OverlayView overlayView = new OverlayView(model, this, parentScene);
+    }
+
+    public void show(Controller controller) {
+        controller.initialize();
+        View view = controller.getView();
+        model.selectView(view);
+    }
+
+    public void onClosed() {
+        model.selectView(null);
     }
 }

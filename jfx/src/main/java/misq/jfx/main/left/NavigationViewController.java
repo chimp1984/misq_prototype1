@@ -20,21 +20,28 @@ package misq.jfx.main.left;
 import lombok.Getter;
 import misq.jfx.common.Controller;
 import misq.jfx.main.content.ContentViewController;
+import misq.jfx.main.content.createoffer.CreateOfferController;
+import misq.jfx.overlay.OverlayController;
 
 public class NavigationViewController {
     private final NavigationViewModel model;
     @Getter
     private final NavigationView view;
     private final ContentViewController contentViewController;
+    private final OverlayController overlayController;
 
-    public NavigationViewController(ContentViewController contentViewController) {
+    public NavigationViewController(ContentViewController contentViewController, OverlayController overlayController) {
         this.contentViewController = contentViewController;
+        this.overlayController = overlayController;
         this.model = new NavigationViewModel();
         this.view = new NavigationView(model, this);
-
     }
 
-    public void onShowView(Class<? extends Controller> view) {
-        contentViewController.onNavigationRequest(view);
+    public void onShowView(Class<? extends Controller> controllerClass) {
+        if (controllerClass == CreateOfferController.class) {
+            overlayController.show(new CreateOfferController());
+        } else {
+            contentViewController.onNavigationRequest(controllerClass);
+        }
     }
 }

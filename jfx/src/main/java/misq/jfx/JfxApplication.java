@@ -21,7 +21,9 @@ import javafx.application.Application;
 import javafx.scene.Scene;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import misq.jfx.main.MainView;
 import misq.jfx.utils.KeyCodeUtils;
@@ -35,6 +37,8 @@ public class JfxApplication extends Application {
     private JfxApplicationModel model;
 
     private Stage stage;
+    @Getter
+    private Scene scene;
 
     public JfxApplication() {
     }
@@ -49,7 +53,8 @@ public class JfxApplication extends Application {
         this.controller = controller;
         this.model = model;
         try {
-            Scene scene = new Scene(mainView.getRoot());
+            StackPane root = mainView.getRoot();
+            scene = new Scene(root);
             scene.getStylesheets().setAll(getClass().getResource("/misq.css").toExternalForm(),
                     getClass().getResource("/bisq.css").toExternalForm(),
                     getClass().getResource("/theme-dark.css").toExternalForm());

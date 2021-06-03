@@ -22,17 +22,25 @@ import misq.api.Api;
 import misq.jfx.main.content.ContentViewController;
 import misq.jfx.main.content.offerbook.OfferbookController;
 import misq.jfx.main.left.NavigationViewController;
+import misq.jfx.overlay.OverlayController;
 
 public class MainViewController {
-    private final MainViewModel model;
+    private final Api api;
+    private final OverlayController overlayController;
+    private MainViewModel model;
     @Getter
-    private final MainView view;
+    private MainView view;
 
-    public MainViewController(Api api) {
+    public MainViewController(Api api, OverlayController overlayController) {
+        this.api = api;
+        this.overlayController = overlayController;
+    }
+
+    public void initialize() {
         this.model = new MainViewModel();
 
-        ContentViewController contentViewController = new ContentViewController(api);
-        NavigationViewController navigationViewController = new NavigationViewController(contentViewController);
+        ContentViewController contentViewController = new ContentViewController(api, overlayController);
+        NavigationViewController navigationViewController = new NavigationViewController(contentViewController, overlayController);
 
         this.view = new MainView(model,
                 this,
