@@ -20,7 +20,7 @@ package misq.jfx.common;
 import javafx.scene.Node;
 
 public interface LifeCycleChangeListener {
-    void onConstructView(View<? extends Node> view);
+    void onConstructView(View<? extends Node, Model, Controller> view);
 
     void onViewAdded();
 

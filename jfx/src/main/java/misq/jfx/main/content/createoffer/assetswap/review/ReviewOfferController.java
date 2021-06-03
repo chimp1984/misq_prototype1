@@ -15,16 +15,30 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package misq.jfx.main.content;
+package misq.jfx.main.content.createoffer.assetswap.review;
 
-import javafx.scene.control.Label;
-import javafx.scene.layout.StackPane;
-import misq.jfx.common.View;
+import lombok.Getter;
+import misq.jfx.common.Controller;
 
-public class ContentChildDummy extends View<StackPane> {
-    public ContentChildDummy(String label) {
-        super(new StackPane());
+public class ReviewOfferController implements Controller {
+    private ReviewOfferModel model;
+    @Getter
+    private ReviewOfferView view;
 
-        root.getChildren().add(new Label(label));
+    public ReviewOfferController() {
+    }
+
+    @Override
+    public void initialize() {
+        this.model = new ReviewOfferModel();
+        this.view = new ReviewOfferView(model, this);
+    }
+
+    @Override
+    public void onViewAdded() {
+    }
+
+    @Override
+    public void onViewRemoved() {
     }
 }

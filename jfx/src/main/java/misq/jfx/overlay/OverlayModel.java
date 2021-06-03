@@ -20,12 +20,14 @@ package misq.jfx.overlay;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.scene.Parent;
+import misq.jfx.common.Controller;
+import misq.jfx.common.Model;
 import misq.jfx.common.View;
 
-public class OverlayModel {
-    ObjectProperty<View<Parent>> view = new SimpleObjectProperty<>();
+public class OverlayModel implements Model {
+    ObjectProperty<View<Parent, Model, Controller>> view = new SimpleObjectProperty<>();
 
-    public void selectView(View<Parent> view) {
+    public void selectView(View<Parent, Model, Controller> view) {
         this.view.set(view);
     }
 }

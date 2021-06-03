@@ -44,9 +44,7 @@ import java.util.Optional;
 import java.util.function.Function;
 
 @Slf4j
-public class OfferbookView extends View<VBox> {
-    private final OfferbookModel model;
-    private final OfferbookController controller;
+public class OfferbookView extends View<VBox, OfferbookModel, OfferbookController> {
     private TableView<OfferListItem> tableView;
     private RangeSliderBox baseAmountSliderBox, priceSliderBox;
     private AutocompleteComboBox<String> askCurrencyComboBox, bidCurrencyComboBox;
@@ -56,13 +54,7 @@ public class OfferbookView extends View<VBox> {
     private AutoTooltipButton createOfferButton;
 
     public OfferbookView(OfferbookModel model, OfferbookController controller) {
-        super(new VBox());
-        this.model = model;
-        this.controller = controller;
-
-        setupView();
-        configModel();
-        configController();
+        super(new VBox(), model, controller);
     }
 
     @Override

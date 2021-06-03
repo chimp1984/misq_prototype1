@@ -15,17 +15,10 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package misq.jfx.common;
+package misq.jfx.main.top;
 
-import javafx.scene.Node;
 
-public interface LifeCycle {
+import misq.jfx.common.Model;
 
-    void onConstructView(View<? extends Node, Model, Controller> view);
-
-    default void onViewAdded() {
-    }
-
-    default void onViewRemoved() {
-    }
+public class TopPanelModel implements Model {
 }

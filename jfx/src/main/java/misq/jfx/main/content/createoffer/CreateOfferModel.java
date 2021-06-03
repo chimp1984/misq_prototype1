@@ -17,5 +17,27 @@
 
 package misq.jfx.main.content.createoffer;
 
-public class CreateOfferModel {
+import javafx.beans.property.*;
+import javafx.scene.Parent;
+import misq.jfx.common.Controller;
+import misq.jfx.common.Model;
+import misq.jfx.common.View;
+
+public class CreateOfferModel implements Model {
+    DoubleProperty minWidthProperty = new SimpleDoubleProperty(800);
+    DoubleProperty minHeightProperty = new SimpleDoubleProperty(600);
+    StringProperty titleProperty = new SimpleStringProperty("Create offer");
+    BooleanProperty backButtonVisible = new SimpleBooleanProperty(true);
+    BooleanProperty nextButtonVisible = new SimpleBooleanProperty(true);
+
+    ObjectProperty<View<Parent, Model, Controller>> view = new SimpleObjectProperty<>();
+
+    public CreateOfferModel() {
+    }
+
+    public void selectView(View<Parent, Model, Controller> view) {
+        this.view.set(view);
+    }
+
+
 }

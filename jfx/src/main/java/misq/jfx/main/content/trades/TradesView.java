@@ -17,9 +17,9 @@
 
 package misq.jfx.main.content.trades;
 
-import misq.jfx.main.content.ContentChildDummy;
+import misq.jfx.main.content.Dummy;
 
-public class TradesView extends ContentChildDummy {
+public class TradesView extends Dummy.View {
 
     public TradesView() {
         super("TradesView");

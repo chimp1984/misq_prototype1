@@ -17,9 +17,9 @@
 
 package misq.jfx.main.content.funds;
 
-import misq.jfx.main.content.ContentChildDummy;
+import misq.jfx.main.content.Dummy;
 
-public class FundsView extends ContentChildDummy {
+public class FundsView extends Dummy.View {
 
     public FundsView() {
         super("FundsView");

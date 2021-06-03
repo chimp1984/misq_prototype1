@@ -17,6 +17,7 @@
 
 package misq.jfx.main.content.offerbook;
 
+import javafx.application.Platform;
 import javafx.geometry.Bounds;
 import lombok.Getter;
 import misq.api.Api;
@@ -61,6 +62,8 @@ public class OfferbookController implements MarketPriceService.Listener, Offerbo
         model.activate();
         api.getMarketPriceService().addListener(this);
         api.getOfferbookRepository().addListener(this);
+
+        Platform.runLater(() -> onCreateOffer());
     }
 
     @Override

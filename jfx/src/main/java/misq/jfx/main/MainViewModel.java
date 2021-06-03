@@ -17,5 +17,7 @@
 
 package misq.jfx.main;
 
-public class MainViewModel {
+import misq.jfx.common.Model;
+
+public class MainViewModel implements Model {
 }

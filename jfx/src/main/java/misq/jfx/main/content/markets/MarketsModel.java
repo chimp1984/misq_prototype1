@@ -19,8 +19,9 @@ package misq.jfx.main.content.markets;
 
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
+import misq.jfx.common.Model;
 
-public class MarketsModel {
+public class MarketsModel implements Model {
     StringProperty formattedMarketPrice = new SimpleStringProperty("N/A");
 
     public void setMarketPrice(int marketPrice) {

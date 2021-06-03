@@ -17,9 +17,9 @@
 
 package misq.jfx.main.content.accounts;
 
-import misq.jfx.main.content.ContentChildDummy;
+import misq.jfx.main.content.Dummy;
 
-public class AccountsView extends ContentChildDummy {
+public class AccountsView extends Dummy.View {
 
     public AccountsView() {
         super("AccountsView");

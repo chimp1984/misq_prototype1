@@ -74,6 +74,7 @@ public class JfxApplication extends Application {
                 }
             });
             stage.show();
+            controller.onViewAdded();
         } catch (Exception exception) {
             exception.printStackTrace();
         }

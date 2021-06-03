@@ -21,8 +21,9 @@ import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
+import misq.jfx.common.Model;
 
-public class JfxApplicationModel {
+public class JfxApplicationModel implements Model {
     DoubleProperty minWidthProperty = new SimpleDoubleProperty(1000);
     DoubleProperty minHeightProperty = new SimpleDoubleProperty(1000);
     StringProperty titleProperty = new SimpleStringProperty("Misq");

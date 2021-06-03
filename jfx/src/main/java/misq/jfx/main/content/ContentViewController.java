@@ -41,7 +41,6 @@ public class ContentViewController implements Controller {
     public ContentViewController(Api api, OverlayController overlayController) {
         this.api = api;
         this.overlayController = overlayController;
-        initialize();
     }
 
     @Override

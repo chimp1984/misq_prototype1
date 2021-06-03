@@ -17,30 +17,46 @@
 
 package misq.jfx.common;
 
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.scene.Node;
+import javafx.stage.Window;
 import lombok.Getter;
 
-public abstract class View<T extends Node> {
+public abstract class View<T extends Node, M extends Model, C extends Controller> {
     @Getter
     protected final T root;
+    protected final M model;
+    protected final C controller;
 
-    public View(T root) {
+    public View(T root, M model, C controller) {
         this.root = root;
+        this.model = model;
+        this.controller = controller;
         if (root != null) {
             root.sceneProperty().addListener((ov, oldValue, newValue) -> {
                 if (oldValue == null && newValue != null) {
-                    onAddedToStage();
+                    if (newValue.getWindow() != null) {
+                        onAddedToStage();
+                    } else {
+                        // For overlays we need to wait until stage is available
+                        newValue.windowProperty().addListener(new ChangeListener<Window>() {
+                            @Override
+                            public void changed(ObservableValue<? extends Window> observable, Window oldValue, Window newValue) {
+                                if (newValue != null) {
+                                    onAddedToStage();
+                                }
+                            }
+                        });
+                    }
                 } else if (oldValue != null && newValue == null) {
                     onRemovedFromStage();
                 }
             });
         }
-    }
-
-    protected void onAddedToStage() {
-    }
-
-    protected void onRemovedFromStage() {
+        setupView();
+        configModel();
+        configController();
     }
 
     protected void setupView() {
@@ -51,4 +67,11 @@ public abstract class View<T extends Node> {
 
     protected void configController() {
     }
+
+    protected void onAddedToStage() {
+    }
+
+    protected void onRemovedFromStage() {
+    }
+
 }

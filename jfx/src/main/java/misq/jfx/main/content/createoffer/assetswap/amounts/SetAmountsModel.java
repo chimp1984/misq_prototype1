@@ -15,25 +15,33 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package misq.jfx.main.content.offerbook.details;
+package misq.jfx.main.content.createoffer.assetswap.amounts;
 
-import javafx.beans.property.DoubleProperty;
-import javafx.beans.property.SimpleDoubleProperty;
+
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import lombok.Getter;
 import misq.jfx.common.Model;
-import misq.presentation.offer.OfferListItem;
 
-@Getter
-public class OfferDetailsModel implements Model {
-    private final OfferListItem item;
-    DoubleProperty minWidthProperty = new SimpleDoubleProperty(800);
-    DoubleProperty minHeightProperty = new SimpleDoubleProperty(400);
-    StringProperty titleProperty = new SimpleStringProperty();
+public class SetAmountsModel implements Model {
+    @Getter
+    private final StringProperty selectedAskCurrency = new SimpleStringProperty();
+    @Getter
+    private final StringProperty selectedBidCurrency = new SimpleStringProperty();
+    @Getter
+    private final ObservableList<String> currencies = FXCollections.observableArrayList("BTC", "USD", "EUR", "XMR", "USDT");
 
-    public OfferDetailsModel(OfferListItem item) {
-        this.item = item;
-        titleProperty.set("Offer " + item.getOffer().getId().substring(0, 8));
+    public void setSelectAskCurrency(String currency) {
+        selectedAskCurrency.set(currency);
+    }
+
+    public void setSelectBidCurrency(String currency) {
+        selectedBidCurrency.set(currency);
+    }
+
+    public void flipCurrencies() {
+
     }
 }

@@ -17,5 +17,7 @@
 
 package misq.jfx.main.left;
 
-public class NavigationViewModel {
+import misq.jfx.common.Model;
+
+public class NavigationViewModel implements Model {
 }

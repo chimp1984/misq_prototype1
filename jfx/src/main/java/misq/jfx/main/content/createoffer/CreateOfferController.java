@@ -19,11 +19,17 @@ package misq.jfx.main.content.createoffer;
 
 import lombok.Getter;
 import misq.jfx.common.Controller;
+import misq.jfx.common.View;
+import misq.jfx.main.content.createoffer.assetswap.amounts.SetAmountsController;
+
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class CreateOfferController implements Controller {
     private CreateOfferModel model;
     @Getter
     private CreateOfferView view;
+    private final Map<Class<? extends Controller>, Controller> map = new ConcurrentHashMap<>();
 
     public CreateOfferController() {
     }
@@ -32,6 +38,12 @@ public class CreateOfferController implements Controller {
     public void initialize() {
         this.model = new CreateOfferModel();
         this.view = new CreateOfferView(model, this);
+        addController(new SetAmountsController());
+
+        Controller controller = map.get(SetAmountsController.class);
+        controller.initialize();
+        View view = controller.getView();
+        model.selectView(view);
     }
 
     @Override
@@ -40,5 +52,17 @@ public class CreateOfferController implements Controller {
 
     @Override
     public void onViewRemoved() {
+    }
+
+    public void onNavigateBack() {
+
+    }
+
+    public void onNavigateNext() {
+
+    }
+
+    private void addController(Controller controller) {
+        map.put(controller.getClass(), controller);
     }
 }

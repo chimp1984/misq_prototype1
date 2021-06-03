@@ -29,10 +29,14 @@ import misq.jfx.main.left.NavigationView;
 import misq.jfx.main.top.TopPanelView;
 import misq.jfx.utils.ImageUtil;
 
-public class MainView extends View<StackPane> {
+public class MainView extends View<StackPane, MainViewModel, MainViewController> {
 
-    public MainView(MainViewModel model, MainViewController controller, ContentView contentView, NavigationView navigationView) {
-        super(new StackPane());
+    public MainView(MainViewModel model,
+                    MainViewController controller,
+                    ContentView contentView,
+                    NavigationView navigationView,
+                    TopPanelView topPanelView) {
+        super(new StackPane(), model, controller);
 
         root.getStyleClass().add("content-pane");
 
@@ -44,8 +48,6 @@ public class MainView extends View<StackPane> {
 
         VBox rootContainer = new VBox();
         root.getChildren().addAll(bgImage, rootContainer);
-
-        TopPanelView topPanelView = new TopPanelView();
 
         HBox leftNavAndContentBox = new HBox();
         VBox.setVgrow(leftNavAndContentBox, Priority.ALWAYS);

@@ -15,17 +15,30 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package misq.jfx.common;
+package misq.jfx.main.top;
 
-import javafx.scene.Node;
+import lombok.Getter;
+import misq.jfx.common.Controller;
 
-public interface LifeCycle {
+public class TopPanelController implements Controller {
+    private TopPanelModel model;
+    @Getter
+    private TopPanelView view;
 
-    void onConstructView(View<? extends Node, Model, Controller> view);
-
-    default void onViewAdded() {
+    public TopPanelController() {
     }
 
-    default void onViewRemoved() {
+    @Override
+    public void initialize() {
+        this.model = new TopPanelModel();
+        this.view = new TopPanelView(model, this);
+    }
+
+    @Override
+    public void onViewAdded() {
+    }
+
+    @Override
+    public void onViewRemoved() {
     }
 }

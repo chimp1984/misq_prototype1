@@ -23,18 +23,30 @@ import misq.jfx.main.content.ContentViewController;
 import misq.jfx.main.content.createoffer.CreateOfferController;
 import misq.jfx.overlay.OverlayController;
 
-public class NavigationViewController {
-    private final NavigationViewModel model;
+public class NavigationViewController implements Controller {
+    private NavigationViewModel model;
     @Getter
-    private final NavigationView view;
+    private NavigationView view;
     private final ContentViewController contentViewController;
     private final OverlayController overlayController;
 
     public NavigationViewController(ContentViewController contentViewController, OverlayController overlayController) {
         this.contentViewController = contentViewController;
         this.overlayController = overlayController;
+    }
+
+    @Override
+    public void initialize() {
         this.model = new NavigationViewModel();
         this.view = new NavigationView(model, this);
+    }
+
+    @Override
+    public void onViewAdded() {
+    }
+
+    @Override
+    public void onViewRemoved() {
     }
 
     public void onShowView(Class<? extends Controller> controllerClass) {
@@ -44,4 +56,5 @@ public class NavigationViewController {
             contentViewController.onNavigationRequest(controllerClass);
         }
     }
+
 }

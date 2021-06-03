@@ -24,6 +24,8 @@ import javafx.scene.Scene;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.Window;
+import misq.jfx.common.Controller;
+import misq.jfx.common.Model;
 import misq.jfx.common.View;
 
 public class OverlayView {
@@ -36,9 +38,11 @@ public class OverlayView {
         this.model = model;
         this.controller = controller;
         this.parentScene = parentScene;
-        model.view.addListener(new ChangeListener<View<Parent>>() {
+        model.view.addListener(new ChangeListener<View<Parent, Model, Controller>>() {
             @Override
-            public void changed(ObservableValue<? extends View<Parent>> observable, View<Parent> oldValue, View<Parent> newValue) {
+            public void changed(ObservableValue<? extends View<Parent, Model, Controller>> observable,
+                                View<Parent, Model, Controller> oldValue,
+                                View<Parent, Model, Controller> newValue) {
                 if (newValue != null) {
                     show(newValue.getRoot());
                 } else if (stage != null) {
@@ -61,7 +65,7 @@ public class OverlayView {
             event.consume();
             controller.onClosed();
         });
-        stage.sizeToScene();
+        //  stage.sizeToScene();
         stage.show();
     }
   /*  protected void layout() {

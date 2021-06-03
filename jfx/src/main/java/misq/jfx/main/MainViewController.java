@@ -19,12 +19,14 @@ package misq.jfx.main;
 
 import lombok.Getter;
 import misq.api.Api;
+import misq.jfx.common.Controller;
 import misq.jfx.main.content.ContentViewController;
 import misq.jfx.main.content.offerbook.OfferbookController;
 import misq.jfx.main.left.NavigationViewController;
+import misq.jfx.main.top.TopPanelController;
 import misq.jfx.overlay.OverlayController;
 
-public class MainViewController {
+public class MainViewController implements Controller {
     private final Api api;
     private final OverlayController overlayController;
     private MainViewModel model;
@@ -37,16 +39,35 @@ public class MainViewController {
     }
 
     public void initialize() {
-        this.model = new MainViewModel();
+        try {
+            this.model = new MainViewModel();
 
-        ContentViewController contentViewController = new ContentViewController(api, overlayController);
-        NavigationViewController navigationViewController = new NavigationViewController(contentViewController, overlayController);
+            ContentViewController contentViewController = new ContentViewController(api, overlayController);
+            contentViewController.initialize();
+            NavigationViewController navigationViewController = new NavigationViewController(contentViewController, overlayController);
+            navigationViewController.initialize();
+            TopPanelController topPanelController = new TopPanelController();
+            topPanelController.initialize();
 
-        this.view = new MainView(model,
-                this,
-                contentViewController.getView(),
-                navigationViewController.getView());
+            this.view = new MainView(model,
+                    this,
+                    contentViewController.getView(),
+                    navigationViewController.getView(),
+                    topPanelController.getView());
 
-        contentViewController.onNavigationRequest(OfferbookController.class);
+            contentViewController.onNavigationRequest(OfferbookController.class);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public void onViewAdded() {
+
+    }
+
+    @Override
+    public void onViewRemoved() {
+
     }
 }

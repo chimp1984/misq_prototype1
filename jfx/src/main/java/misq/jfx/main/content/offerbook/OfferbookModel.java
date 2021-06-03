@@ -18,10 +18,11 @@
 package misq.jfx.main.content.offerbook;
 
 import misq.api.Api;
+import misq.jfx.common.Model;
 import misq.presentation.offer.OfferbookEntity;
 
 // Handled jfx only concerns, others which can be re-used by other frontends are in OfferbookEntity
-public class OfferbookModel extends OfferbookEntity {
+public class OfferbookModel extends OfferbookEntity implements Model {
     public OfferbookModel(Api api) {
         super(api);
     }

@@ -15,17 +15,17 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package misq.jfx.common;
+package misq.jfx.main.content.createoffer.assetswap.review;
 
-import javafx.scene.Node;
+import javafx.scene.control.Label;
+import javafx.scene.layout.StackPane;
+import misq.jfx.common.View;
 
-public interface LifeCycle {
+public class ReviewOfferView extends View<StackPane, ReviewOfferModel, ReviewOfferController> {
 
-    void onConstructView(View<? extends Node, Model, Controller> view);
+    public ReviewOfferView(ReviewOfferModel model, ReviewOfferController controller) {
+        super(new StackPane(), model, controller);
 
-    default void onViewAdded() {
-    }
-
-    default void onViewRemoved() {
+        root.getChildren().add(new Label(this.getClass().getSimpleName()));
     }
 }

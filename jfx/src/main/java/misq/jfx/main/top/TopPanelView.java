@@ -25,9 +25,9 @@ import javafx.scene.layout.Priority;
 import misq.jfx.common.View;
 import misq.jfx.utils.ImageUtil;
 
-public class TopPanelView extends View<HBox> {
-    public TopPanelView() {
-        super(new HBox());
+public class TopPanelView extends View<HBox, TopPanelModel, TopPanelController> {
+    public TopPanelView(TopPanelModel model, TopPanelController controller) {
+        super(new HBox(), model, controller);
 
         root.setMinHeight(80);
         root.setPadding(new Insets(10, 20, 10, 20));

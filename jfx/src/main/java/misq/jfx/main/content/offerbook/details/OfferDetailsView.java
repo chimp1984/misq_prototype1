@@ -17,28 +17,21 @@
 
 package misq.jfx.main.content.offerbook.details;
 
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.geometry.Bounds;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
-import javafx.stage.Window;
 import lombok.extern.slf4j.Slf4j;
 import misq.jfx.common.View;
 
 @Slf4j
-public class OfferDetailsView extends View<StackPane> {
+public class OfferDetailsView extends View<StackPane, OfferDetailsModel, OfferDetailsController> {
     @org.jetbrains.annotations.NotNull
-    private final OfferDetailsModel model;
-    private final OfferDetailsController offerDetailsController;
     private final Bounds boundsInParent;
 
-    public OfferDetailsView(OfferDetailsModel model, OfferDetailsController offerDetailsController, Bounds boundsInParent) {
-        super(new StackPane());
-        this.model = model;
-        this.offerDetailsController = offerDetailsController;
+    public OfferDetailsView(OfferDetailsModel model, OfferDetailsController controller, Bounds boundsInParent) {
+        super(new StackPane(), model, controller);
         this.boundsInParent = boundsInParent;
 
         root.getChildren().add(new Label(model.getItem().toString()));
@@ -46,19 +39,11 @@ public class OfferDetailsView extends View<StackPane> {
 
     protected void onAddedToStage() {
         Scene scene = root.getScene();
-        scene.windowProperty().addListener(new ChangeListener<Window>() {
-            @Override
-            public void changed(ObservableValue<? extends Window> observable, Window oldValue, Window newValue) {
-                if (newValue != null) {
-                    Stage stage = (Stage) scene.getWindow();
-                    stage.minHeightProperty().bind(model.minHeightProperty);
-                    stage.minWidthProperty().bind(model.minWidthProperty);
-                    stage.titleProperty().bind(model.titleProperty);
-                    stage.setX(boundsInParent.getMinX() - model.minWidthProperty.get() / 2);
-                    root.getScene().getWindow().setY(boundsInParent.getMinY() + model.minHeightProperty.get() / 2);
-                }
-            }
-        });
-
+        Stage stage = (Stage) scene.getWindow();
+        stage.minHeightProperty().bind(model.minHeightProperty);
+        stage.minWidthProperty().bind(model.minWidthProperty);
+        stage.titleProperty().bind(model.titleProperty);
+        stage.setX(boundsInParent.getMinX() - model.minWidthProperty.get() / 2);
+        root.getScene().getWindow().setY(boundsInParent.getMinY() + model.minHeightProperty.get() / 2);
     }
 }

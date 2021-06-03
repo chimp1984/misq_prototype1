@@ -22,16 +22,12 @@ import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
 import misq.jfx.common.View;
 
-public class MarketsView extends View<HBox> {
+public class MarketsView extends View<HBox, MarketsModel, MarketsController> {
     private final Label label;
     private final Button button;
-    private MarketsModel model;
-    private final MarketsController controller;
 
     public MarketsView(MarketsModel model, MarketsController controller) {
-        super(new HBox());
-        this.model = model;
-        this.controller = controller;
+        super(new HBox(), model, controller);
 
         root.setSpacing(20);
         label = new Label();

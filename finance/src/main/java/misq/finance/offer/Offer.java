@@ -38,7 +38,6 @@ public class Offer {
     private final Optional<ReputationOptions> reputationOptions;
     private final Optional<TransferOptions> transferOptions;
 
-
     public Offer(List<? extends ProtocolType> protocolTypes, NetworkId makerNetworkId) {
         this(protocolTypes, makerNetworkId, Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty());
     }

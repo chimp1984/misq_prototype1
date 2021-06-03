@@ -17,9 +17,9 @@
 
 package misq.jfx.main.content.settings;
 
-import misq.jfx.main.content.ContentChildDummy;
+import misq.jfx.main.content.Dummy;
 
-public class SettingsView extends ContentChildDummy {
+public class SettingsView extends Dummy.View {
 
     public SettingsView() {
         super("SettingsView");

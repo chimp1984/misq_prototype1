@@ -24,21 +24,21 @@ import javafx.scene.Node;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import lombok.extern.slf4j.Slf4j;
+import misq.jfx.common.Controller;
+import misq.jfx.common.Model;
 import misq.jfx.common.View;
 
 @Slf4j
-public class ContentView extends View<HBox> {
-    private final ContentViewModel model;
-    private final ContentViewController controller;
+public class ContentView extends View<HBox, ContentViewModel, ContentViewController> {
 
     public ContentView(ContentViewModel model, ContentViewController controller) {
-        super(new HBox());
-        this.model = model;
-        this.controller = controller;
+        super(new HBox(), model, controller);
 
-        model.view.addListener(new ChangeListener<View<? extends Node>>() {
+        model.view.addListener(new ChangeListener<View<? extends Node, Model, Controller>>() {
             @Override
-            public void changed(ObservableValue<? extends View<? extends Node>> observable, View<? extends Node> oldValue, View<? extends Node> newValue) {
+            public void changed(ObservableValue<? extends View<? extends Node, Model, Controller>> observable,
+                                View<? extends Node, Model, Controller> oldValue,
+                                View<? extends Node, Model, Controller> newValue) {
                 HBox.setHgrow(newValue.getRoot(), Priority.ALWAYS);
                 ObservableList<Node> children = root.getChildren();
                 children.setAll(newValue.getRoot());

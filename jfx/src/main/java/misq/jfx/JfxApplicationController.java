@@ -20,6 +20,8 @@ package misq.jfx;
 import javafx.application.Application;
 import lombok.extern.slf4j.Slf4j;
 import misq.api.Api;
+import misq.jfx.common.Controller;
+import misq.jfx.common.View;
 import misq.jfx.main.MainViewController;
 import misq.jfx.overlay.OverlayController;
 import misq.jfx.utils.UncaughtExceptionHandler;
@@ -28,7 +30,7 @@ import misq.jfx.utils.UserThread;
 import java.util.concurrent.CompletableFuture;
 
 @Slf4j
-public class JfxApplicationController {
+public class JfxApplicationController implements Controller {
     private final Api api;
     private final JfxApplicationModel model;
     private JfxApplication jfxApplication;
@@ -58,13 +60,35 @@ public class JfxApplicationController {
         return future;
     }
 
-    private void initialize() {
-        overlayController = new OverlayController();
-        mainViewController = new MainViewController(api, overlayController);
-        mainViewController.initialize();
-        jfxApplication.initialize(model, this, mainViewController.getView());
-        // Now the scene is available
-        overlayController.initialize(jfxApplication.getScene());
+    @Override
+    public void initialize() {
+        try {
+            overlayController = new OverlayController();
+            mainViewController = new MainViewController(api, overlayController);
+            mainViewController.initialize();
+            jfxApplication.initialize(model, this, mainViewController.getView());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+    }
+
+    @Override
+    public void onViewAdded() {
+        try {
+            overlayController.initialize(jfxApplication.getScene());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public void onViewRemoved() {
+    }
+
+    @Override
+    public View getView() {
+        return null;
     }
 
     public void onQuit() {

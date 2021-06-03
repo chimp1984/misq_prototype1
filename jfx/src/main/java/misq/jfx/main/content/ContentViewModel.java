@@ -20,12 +20,14 @@ package misq.jfx.main.content;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.scene.Node;
+import misq.jfx.common.Controller;
+import misq.jfx.common.Model;
 import misq.jfx.common.View;
 
-public class ContentViewModel {
-    ObjectProperty<View<? extends Node>> view = new SimpleObjectProperty<>();
+public class ContentViewModel implements Model {
+    ObjectProperty<View<? extends Node, Model, Controller>> view = new SimpleObjectProperty<>();
 
-    public void selectView(View<? extends Node> view) {
+    public void selectView(View<? extends Node, Model, Controller> view) {
         this.view.set(view);
     }
 }

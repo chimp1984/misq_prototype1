@@ -27,15 +27,11 @@ import misq.jfx.main.content.createoffer.CreateOfferController;
 import misq.jfx.main.content.markets.MarketsController;
 import misq.jfx.main.content.offerbook.OfferbookController;
 
-public class NavigationView extends View<VBox> {
+public class NavigationView extends View<VBox, NavigationViewModel, NavigationViewController> {
     private final ToggleGroup navButtons = new ToggleGroup();
-    private final NavigationViewModel model;
-    private final NavigationViewController controller;
 
     public NavigationView(NavigationViewModel model, NavigationViewController controller) {
-        super(new VBox());
-        this.model = model;
-        this.controller = controller;
+        super(new VBox(), model, controller);
 
         root.setMaxWidth(337);
         root.setMinWidth(337);
