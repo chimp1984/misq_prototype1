@@ -195,7 +195,7 @@ public class OfferbookView extends View<VBox> {
                             public void updateItem(final OfferListItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null && !empty) {
-                                    button.setOnAction(e -> controller.onShowMakerDetails(item));
+                                    button.setOnAction(e -> controller.onShowMakerDetails(item, localToScene(getLayoutBounds())));
                                     setPadding(new Insets(0, 15, 0, 0));
                                     setGraphic(button);
                                 } else {

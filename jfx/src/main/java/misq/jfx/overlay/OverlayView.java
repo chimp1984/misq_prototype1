@@ -54,13 +54,9 @@ public class OverlayView {
         //scene.setFill(Color.TRANSPARENT);
         stage = new Stage();
         stage.setScene(scene);
-        stage.minHeightProperty().bind(model.minHeightProperty);
-        stage.minWidthProperty().bind(model.minWidthProperty);
-        stage.titleProperty().bind(model.titleProperty);
         Window parentWindow = parentScene.getWindow();
         stage.initOwner(parentWindow);
         stage.initModality(Modality.WINDOW_MODAL);
-        //  stage.initStyle(StageStyle.TRANSPARENT);
         stage.setOnCloseRequest(event -> {
             event.consume();
             controller.onClosed();

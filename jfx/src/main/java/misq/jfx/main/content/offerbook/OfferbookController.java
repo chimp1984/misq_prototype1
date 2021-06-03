@@ -17,6 +17,7 @@
 
 package misq.jfx.main.content.offerbook;
 
+import javafx.geometry.Bounds;
 import lombok.Getter;
 import misq.api.Api;
 import misq.finance.offer.Offer;
@@ -25,6 +26,7 @@ import misq.finance.swap.offer.SwapOffer;
 import misq.jfx.common.Controller;
 import misq.jfx.main.content.ContentViewController;
 import misq.jfx.main.content.createoffer.CreateOfferController;
+import misq.jfx.main.content.offerbook.details.OfferDetailsController;
 import misq.jfx.overlay.OverlayController;
 import misq.marketprice.MarketPriceService;
 import misq.presentation.offer.OfferListItem;
@@ -116,6 +118,7 @@ public class OfferbookController implements MarketPriceService.Listener, Offerbo
     public void onTakeOffer(OfferListItem item) {
     }
 
-    public void onShowMakerDetails(OfferListItem item) {
+    public void onShowMakerDetails(OfferListItem item, Bounds boundsInParent) {
+        overlayController.show(new OfferDetailsController(item, boundsInParent));
     }
 }

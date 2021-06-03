@@ -17,14 +17,12 @@
 
 package misq.jfx.overlay;
 
-import javafx.beans.property.*;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.scene.Parent;
 import misq.jfx.common.View;
 
 public class OverlayModel {
-    DoubleProperty minWidthProperty = new SimpleDoubleProperty(800);
-    DoubleProperty minHeightProperty = new SimpleDoubleProperty(400);
-    StringProperty titleProperty = new SimpleStringProperty("Popup");
     ObjectProperty<View<Parent>> view = new SimpleObjectProperty<>();
 
     public void selectView(View<Parent> view) {
