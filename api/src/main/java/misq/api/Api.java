@@ -17,6 +17,7 @@
 
 package misq.api;
 
+import io.reactivex.rxjava3.subjects.BehaviorSubject;
 import io.reactivex.rxjava3.subjects.PublishSubject;
 import lombok.Getter;
 import misq.finance.offer.OfferbookRepository;
@@ -42,10 +43,26 @@ public class Api {
         offerbookRepository = new OfferbookRepository(networkService);
         marketPriceService = new MarketPriceService();
         openOffers = new OpenOffers(networkService);
-
         offerbookEntity = new OfferbookEntity(offerbookRepository, marketPriceService);
+    }
+
+    public void initialize() {
         offerbookEntity.initialize();
+    }
+
+    /**
+     * Activates the offerbookEntity. To be called before it is used by a client.
+     */
+    public void activateOfferbookEntity() {
         offerbookEntity.activate();
+    }
+
+    /**
+     * Deactivates the offerbookEntity. To be called before once not anymore used by a client.
+     * Stops event processing, etc.
+     */
+    public void deactivateOfferbookEntity() {
+        offerbookEntity.deactivate();
     }
 
     /**
@@ -72,5 +89,12 @@ public class Api {
      */
     public PublishSubject<OfferEntity> getOfferEntityRemovedSubject() {
         return offerbookEntity.getOfferEntityRemovedSubject();
+    }
+
+    /**
+     * @return The BehaviorSubject for subscribing on market price change events.
+     */
+    public BehaviorSubject<Double> getMarketPriceSubject() {
+        return marketPriceService.getMarketPriceSubject();
     }
 }

@@ -46,7 +46,7 @@ public class OfferbookController implements Controller {
 
     @Override
     public void initialize() {
-        model = new OfferbookModel(api.getOfferbookRepository(), api.getMarketPriceService());
+        model = new OfferbookModel(api);
         model.initialize();
         view = new OfferbookView(model, this);
     }

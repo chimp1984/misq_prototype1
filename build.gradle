@@ -239,6 +239,7 @@ configure(project(':finance')) {
     dependencies {
         implementation project(':common')
         implementation project(':p2p')
+        implementation group: 'io.reactivex.rxjava3', name: 'rxjava', version: '3.0.12'
     }
 }
 

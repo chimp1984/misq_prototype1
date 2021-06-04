@@ -17,25 +17,22 @@
 
 package misq.marketprice;
 
+import io.reactivex.rxjava3.subjects.BehaviorSubject;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Random;
-import java.util.Set;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
 public class MarketPriceService {
-    public interface Listener {
-        void onMarketPriceChanged(double marketPrice);
-    }
 
     @Getter
     private double marketPrice;
-
-    private final Set<MarketPriceService.Listener> listeners = new CopyOnWriteArraySet<>();
+    protected final BehaviorSubject<Double> marketPriceSubject;
 
     public CompletableFuture<Integer> requestPriceUpdate() {
         CompletableFuture<Integer> future = new CompletableFuture<>();
@@ -45,22 +42,20 @@ public class MarketPriceService {
     }
 
     public MarketPriceService() {
+        marketPriceSubject = BehaviorSubject.create();
         marketPrice = 50000 + new Random().nextInt(10000) / 10000d;
-       /* new Timer().scheduleAtFixedRate(new TimerTask() {
+        marketPriceSubject.onNext(marketPrice);
+        new Timer().scheduleAtFixedRate(new TimerTask() {
             @Override
             public void run() {
                 marketPrice = 50000 + new Random().nextInt(1000000) / 1000d;
+                marketPriceSubject.onNext(marketPrice);
                 // log.error("price update {}", marketPrice);
-                listeners.forEach(e -> e.onMarketPriceChanged(marketPrice));
             }
-        }, 0, 1000);*/
+        }, 0, 1000);
     }
 
-    public void addListener(MarketPriceService.Listener listener) {
-        listeners.add(listener);
-    }
-
-    public void removeListener(MarketPriceService.Listener listener) {
-        listeners.remove(listener);
+    public BehaviorSubject<Double> getMarketPriceSubject() {
+        return marketPriceSubject;
     }
 }

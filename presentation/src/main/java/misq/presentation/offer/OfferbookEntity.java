@@ -17,7 +17,6 @@
 
 package misq.presentation.offer;
 
-import io.reactivex.rxjava3.subjects.BehaviorSubject;
 import io.reactivex.rxjava3.subjects.PublishSubject;
 import lombok.extern.slf4j.Slf4j;
 import misq.finance.offer.Offer;
@@ -30,20 +29,19 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Collectors;
 
 @Slf4j
-public class OfferbookEntity implements OfferbookRepository.Listener, MarketPriceService.Listener {
+public class OfferbookEntity implements OfferbookRepository.Listener {
     protected final MarketPriceService marketPriceService;
     protected final OfferbookRepository offerbookRepository;
     protected final List<OfferEntity> offerEntities = new CopyOnWriteArrayList<>();
     protected final PublishSubject<OfferEntity> offerEntityAddedSubject;
     protected final PublishSubject<OfferEntity> offerEntityRemovedSubject;
-    protected final BehaviorSubject<Double> marketPriceSubject;
+    // protected final BehaviorSubject<Double> marketPriceSubject;
     private double marketPrice;
 
     public OfferbookEntity(OfferbookRepository offerbookRepository, MarketPriceService marketPriceService) {
         this.offerbookRepository = offerbookRepository;
         this.marketPriceService = marketPriceService;
 
-        marketPriceSubject = BehaviorSubject.create();
         offerEntityAddedSubject = PublishSubject.create();
         offerEntityRemovedSubject = PublishSubject.create();
     }
@@ -58,19 +56,16 @@ public class OfferbookEntity implements OfferbookRepository.Listener, MarketPric
 
     public void activate() {
         offerbookRepository.addListener(this);
-        marketPriceService.addListener(this);
 
         offerEntities.addAll(offerbookRepository.getOffers().stream()
-                .map(offer -> new OfferEntity((SwapOffer) offer, marketPriceSubject))
+                .map(offer -> new OfferEntity((SwapOffer) offer, marketPriceService.getMarketPriceSubject()))
                 .collect(Collectors.toList()));
 
         this.marketPrice = marketPriceService.getMarketPrice();
-        marketPriceSubject.onNext(marketPrice);
     }
 
     public void deactivate() {
         offerbookRepository.removeListener(this);
-        marketPriceService.removeListener(this);
     }
 
     public List<OfferEntity> getOfferEntities() {
@@ -86,6 +81,7 @@ public class OfferbookEntity implements OfferbookRepository.Listener, MarketPric
     }
 
 
+
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Internal
     ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -93,7 +89,7 @@ public class OfferbookEntity implements OfferbookRepository.Listener, MarketPric
     @Override
     public void onOfferAdded(Offer offer) {
         if (offer instanceof SwapOffer) {
-            OfferEntity offerEntity = new OfferEntity((SwapOffer) offer, marketPriceSubject);
+            OfferEntity offerEntity = new OfferEntity((SwapOffer) offer, marketPriceService.getMarketPriceSubject());
             offerEntities.add(offerEntity);
             offerEntityAddedSubject.onNext(offerEntity);
         }
@@ -108,11 +104,5 @@ public class OfferbookEntity implements OfferbookRepository.Listener, MarketPric
                     offerEntities.remove(offerEntity);
                     offerEntityRemovedSubject.onNext(offerEntity);
                 });
-    }
-
-    @Override
-    public void onMarketPriceChanged(double marketPrice) {
-        this.marketPrice = marketPrice;
-        marketPriceSubject.onNext(marketPrice);
     }
 }
