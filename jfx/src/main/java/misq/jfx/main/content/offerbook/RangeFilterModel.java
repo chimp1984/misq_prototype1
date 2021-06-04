@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package misq.presentation.offer;
+package misq.jfx.main.content.offerbook;
 
 import javafx.beans.property.*;
 import javafx.beans.value.ChangeListener;
@@ -26,8 +26,9 @@ import misq.presentation.formatters.AmountFormatter;
 import java.util.List;
 import java.util.function.Predicate;
 
+//todo extract to presentation layer the more generic fields like the predicates
 public class RangeFilterModel {
-    private final OfferbookEntity model;
+    private final OfferbookModel model;
     @Getter
     private final BooleanProperty visible = new SimpleBooleanProperty();
     @Getter
@@ -46,7 +47,7 @@ public class RangeFilterModel {
     private final ChangeListener<Number> lowPercentageListener;
     private final ChangeListener<Number> highPercentageListener;
 
-    public RangeFilterModel(OfferbookEntity model) {
+    public RangeFilterModel(OfferbookModel model) {
         this.model = model;
 
         lowPercentageListener = (observable, oldValue, newValue) -> {
@@ -67,11 +68,12 @@ public class RangeFilterModel {
 
     public void initialize() {
         visible.set(true);
-        applyMinBaseAmountValue();
-        applyMaxBaseAmountValue();
     }
 
     public void activate() {
+        applyMinBaseAmountValue();
+        applyMaxBaseAmountValue();
+
         lowPercentage.addListener(lowPercentageListener);
         highPercentage.addListener(highPercentageListener);
     }

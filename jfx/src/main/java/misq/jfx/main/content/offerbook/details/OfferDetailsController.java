@@ -20,7 +20,7 @@ package misq.jfx.main.content.offerbook.details;
 import javafx.geometry.Bounds;
 import lombok.Getter;
 import misq.jfx.common.Controller;
-import misq.presentation.offer.OfferListItem;
+import misq.jfx.main.content.offerbook.OfferListItem;
 
 public class OfferDetailsController implements Controller {
     private final OfferListItem item;

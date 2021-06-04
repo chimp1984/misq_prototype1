@@ -22,13 +22,14 @@ import lombok.Getter;
 import misq.finance.ProtocolType;
 import misq.p2p.NetworkId;
 
+import java.io.Serializable;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
 @EqualsAndHashCode
 @Getter
-public class Offer {
+public class Offer implements Serializable {
     private final String id;
     private final long date;
     private final List<? extends ProtocolType> protocolTypes;

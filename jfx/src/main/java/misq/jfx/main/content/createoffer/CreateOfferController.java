@@ -18,20 +18,24 @@
 package misq.jfx.main.content.createoffer;
 
 import lombok.Getter;
+import misq.api.Api;
 import misq.jfx.common.Controller;
 import misq.jfx.common.View;
 import misq.jfx.main.content.createoffer.assetswap.amounts.SetAmountsController;
+import misq.jfx.main.content.createoffer.assetswap.review.ReviewOfferController;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class CreateOfferController implements Controller {
+    private final Api api;
     private CreateOfferModel model;
     @Getter
     private CreateOfferView view;
     private final Map<Class<? extends Controller>, Controller> map = new ConcurrentHashMap<>();
 
-    public CreateOfferController() {
+    public CreateOfferController(Api api) {
+        this.api = api;
     }
 
     @Override
@@ -39,8 +43,10 @@ public class CreateOfferController implements Controller {
         this.model = new CreateOfferModel();
         this.view = new CreateOfferView(model, this);
         addController(new SetAmountsController());
+        addController(new ReviewOfferController(api));
 
-        Controller controller = map.get(SetAmountsController.class);
+        //  Controller controller = map.get(SetAmountsController.class);
+        Controller controller = map.get(ReviewOfferController.class);
         controller.initialize();
         View view = controller.getView();
         model.selectView(view);

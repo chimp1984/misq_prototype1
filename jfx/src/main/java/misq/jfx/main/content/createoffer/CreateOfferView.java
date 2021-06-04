@@ -23,7 +23,6 @@ import javafx.geometry.Insets;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
@@ -34,6 +33,7 @@ import misq.jfx.common.Controller;
 import misq.jfx.common.Model;
 import misq.jfx.common.View;
 import misq.jfx.components.controls.AutoTooltipButton;
+import misq.jfx.components.controls.AutoTooltipLabel;
 
 @Slf4j
 public class CreateOfferView extends View<VBox, CreateOfferModel, CreateOfferController> {
@@ -66,7 +66,7 @@ public class CreateOfferView extends View<VBox, CreateOfferModel, CreateOfferCon
     }
 
     private Node getStepNode(String title) {
-        return new Label(title);
+        return new AutoTooltipLabel(title);
     }
 
     protected void configModel() {

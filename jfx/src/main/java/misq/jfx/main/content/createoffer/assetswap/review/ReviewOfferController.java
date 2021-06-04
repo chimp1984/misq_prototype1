@@ -18,14 +18,18 @@
 package misq.jfx.main.content.createoffer.assetswap.review;
 
 import lombok.Getter;
+import misq.api.Api;
+import misq.finance.offer.OpenOffers;
 import misq.jfx.common.Controller;
 
 public class ReviewOfferController implements Controller {
+    private final OpenOffers openOffers;
     private ReviewOfferModel model;
     @Getter
     private ReviewOfferView view;
 
-    public ReviewOfferController() {
+    public ReviewOfferController(Api api) {
+        openOffers = api.getOpenOffers();
     }
 
     @Override
@@ -40,5 +44,13 @@ public class ReviewOfferController implements Controller {
 
     @Override
     public void onViewRemoved() {
+    }
+
+    public void setAskValue(String value) {
+        model.setAskValue(value);
+    }
+
+    public void onPublish() {
+        openOffers.createNewOffer(model.askAmount);
     }
 }

@@ -18,14 +18,83 @@
 package misq.jfx.main.content.createoffer.assetswap.review;
 
 import javafx.scene.control.Label;
-import javafx.scene.layout.StackPane;
+import javafx.scene.control.TextField;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.VBox;
+import misq.common.util.Tuple2;
 import misq.jfx.common.View;
+import misq.jfx.components.controls.AutoTooltipButton;
+import misq.jfx.components.controls.AutoTooltipLabel;
+import misq.jfx.components.controls.MisqTextField;
 
-public class ReviewOfferView extends View<StackPane, ReviewOfferModel, ReviewOfferController> {
+public class ReviewOfferView extends View<VBox, ReviewOfferModel, ReviewOfferController> {
+
+    private GridPane gridPane;
+    private TextField askTextField;
+    private AutoTooltipButton publishButton;
 
     public ReviewOfferView(ReviewOfferModel model, ReviewOfferController controller) {
-        super(new StackPane(), model, controller);
+        super(new VBox(), model, controller);
+    }
 
-        root.getChildren().add(new Label(this.getClass().getSimpleName()));
+    protected void setupView() {
+        root.setSpacing(20);
+        Label header = new AutoTooltipLabel("Review offer");
+        gridPane = new GridPane();
+        gridPane.setHgap(10);
+        gridPane.setVgap(10);
+
+        int rowIndex = 0;
+        askTextField = addRow(rowIndex, "I want (ask):", "").second;
+
+        publishButton = new AutoTooltipButton("Publish");
+        root.getChildren().addAll(header, gridPane, publishButton);
+    }
+
+    private Tuple2<Label, TextField> addRow(int rowIndex, String key, String value) {
+        Label keyLabel = new AutoTooltipLabel(key);
+        GridPane.setRowIndex(keyLabel, rowIndex);
+
+        TextField valueTextField = new MisqTextField(value);
+        GridPane.setRowIndex(valueTextField, rowIndex);
+        GridPane.setColumnIndex(valueTextField, 1);
+
+        gridPane.getChildren().addAll(keyLabel, valueTextField);
+        return new Tuple2<>(keyLabel, valueTextField);
+    }
+
+    protected void configModel() {
+        askTextField.textProperty().bindBidirectional(model.formattedAskAmount);
+    }
+
+    protected void configController() {
+    /*    ChangeListener<String> listener = new ChangeListener<>() {
+            @Override
+            public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue) {
+                controller.setAskValue(newValue);
+            }
+        };
+        askTextField.focusedProperty().addListener(new ChangeListener<Boolean>() {
+            @Override
+            public void changed(ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue) {
+                if (!oldValue && newValue) {
+                    askTextField.textProperty().unbind();
+                    askTextField.textProperty().addListener(listener);
+
+                } else {
+                    askTextField.textProperty().bind(model.formattedAskAmount);
+                    askTextField.textProperty().removeListener(listener);
+                }
+            }
+        });
+*/
+
+        publishButton.setOnAction(e -> controller.onPublish());
+    }
+
+    protected void onAddedToStage() {
+    }
+
+    protected void onRemovedFromStage() {
     }
 }

@@ -21,6 +21,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
 import misq.jfx.common.View;
+import misq.jfx.components.controls.AutoTooltipLabel;
 
 public class MarketsView extends View<HBox, MarketsModel, MarketsController> {
     private final Label label;
@@ -30,7 +31,7 @@ public class MarketsView extends View<HBox, MarketsModel, MarketsController> {
         super(new HBox(), model, controller);
 
         root.setSpacing(20);
-        label = new Label();
+        label = new AutoTooltipLabel();
         button = new Button("Update price");
         root.getChildren().addAll(label, button);
 

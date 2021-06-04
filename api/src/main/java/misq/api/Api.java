@@ -17,19 +17,60 @@
 
 package misq.api;
 
+import io.reactivex.rxjava3.subjects.PublishSubject;
 import lombok.Getter;
 import misq.finance.offer.OfferbookRepository;
+import misq.finance.offer.OpenOffers;
 import misq.marketprice.MarketPriceService;
+import misq.p2p.MockNetworkService;
+import misq.presentation.offer.OfferEntity;
+import misq.presentation.offer.OfferbookEntity;
+
+import java.util.List;
 
 @Getter
 public class Api {
-    private final OfferbookRepository.MockNetworkService networkService;
+    private final MockNetworkService networkService;
     private final OfferbookRepository offerbookRepository;
     private final MarketPriceService marketPriceService;
+    private final OpenOffers openOffers;
+    private final OfferbookEntity offerbookEntity;
+
 
     public Api() {
-        networkService = new OfferbookRepository.MockNetworkService();
+        networkService = new MockNetworkService();
         offerbookRepository = new OfferbookRepository(networkService);
         marketPriceService = new MarketPriceService();
+        openOffers = new OpenOffers(networkService);
+
+        offerbookEntity = new OfferbookEntity(offerbookRepository, marketPriceService);
+        offerbookEntity.initialize();
+        offerbookEntity.activate();
+    }
+
+    /**
+     * @return Provides the list of OfferEntity of the offerbookEntity.
+     * <p>
+     * An OfferEntity wraps the Offer domain object and augment it with presentation fields and dynamically
+     * updated fields like market based prices and amounts.
+     */
+    public List<OfferEntity> getOfferEntities() {
+        return offerbookEntity.getOfferEntities();
+    }
+
+    /**
+     * @return The PublishSubject for subscribing on OfferEntity added events.
+     * The subscriber need to take care of dispose calls once inactive.
+     */
+    public PublishSubject<OfferEntity> getOfferEntityAddedSubject() {
+        return offerbookEntity.getOfferEntityAddedSubject();
+    }
+
+    /**
+     * @return The PublishSubject for subscribing on OfferEntity removed events.
+     * The subscriber need to take care of dispose calls once inactive.
+     */
+    public PublishSubject<OfferEntity> getOfferEntityRemovedSubject() {
+        return offerbookEntity.getOfferEntityRemovedSubject();
     }
 }

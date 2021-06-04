@@ -19,11 +19,11 @@ package misq.jfx.main.content.offerbook.details;
 
 import javafx.geometry.Bounds;
 import javafx.scene.Scene;
-import javafx.scene.control.Label;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 import lombok.extern.slf4j.Slf4j;
 import misq.jfx.common.View;
+import misq.jfx.components.controls.AutoTooltipLabel;
 
 @Slf4j
 public class OfferDetailsView extends View<StackPane, OfferDetailsModel, OfferDetailsController> {
@@ -34,7 +34,7 @@ public class OfferDetailsView extends View<StackPane, OfferDetailsModel, OfferDe
         super(new StackPane(), model, controller);
         this.boundsInParent = boundsInParent;
 
-        root.getChildren().add(new Label(model.getItem().toString()));
+        root.getChildren().add(new AutoTooltipLabel(model.getItem().toString()));
     }
 
     protected void onAddedToStage() {

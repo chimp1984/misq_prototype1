@@ -19,19 +19,14 @@ package misq.finance.offer;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import misq.account.FiatTransferType;
-import misq.account.TransferType;
-import misq.finance.Asset;
-import misq.finance.contract.AssetTransfer;
-import misq.finance.swap.SwapProtocolType;
-import misq.finance.swap.offer.SwapOffer;
-import misq.p2p.Address;
-import misq.p2p.NetworkId;
+import misq.p2p.MockNetworkService;
+import misq.p2p.NetworkService;
 
-import java.util.*;
+import java.io.Serializable;
+import java.util.List;
+import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CopyOnWriteArraySet;
-import java.util.stream.Collectors;
 
 @Slf4j
 public class OfferbookRepository {
@@ -50,25 +45,29 @@ public class OfferbookRepository {
     public OfferbookRepository(NetworkService networkService) {
         this.networkService = networkService;
 
-        offers.addAll(networkService.getData().values());
+
+        offers.addAll(MockOfferBuilder.makeOffers().values());
 
         networkService.addListener(new MockNetworkService.Listener() {
             @Override
-            public void onOfferAdded(Offer offer) {
-                offers.add(offer);
-                listeners.forEach(listener -> listener.onOfferAdded(offer));
+            public void onDataAdded(Serializable serializable) {
+                if (serializable instanceof Offer) {
+                    Offer offer = (Offer) serializable;
+                    offers.add(offer);
+                    listeners.forEach(listener -> listener.onOfferAdded(offer));
+                }
             }
 
             @Override
-            public void onOfferRemoved(Offer offer) {
-                offers.remove(offer);
-                listeners.forEach(listener -> listener.onOfferRemoved(offer));
+            public void onDataRemoved(Serializable serializable) {
+                if (serializable instanceof Offer) {
+                    Offer offer = (Offer) serializable;
+                    offers.remove(offer);
+                    listeners.forEach(listener -> listener.onOfferRemoved(offer));
+                }
+
             }
         });
-    }
-
-    public List<Offer> getOffers(List<String> offerIds) {
-        return offers.stream().filter(e -> e.getId().equals(offerIds)).collect(Collectors.toList());
     }
 
     public void addListener(Listener listener) {
@@ -79,144 +78,4 @@ public class OfferbookRepository {
         listeners.remove(listener);
     }
 
-    public static class MockNetworkService implements NetworkService {
-        public interface Listener {
-            void onOfferAdded(Offer offer);
-
-            void onOfferRemoved(Offer offer);
-        }
-
-        private final Set<Listener> listeners = new CopyOnWriteArraySet<>();
-        @Getter
-        private final Map<String, Offer> data = new HashMap<>();
-
-        public MockNetworkService() {
-            for (int i = 0; i < 10; i++) {
-                Offer offer = getRandomOffer();
-                data.put(offer.getId(), offer);
-            }
-
-           /* new Timer().scheduleAtFixedRate(new TimerTask() {
-                @Override
-                public void run() {
-                    int toggle = new Random().nextInt(2);
-                    if (toggle == 0) {
-                        int iter = new Random().nextInt(3);
-                        for (int i = 0; i < iter; i++) {
-                            Offer offer = getRandomOffer();
-                            data.put(offer.getId(), offer);
-                            listeners.forEach(l -> l.onOfferAdded(offer));
-                        }
-                    } else {
-                        int iter2 = new Random().nextInt(2);
-                        for (int i = 0; i < iter2; i++) {
-                            if (!data.isEmpty()) {
-                                Offer offerToRemove = getOfferToRemove();
-                                data.remove(offerToRemove.getId());
-                                listeners.forEach(l -> l.onOfferRemoved(offerToRemove));
-                            }
-                        }
-                    }
-                }
-            }, 0, 500);*/
-        }
-
-        @Override
-        public void addListener(Listener listener) {
-            listeners.add(listener);
-        }
-
-        @Override
-        public void removeListener(Listener listener) {
-            listeners.remove(listener);
-        }
-
-        private Offer getRandomOffer() {
-            Asset askAsset;
-            Asset bidAsset;
-            Optional<Double> marketBasedPrice = Optional.empty();
-            Optional<Double> minAmountAsPercentage = Optional.empty();
-            String baseCurrency;
-            //  int rand = new Random().nextInt(3);
-            int rand = new Random().nextInt(2);
-            //  rand = 0;
-            if (rand == 0) {
-                long usdAmount = new Random().nextInt(1000) + 500000000; // precision 4 / 50k usd
-                long btcAmount = new Random().nextInt(100000000) + 100000000; // precision 8 / 1 btc
-                //  usdAmount = 500000000; // precision 4 / 50k usd
-                //   btcAmount = 100000000; // precision 8 / 1 btc
-                askAsset = getRandomAsset("USD", usdAmount);
-                bidAsset = getRandomAsset("BTC", btcAmount);
-                baseCurrency = "BTC";
-                marketBasedPrice = Optional.of(0.3d + new Random().nextInt(100) / 100d);
-                minAmountAsPercentage = new Random().nextBoolean() ? Optional.empty() : Optional.of(0.1);
-                // minAmountAsPercentage = Optional.empty();
-            } else if (rand == 1) {
-                long usdAmount = new Random().nextInt(1000) + 600000000; // precision 4 / 50k usd
-                long btcAmount = new Random().nextInt(100000000) + 110000000; // precision 8 / 1 btc
-                // usdAmount = 600000000; // precision 4 / 50k usd
-                //  btcAmount = 120000000; // precision 8 / 1 btc
-                askAsset = getRandomAsset("BTC", btcAmount);
-                bidAsset = getRandomAsset("USD", usdAmount);
-                baseCurrency = "BTC";
-                marketBasedPrice = Optional.of(0.1d + new Random().nextInt(100) / 100d);
-                minAmountAsPercentage = new Random().nextBoolean() ? Optional.empty() : Optional.of(0.3);
-                // minAmountAsPercentage = Optional.empty();
-            } else if (rand == 2) {
-                long usdAmount = new Random().nextInt(100000) + 1200000; // precision 4 / 120 usd
-                long eurAmount = new Random().nextInt(100000) + 1000000; // precision 4 / 100 eur
-                askAsset = getRandomAsset("USD", usdAmount);
-                bidAsset = getRandomAsset("EUR", eurAmount);
-                baseCurrency = "USD";
-
-            } else {
-                // ignore for now as fiat/altcoins calculations not supported and only one market price
-                long btcAmount = new Random().nextInt(10000000) + 100000000; // precision 8 / 1 btc //0.007144 BTC
-                long xmrAmount = new Random().nextInt(10000000) + 13800000000L; // precision 8 / 138 xmr
-                bidAsset = getRandomAsset("BTC", btcAmount);
-                askAsset = getRandomAsset("XMR", xmrAmount);
-                baseCurrency = "XMR";
-                marketBasedPrice = Optional.of(-0.02);
-                minAmountAsPercentage = Optional.of(0.8);
-            }
-            List<SwapProtocolType> protocolTypes = new ArrayList<>();
-            rand = new Random().nextInt(3);
-            for (int i = 0; i < rand; i++) {
-                SwapProtocolType swapProtocolType = SwapProtocolType.values()[new Random().nextInt(SwapProtocolType.values().length)];
-                protocolTypes.add(swapProtocolType);
-            }
-            NetworkId makerNetworkId = new NetworkId(Address.localHost(1000 + new Random().nextInt(1000)), null, "default");
-
-            Optional<DisputeResolutionOptions> disputeResolutionOptions = Optional.empty();
-            Optional<FeeOptions> feeOptions = Optional.empty();
-            ReputationProof accountCreationDateProof = new AccountCreationDateProof("hashOfAccount", "otsProof)");
-            Optional<ReputationOptions> reputationOptions = Optional.of(new ReputationOptions(Set.of(accountCreationDateProof)));
-            Optional<TransferOptions> transferOptions = new Random().nextBoolean() ?
-                    Optional.of(new TransferOptions("USA", "HSBC")) :
-                    new Random().nextBoolean() ? Optional.of(new TransferOptions("DE", "N26")) :
-                            Optional.empty();
-            return new SwapOffer(bidAsset, askAsset, baseCurrency, protocolTypes, makerNetworkId,
-                    marketBasedPrice, minAmountAsPercentage,
-                    disputeResolutionOptions, feeOptions, reputationOptions, transferOptions);
-        }
-
-        private Asset getRandomAsset(String code, long amount) {
-            AssetTransfer.Type assetTransferType = new Random().nextBoolean() ? AssetTransfer.Type.AUTOMATIC : AssetTransfer.Type.MANUAL;
-            List<TransferType> transferTypes = List.of(FiatTransferType.values()[new Random().nextInt(FiatTransferType.values().length)]);
-            return new Asset(code, amount, transferTypes, assetTransferType);
-        }
-
-        private Offer getOfferToRemove() {
-            int index = new Random().nextInt(data.size());
-            return new ArrayList<>(data.values()).get(index);
-        }
-    }
-
-    public static interface NetworkService {
-        void addListener(MockNetworkService.Listener listener);
-
-        void removeListener(MockNetworkService.Listener listener);
-
-        Map<String, Offer> getData();
-    }
 }

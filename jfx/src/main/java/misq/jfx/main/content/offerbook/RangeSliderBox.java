@@ -20,6 +20,7 @@ package misq.jfx.main.content.offerbook;
 import javafx.scene.control.Label;
 import javafx.scene.layout.Pane;
 import lombok.extern.slf4j.Slf4j;
+import misq.jfx.components.controls.AutoTooltipLabel;
 import org.controlsfx.control.RangeSlider;
 
 // Sub view which is using a custom sub model
@@ -31,11 +32,11 @@ public class RangeSliderBox extends Pane {
     public RangeSliderBox(String title, int width, OfferbookModel model, OfferbookController controller) {
         setPrefWidth(width);
 
-        titleLabel = new Label(title);
-        minLabel = new Label("Min");
-        maxLabel = new Label("Max");
-        lowLabel = new Label("lowLabel");
-        highLabel = new Label("highLabel");
+        titleLabel = new AutoTooltipLabel(title);
+        minLabel = new AutoTooltipLabel("Min");
+        maxLabel = new AutoTooltipLabel("Max");
+        lowLabel = new AutoTooltipLabel("lowLabel");
+        highLabel = new AutoTooltipLabel("highLabel");
         slider = new RangeSlider(0, 100, 0, 100);
         slider.setShowTickLabels(false);
         slider.setShowTickMarks(false);

@@ -247,25 +247,27 @@ configure(project(':i18n')) {
     }
 }
 
-configure(project(':api')) {
+configure(project(':presentation')) {
     dependencies {
         implementation project(':common')
         implementation project(':i18n')
+        implementation project(':p2p')
         implementation project(':finance')
+        implementation group: 'io.reactivex.rxjava3', name: 'rxjava', version: '3.0.12'
     }
     test {
         exclude '**/**Integration*'
     }
 }
 
-configure(project(':presentation')) {
+configure(project(':api')) {
     dependencies {
         implementation project(':common')
         implementation project(':i18n')
+        implementation project(':p2p')
         implementation project(':finance')
-        implementation project(':api')
-
-        implementation "org.openjfx:javafx-base:$javafxVersion:$os"
+        implementation project(':presentation')
+        implementation group: 'io.reactivex.rxjava3', name: 'rxjava', version: '3.0.12'
     }
     test {
         exclude '**/**Integration*'
@@ -279,6 +281,7 @@ configure(project(':jfx')) {
         implementation project(':finance')
         implementation project(':presentation')
         implementation project(':api')
+
         implementation "org.openjfx:javafx-base:$javafxVersion:$os"
         implementation "org.openjfx:javafx-graphics:$javafxVersion:$os"
         implementation "org.openjfx:javafx-controls:$javafxVersion:$os"
@@ -289,6 +292,7 @@ configure(project(':jfx')) {
         compile "de.jensd:fontawesomefx-materialdesignfont:$fontawesomefxMaterialdesignfontVersion"
         implementation group: 'org.controlsfx', name: 'controlsfx', version: '11.1.0'
 
+        implementation group: 'io.reactivex.rxjava3', name: 'rxjava', version: '3.0.12'
     }
 }
 

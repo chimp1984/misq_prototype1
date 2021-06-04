@@ -31,8 +31,8 @@ import java.util.List;
 import java.util.Optional;
 
 @Slf4j
-public class OfferFormatter {
-    public static String formatAmountWithMinAmount(long amount, Optional<Double> minAmountAsPercentage, String currencyCode) {
+class OfferFormatter {
+    static String formatAmountWithMinAmount(long amount, Optional<Double> minAmountAsPercentage, String currencyCode) {
         String minAmountString = minAmountAsPercentage
                 .map(e -> Math.round(amount * e))
                 .map(e -> AmountFormatter.formatAmount(e, currencyCode) + " - ")
@@ -40,31 +40,31 @@ public class OfferFormatter {
         return minAmountString + formatAmount(amount, currencyCode);
     }
 
-    public static String formatAmount(long amount, String currencyCode) {
+    static String formatAmount(long amount, String currencyCode) {
         return AmountFormatter.formatAmount(amount, currencyCode);
     }
 
-    public static String formatDate(long date) {
+    static String formatDate(long date) {
         return DateFormatter.formatDateTime(new Date(date));
     }
 
-    public static String formatProtocolTypes(List<? extends ProtocolType> protocolTypes) {
+    static String formatProtocolTypes(List<? extends ProtocolType> protocolTypes) {
         return protocolTypes.toString();
     }
 
-    public static String formatReputationOptions(Optional<ReputationOptions> reputationOptions) {
+    static String formatReputationOptions(Optional<ReputationOptions> reputationOptions) {
         return reputationOptions.toString();
     }
 
-    public static String formatTransferOptions(Optional<TransferOptions> transferOptions) {
+    static String formatTransferOptions(Optional<TransferOptions> transferOptions) {
         return transferOptions.map(e -> e.getBankName() + " / " + e.getCountyCodeOfBank()).orElse("-");
     }
 
-    public static String formatTransferTypes(List<TransferType> transferTypes) {
+    static String formatTransferTypes(List<TransferType> transferTypes) {
         return transferTypes.toString();
     }
 
-    public static String formatAssetTransferType(AssetTransfer.Type assetTransferType) {
+    static String formatAssetTransferType(AssetTransfer.Type assetTransferType) {
         return assetTransferType.toString();
     }
 }

@@ -18,7 +18,28 @@
 package misq.jfx.main.content.createoffer.assetswap.review;
 
 
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import misq.jfx.common.Model;
 
 public class ReviewOfferModel implements Model {
+    StringProperty formattedAskAmount = new SimpleStringProperty();
+    long askAmount;
+
+    public void setAskValue(String value) {
+        formattedAskAmount.set(value);
+        askAmount = Long.parseLong(value) * 10000000;
+    }
+
+    public ReviewOfferModel() {
+        formattedAskAmount.addListener(new ChangeListener<String>() {
+            @Override
+            public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue) {
+                askAmount = Long.parseLong(newValue) * 10000000;
+                formattedAskAmount.set(String.valueOf(askAmount / 10000000));
+            }
+        });
+    }
 }

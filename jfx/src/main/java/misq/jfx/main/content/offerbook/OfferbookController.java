@@ -17,25 +17,19 @@
 
 package misq.jfx.main.content.offerbook;
 
-import javafx.application.Platform;
 import javafx.geometry.Bounds;
 import lombok.Getter;
 import misq.api.Api;
-import misq.finance.offer.Offer;
-import misq.finance.offer.OfferbookRepository;
-import misq.finance.swap.offer.SwapOffer;
 import misq.jfx.common.Controller;
 import misq.jfx.main.content.ContentViewController;
 import misq.jfx.main.content.createoffer.CreateOfferController;
 import misq.jfx.main.content.offerbook.details.OfferDetailsController;
 import misq.jfx.overlay.OverlayController;
-import misq.marketprice.MarketPriceService;
-import misq.presentation.offer.OfferListItem;
 
 // As all controllers are created we do not do anything in the constructors beside assigning fields.
 // initialize starts  MVC group up. onViewAdded is called when the view got added to the stage.
 // onViewRemoved when the view got removed from the stage.
-public class OfferbookController implements MarketPriceService.Listener, OfferbookRepository.Listener, Controller {
+public class OfferbookController implements Controller {
     private OfferbookModel model;
     @Getter
     private OfferbookView view;
@@ -52,49 +46,21 @@ public class OfferbookController implements MarketPriceService.Listener, Offerbo
 
     @Override
     public void initialize() {
-        this.model = new OfferbookModel(api);
+        model = new OfferbookModel(api.getOfferbookRepository(), api.getMarketPriceService());
         model.initialize();
-        this.view = new OfferbookView(model, this);
+        view = new OfferbookView(model, this);
     }
 
     @Override
     public void onViewAdded() {
         model.activate();
-        api.getMarketPriceService().addListener(this);
-        api.getOfferbookRepository().addListener(this);
 
-        Platform.runLater(() -> onCreateOffer());
+        // Platform.runLater(() -> onCreateOffer());
     }
 
     @Override
     public void onViewRemoved() {
-        api.getMarketPriceService().removeListener(this);
-        api.getOfferbookRepository().removeListener(this);
         model.deactivate();
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-    // Domain events
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-
-    @Override
-    public void onOfferAdded(Offer offer) {
-        if (offer instanceof SwapOffer) {
-            model.addOffer((SwapOffer) offer);
-        }
-    }
-
-    @Override
-    public void onOfferRemoved(Offer offer) {
-        if (offer instanceof SwapOffer) {
-            model.removeOffer((SwapOffer) offer);
-        }
-    }
-
-    @Override
-    public void onMarketPriceChanged(double marketPrice) {
-        model.setMarketPrice(marketPrice);
     }
 
 
@@ -111,11 +77,11 @@ public class OfferbookController implements MarketPriceService.Listener, Offerbo
     }
 
     public void onFlipCurrencies() {
-        model.reset();
+        model.resetFilter();
     }
 
     public void onCreateOffer() {
-        overlayController.show(new CreateOfferController());
+        overlayController.show(new CreateOfferController(api));
     }
 
     public void onTakeOffer(OfferListItem item) {

@@ -17,8 +17,8 @@
 
 package misq.jfx.main.content;
 
-import javafx.scene.control.Label;
 import javafx.scene.layout.StackPane;
+import misq.jfx.components.controls.AutoTooltipLabel;
 
 public class Dummy {
 
@@ -47,7 +47,7 @@ public class Dummy {
     public static class View extends misq.jfx.common.View<StackPane, Model, Controller> {
         public View(String label) {
             super(new StackPane(), new Model(), new Controller());
-            root.getChildren().add(new Label(label));
+            root.getChildren().add(new AutoTooltipLabel(label));
         }
     }
 }

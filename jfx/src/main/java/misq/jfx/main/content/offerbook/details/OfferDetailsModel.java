@@ -23,7 +23,7 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import lombok.Getter;
 import misq.jfx.common.Model;
-import misq.presentation.offer.OfferListItem;
+import misq.jfx.main.content.offerbook.OfferListItem;
 
 @Getter
 public class OfferDetailsModel implements Model {

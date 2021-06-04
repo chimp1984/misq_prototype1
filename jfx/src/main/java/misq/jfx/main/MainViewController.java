@@ -44,7 +44,9 @@ public class MainViewController implements Controller {
 
             ContentViewController contentViewController = new ContentViewController(api, overlayController);
             contentViewController.initialize();
-            NavigationViewController navigationViewController = new NavigationViewController(contentViewController, overlayController);
+            NavigationViewController navigationViewController = new NavigationViewController(api,
+                    contentViewController,
+                    overlayController);
             navigationViewController.initialize();
             TopPanelController topPanelController = new TopPanelController();
             topPanelController.initialize();

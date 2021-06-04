@@ -33,11 +33,7 @@ import javafx.scene.text.TextAlignment;
 import javafx.util.Callback;
 import lombok.extern.slf4j.Slf4j;
 import misq.jfx.common.View;
-import misq.jfx.components.controls.AutoTooltipButton;
-import misq.jfx.components.controls.AutoTooltipSlideToggleButton;
-import misq.jfx.components.controls.AutoTooltipTableColumn;
-import misq.jfx.components.controls.AutocompleteComboBox;
-import misq.presentation.offer.OfferListItem;
+import misq.jfx.components.controls.*;
 
 import java.util.Comparator;
 import java.util.Optional;
@@ -74,7 +70,7 @@ public class OfferbookView extends View<VBox, OfferbookModel, OfferbookControlle
 
     @Override
     protected void setupView() {
-        Label askCurrencyLabel = new Label("I want (ask):");
+        Label askCurrencyLabel = new AutoTooltipLabel("I want (ask):");
         askCurrencyLabel.setPadding(new Insets(4, 8, 0, 0));
 
         askCurrencyComboBox = new AutocompleteComboBox<>();
@@ -82,7 +78,7 @@ public class OfferbookView extends View<VBox, OfferbookModel, OfferbookControlle
 
         flipButton = new AutoTooltipButton("<- Flip ->");
 
-        Label bidCurrencyLabel = new Label("I give (bid):");
+        Label bidCurrencyLabel = new AutoTooltipLabel("I give (bid):");
         bidCurrencyLabel.setPadding(new Insets(4, 8, 0, 60));
         bidCurrencyComboBox = new AutocompleteComboBox<>();
         bidCurrencyComboBox.getEditor().getStyleClass().add("combo-box-editor-bold");
@@ -116,10 +112,10 @@ public class OfferbookView extends View<VBox, OfferbookModel, OfferbookControlle
         VBox.setVgrow(tableView, Priority.ALWAYS);
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
 
-        addValueColumn("Offered amount", OfferListItem::getBaseAmountWithMinAmount, Optional.of(OfferListItem::compareBaseAmount));
-        addPropertyColumn("Price", OfferListItem::getPrice, Optional.of(OfferListItem::comparePrice));
-        addPropertyColumn("Amount to pay", OfferListItem::getQuoteAmount, Optional.of(OfferListItem::compareQuoteAmount));
-        addValueColumn("Details", OfferListItem::getTransferOptions, Optional.empty());
+        addValueColumn("Offered amount", OfferListItem::getFormattedBaseAmountWithMinAmount, Optional.of(OfferListItem::compareBaseAmount));
+        addPropertyColumn("Price", OfferListItem::getPriceProperty, Optional.of(OfferListItem::comparePrice));
+        addPropertyColumn("Amount to pay", OfferListItem::getQuoteAmountProperty, Optional.of(OfferListItem::compareQuoteAmount));
+        addValueColumn("Details", OfferListItem::getFormattedTransferOptions, Optional.empty());
         addMakerColumn("Maker");
         addTakeOfferColumn("");
 
@@ -128,17 +124,17 @@ public class OfferbookView extends View<VBox, OfferbookModel, OfferbookControlle
 
     @Override
     protected void configModel() {
-        askCurrencyComboBox.setAutocompleteItems(model.getCurrencies());
-        askCurrencyComboBox.getSelectionModel().select(model.getSelectedAskCurrency().get());
+        askCurrencyComboBox.setAutocompleteItems(model.getCurrenciesProperty());
+        askCurrencyComboBox.getSelectionModel().select(model.getSelectedAskCurrencyProperty().get());
 
-        bidCurrencyComboBox.setAutocompleteItems(model.getCurrencies());
-        bidCurrencyComboBox.getSelectionModel().select(model.getSelectedBidCurrency().get());
+        bidCurrencyComboBox.setAutocompleteItems(model.getCurrenciesProperty());
+        bidCurrencyComboBox.getSelectionModel().select(model.getSelectedBidCurrencyProperty().get());
 
         amountPriceFilterBox.visibleProperty().bind(model.getAmountFilterModel().getVisible());
         showAmountPriceFilterToggle.selectedProperty().bind(model.getAmountFilterModel().getVisible());
 
         model.getSortedItems().comparatorProperty().bind(tableView.comparatorProperty());
-        model.getMarketPrice().addListener(observable -> tableView.sort());
+        model.getMarketPriceProperty().addListener(observable -> tableView.sort());
         tableView.setItems(model.getSortedItems());
         tableView.sort();
     }
@@ -295,15 +291,15 @@ public class OfferbookView extends View<VBox, OfferbookModel, OfferbookControlle
                                 super.updateItem(item, empty);
                                 if (item != null && !empty) {
                                     if (previousItem != null) {
-                                        previousItem.isVisible(false);
+                                        previousItem.deactivate();
                                     }
                                     previousItem = item;
 
-                                    item.isVisible(true);
+                                    item.activate();
                                     textProperty().bind(valueSupplier.apply(item));
                                 } else {
                                     if (previousItem != null) {
-                                        previousItem.isVisible(false);
+                                        previousItem.deactivate();
                                         previousItem = null;
                                     }
                                     textProperty().unbind();
