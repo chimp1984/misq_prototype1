@@ -17,9 +17,9 @@
 
 package misq.presentation.offer;
 
+import io.reactivex.rxjava3.disposables.Disposable;
 import io.reactivex.rxjava3.subjects.PublishSubject;
 import lombok.extern.slf4j.Slf4j;
-import misq.finance.offer.Offer;
 import misq.finance.offer.OfferbookRepository;
 import misq.finance.swap.offer.SwapOffer;
 import misq.marketprice.MarketPriceService;
@@ -29,14 +29,13 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Collectors;
 
 @Slf4j
-public class OfferbookEntity implements OfferbookRepository.Listener {
+public class OfferbookEntity {
     protected final MarketPriceService marketPriceService;
     protected final OfferbookRepository offerbookRepository;
     protected final List<OfferEntity> offerEntities = new CopyOnWriteArrayList<>();
     protected final PublishSubject<OfferEntity> offerEntityAddedSubject;
     protected final PublishSubject<OfferEntity> offerEntityRemovedSubject;
-    // protected final BehaviorSubject<Double> marketPriceSubject;
-    private double marketPrice;
+    private Disposable oferAddedDisposable, oferRemovedDisposable;
 
     public OfferbookEntity(OfferbookRepository offerbookRepository, MarketPriceService marketPriceService) {
         this.offerbookRepository = offerbookRepository;
@@ -55,17 +54,31 @@ public class OfferbookEntity implements OfferbookRepository.Listener {
     }
 
     public void activate() {
-        offerbookRepository.addListener(this);
+        oferAddedDisposable = offerbookRepository.getOfferAddedSubject().subscribe(offer -> {
+            offerEntities.stream()
+                    .filter(e -> e.getOffer().equals(offer))
+                    .findAny()
+                    .ifPresent(offerEntity -> {
+                        offerEntities.remove(offerEntity);
+                        offerEntityRemovedSubject.onNext(offerEntity);
+                    });
+        });
+        oferRemovedDisposable = offerbookRepository.getOfferRemovedSubject().subscribe(offer -> {
+            if (offer instanceof SwapOffer) {
+                OfferEntity offerEntity = new OfferEntity((SwapOffer) offer, marketPriceService.getMarketPriceSubject());
+                offerEntities.add(offerEntity);
+                offerEntityAddedSubject.onNext(offerEntity);
+            }
+        });
 
         offerEntities.addAll(offerbookRepository.getOffers().stream()
                 .map(offer -> new OfferEntity((SwapOffer) offer, marketPriceService.getMarketPriceSubject()))
                 .collect(Collectors.toList()));
-
-        this.marketPrice = marketPriceService.getMarketPrice();
     }
 
     public void deactivate() {
-        offerbookRepository.removeListener(this);
+        oferAddedDisposable.dispose();
+        oferRemovedDisposable.dispose();
     }
 
     public List<OfferEntity> getOfferEntities() {
@@ -78,31 +91,5 @@ public class OfferbookEntity implements OfferbookRepository.Listener {
 
     public PublishSubject<OfferEntity> getOfferEntityRemovedSubject() {
         return offerEntityRemovedSubject;
-    }
-
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-    // Internal
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-
-    @Override
-    public void onOfferAdded(Offer offer) {
-        if (offer instanceof SwapOffer) {
-            OfferEntity offerEntity = new OfferEntity((SwapOffer) offer, marketPriceService.getMarketPriceSubject());
-            offerEntities.add(offerEntity);
-            offerEntityAddedSubject.onNext(offerEntity);
-        }
-    }
-
-    @Override
-    public void onOfferRemoved(Offer offer) {
-        offerEntities.stream()
-                .filter(e -> e.getOffer().equals(offer))
-                .findAny()
-                .ifPresent(offerEntity -> {
-                    offerEntities.remove(offerEntity);
-                    offerEntityRemovedSubject.onNext(offerEntity);
-                });
     }
 }

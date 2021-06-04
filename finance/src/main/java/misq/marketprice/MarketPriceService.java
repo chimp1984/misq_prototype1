@@ -29,17 +29,9 @@ import java.util.concurrent.TimeUnit;
 
 @Slf4j
 public class MarketPriceService {
-
     @Getter
     private double marketPrice;
     protected final BehaviorSubject<Double> marketPriceSubject;
-
-    public CompletableFuture<Integer> requestPriceUpdate() {
-        CompletableFuture<Integer> future = new CompletableFuture<>();
-        CompletableFuture.delayedExecutor(300, TimeUnit.MILLISECONDS)
-                .execute(() -> future.complete(new Random().nextInt(5000000)));
-        return future;
-    }
 
     public MarketPriceService() {
         marketPriceSubject = BehaviorSubject.create();
@@ -53,6 +45,17 @@ public class MarketPriceService {
                 // log.error("price update {}", marketPrice);
             }
         }, 0, 1000);
+    }
+
+    public void initialize() {
+
+    }
+
+    public CompletableFuture<Integer> requestPriceUpdate() {
+        CompletableFuture<Integer> future = new CompletableFuture<>();
+        CompletableFuture.delayedExecutor(300, TimeUnit.MILLISECONDS)
+                .execute(() -> future.complete(new Random().nextInt(5000000)));
+        return future;
     }
 
     public BehaviorSubject<Double> getMarketPriceSubject() {

@@ -34,6 +34,9 @@ public class OpenOffers {
         this.networkService = networkService;
     }
 
+    public void initialize() {
+    }
+
     public void createNewOffer(long askAmount) {
         NetworkId makerNetworkId = new NetworkId(Address.localHost(3333), null, "default");
         Asset askAsset = new Asset("BTC", askAmount, List.of());

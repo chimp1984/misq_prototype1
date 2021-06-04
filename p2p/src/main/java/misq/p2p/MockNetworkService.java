@@ -39,6 +39,10 @@ public class MockNetworkService implements NetworkService {
     public MockNetworkService() {
     }
 
+    public void initialize() {
+
+    }
+
     public void addData(Serializable serializable) {
         map.put(serializable.toString(), serializable);
         listeners.forEach(e -> e.onDataAdded(serializable));

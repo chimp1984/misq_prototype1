@@ -19,7 +19,7 @@ package misq.presentation.offer;
 
 import io.reactivex.rxjava3.disposables.Disposable;
 import io.reactivex.rxjava3.subjects.BehaviorSubject;
-import misq.common.util.Tuple2;
+import misq.common.util.Couple;
 import misq.finance.swap.offer.SwapOffer;
 import org.jetbrains.annotations.NotNull;
 
@@ -113,7 +113,7 @@ public class OfferEntity implements Comparable<OfferEntity> {
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     protected void updatedPriceAndAmount(double marketPrice) {
-        Tuple2<String, Double> priceTuple = getPriceTuple(offer.getFixPrice(),
+        Couple<String, Double> priceTuple = getPriceTuple(offer.getFixPrice(),
                 offer.getMarketBasedPrice(),
                 marketPrice);
         formattedPrice = priceTuple.first;
@@ -131,7 +131,7 @@ public class OfferEntity implements Comparable<OfferEntity> {
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     // Todo: Just preliminary, might get moved out to a util class in that package
-    private static Tuple2<String, Double> getPriceTuple(double fixPrice, Optional<Double> marketBasedPrice, double marketPrice) {
+    private static Couple<String, Double> getPriceTuple(double fixPrice, Optional<Double> marketBasedPrice, double marketPrice) {
         double percentage;
         double price;
         DecimalFormat df = new DecimalFormat("#.##");
@@ -144,7 +144,7 @@ public class OfferEntity implements Comparable<OfferEntity> {
             price = fixPrice;
         }
         String displayString = df.format(price) + " (" + df.format(percentage * 100) + "%)";
-        return new Tuple2<>(displayString, price);
+        return new Couple<>(displayString, price);
     }
 
     private static String getFormattedQuoteAmount(long baseAmount, Optional<Double> minAmountAsPercentage,

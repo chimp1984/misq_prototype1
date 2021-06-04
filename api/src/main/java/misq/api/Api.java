@@ -37,7 +37,6 @@ public class Api {
     private final OpenOffers openOffers;
     private final OfferbookEntity offerbookEntity;
 
-
     public Api() {
         networkService = new MockNetworkService();
         offerbookRepository = new OfferbookRepository(networkService);
@@ -46,7 +45,14 @@ public class Api {
         offerbookEntity = new OfferbookEntity(offerbookRepository, marketPriceService);
     }
 
+    /**
+     * Initializes all domain objects. Order is relevant.
+     */
     public void initialize() {
+        networkService.initialize();
+        marketPriceService.initialize();
+        offerbookRepository.initialize();
+        openOffers.initialize();
         offerbookEntity.initialize();
     }
 

@@ -17,34 +17,24 @@
 
 package misq.finance.offer;
 
-import lombok.Getter;
+import io.reactivex.rxjava3.subjects.PublishSubject;
 import lombok.extern.slf4j.Slf4j;
 import misq.p2p.MockNetworkService;
 import misq.p2p.NetworkService;
 
 import java.io.Serializable;
 import java.util.List;
-import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.CopyOnWriteArraySet;
 
 @Slf4j
 public class OfferbookRepository {
-    public interface Listener {
-        void onOfferAdded(Offer offer);
-
-        void onOfferRemoved(Offer offer);
-    }
-
-    @Getter
     private final List<Offer> offers = new CopyOnWriteArrayList<>();
-    private final Set<Listener> listeners = new CopyOnWriteArraySet<>();
-
-    private final NetworkService networkService;
+    protected final PublishSubject<Offer> offerAddedSubject;
+    protected final PublishSubject<Offer> offerRemovedSubject;
 
     public OfferbookRepository(NetworkService networkService) {
-        this.networkService = networkService;
-
+        offerAddedSubject = PublishSubject.create();
+        offerRemovedSubject = PublishSubject.create();
 
         offers.addAll(MockOfferBuilder.makeOffers().values());
 
@@ -54,7 +44,7 @@ public class OfferbookRepository {
                 if (serializable instanceof Offer) {
                     Offer offer = (Offer) serializable;
                     offers.add(offer);
-                    listeners.forEach(listener -> listener.onOfferAdded(offer));
+                    offerAddedSubject.onNext(offer);
                 }
             }
 
@@ -63,19 +53,25 @@ public class OfferbookRepository {
                 if (serializable instanceof Offer) {
                     Offer offer = (Offer) serializable;
                     offers.remove(offer);
-                    listeners.forEach(listener -> listener.onOfferRemoved(offer));
+                    offerRemovedSubject.onNext(offer);
                 }
 
             }
         });
     }
 
-    public void addListener(Listener listener) {
-        listeners.add(listener);
+    public void initialize() {
     }
 
-    public void removeListener(Listener listener) {
-        listeners.remove(listener);
+    public List<Offer> getOffers() {
+        return offers;
     }
 
+    public PublishSubject<Offer> getOfferAddedSubject() {
+        return offerAddedSubject;
+    }
+
+    public PublishSubject<Offer> getOfferRemovedSubject() {
+        return offerRemovedSubject;
+    }
 }

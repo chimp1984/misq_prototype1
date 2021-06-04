@@ -21,7 +21,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
-import misq.common.util.Tuple2;
+import misq.common.util.Couple;
 import misq.jfx.common.View;
 import misq.jfx.components.controls.AutoTooltipButton;
 import misq.jfx.components.controls.AutoTooltipLabel;
@@ -51,7 +51,7 @@ public class ReviewOfferView extends View<VBox, ReviewOfferModel, ReviewOfferCon
         root.getChildren().addAll(header, gridPane, publishButton);
     }
 
-    private Tuple2<Label, TextField> addRow(int rowIndex, String key, String value) {
+    private Couple<Label, TextField> addRow(int rowIndex, String key, String value) {
         Label keyLabel = new AutoTooltipLabel(key);
         GridPane.setRowIndex(keyLabel, rowIndex);
 
@@ -60,7 +60,7 @@ public class ReviewOfferView extends View<VBox, ReviewOfferModel, ReviewOfferCon
         GridPane.setColumnIndex(valueTextField, 1);
 
         gridPane.getChildren().addAll(keyLabel, valueTextField);
-        return new Tuple2<>(keyLabel, valueTextField);
+        return new Couple<>(keyLabel, valueTextField);
     }
 
     protected void configModel() {

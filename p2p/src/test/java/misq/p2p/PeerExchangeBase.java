@@ -20,7 +20,7 @@ package misq.p2p;
 import com.google.common.collect.Sets;
 import lombok.extern.slf4j.Slf4j;
 import misq.common.util.OsUtils;
-import misq.common.util.Tuple3;
+import misq.common.util.Triple;
 import misq.p2p.data.storage.Storage;
 import misq.p2p.node.Node;
 import misq.p2p.peers.PeerConfig;
@@ -52,7 +52,7 @@ public class PeerExchangeBase {
     protected int minNumConnectedPeers = 30;
     protected int maxNumConnectedPeers = 40;
     protected int repeatPeerExchangeDelay = 200;
-    protected Map<Integer, Tuple3<PeerExchangeManager, PeerGroup, Node>> tuples;
+    protected Map<Integer, Triple<PeerExchangeManager, PeerGroup, Node>> tuples;
 
 
     // Seed node only, so num connection and num reported will be 0
@@ -320,14 +320,14 @@ public class PeerExchangeBase {
 
     }
 
-    protected CompletableFuture<Tuple3<PeerExchangeManager, PeerGroup, Node>> getTuple(NetworkConfig networkConfig) {
+    protected CompletableFuture<Triple<PeerExchangeManager, PeerGroup, Node>> getTuple(NetworkConfig networkConfig) {
         Node node = new Node(networkConfig);
 
         PeerConfig peerConfig = networkConfig.getPeerConfig();
         PeerGroup peerGroup = new PeerGroup(node, peerConfig, networkConfig.getNodeId().getServerPort());
         DefaultPeerExchangeStrategy peerExchangeStrategy = new DefaultPeerExchangeStrategy(peerGroup, peerConfig);
         return node.initializeServer(networkConfig.getNodeId().getId(), networkConfig.getNodeId().getServerPort())
-                .thenApply(e -> new Tuple3<>(new PeerExchangeManager(node, peerExchangeStrategy), peerGroup, node));
+                .thenApply(e -> new Triple<>(new PeerExchangeManager(node, peerExchangeStrategy), peerGroup, node));
     }
 
     protected void shutDownSeed() {

@@ -19,31 +19,28 @@ package misq.common.util;
 
 import java.util.Objects;
 
-public class Tuple4<A, B, C, D> {
+public class Triple<A, B, C> {
     final public A first;
     final public B second;
     final public C third;
-    final public D fourth;
 
-    public Tuple4(A first, B second, C third, D fourth) {
+    public Triple(A first, B second, C third) {
         this.first = first;
         this.second = second;
         this.third = third;
-        this.fourth = fourth;
     }
 
     @SuppressWarnings("SimplifiableIfStatement")
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof Tuple4)) return false;
+        if (!(o instanceof Triple)) return false;
 
-        Tuple4<?, ?, ?, ?> tuple4 = (Tuple4<?, ?, ?, ?>) o;
+        Triple<?, ?, ?> triple = (Triple<?, ?, ?>) o;
 
-        if (!Objects.equals(first, tuple4.first)) return false;
-        if (!Objects.equals(second, tuple4.second)) return false;
-        if (!Objects.equals(third, tuple4.third)) return false;
-        return Objects.equals(fourth, tuple4.fourth);
+        if (!Objects.equals(first, triple.first)) return false;
+        if (!Objects.equals(second, triple.second)) return false;
+        return Objects.equals(third, triple.third);
 
     }
 
@@ -52,7 +49,6 @@ public class Tuple4<A, B, C, D> {
         int result = first != null ? first.hashCode() : 0;
         result = 31 * result + (second != null ? second.hashCode() : 0);
         result = 31 * result + (third != null ? third.hashCode() : 0);
-        result = 31 * result + (fourth != null ? fourth.hashCode() : 0);
         return result;
     }
 }

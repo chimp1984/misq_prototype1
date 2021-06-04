@@ -17,7 +17,7 @@
 
 package misq.p2p.peers.exchange;
 
-import misq.common.util.Tuple2;
+import misq.common.util.Couple;
 import misq.p2p.Address;
 
 import java.util.List;
@@ -25,9 +25,9 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 public class PeerExchangeGraph {
 
-    private final List<Tuple2<Address, Address>> vectors = new CopyOnWriteArrayList<>();
+    private final List<Couple<Address, Address>> vectors = new CopyOnWriteArrayList<>();
 
     public void add(Address source, Address target) {
-        vectors.add(new Tuple2<>(source, target));
+        vectors.add(new Couple<>(source, target));
     }
 }

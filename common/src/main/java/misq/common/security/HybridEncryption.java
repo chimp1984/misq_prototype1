@@ -18,7 +18,7 @@
 package misq.common.security;
 
 import lombok.extern.slf4j.Slf4j;
-import misq.common.util.Tuple2;
+import misq.common.util.Couple;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
 import javax.crypto.SecretKey;
@@ -53,7 +53,7 @@ public class HybridEncryption {
         byte[] sharedSecret = SymEncryption.generateSharedSecret(senderKeyPair.getPrivate(), receiverPublicKey);
 
         // Use that shared secret to derive the hmacKey and the sessionKey
-        Tuple2<byte[], byte[]> tuple = deriveKeyMaterial(sharedSecret);
+        Couple<byte[], byte[]> tuple = deriveKeyMaterial(sharedSecret);
         SecretKey hmacKey = SymEncryption.generateAESKey(tuple.first);
         SecretKey sessionKey = SymEncryption.generateAESKey(tuple.second);
 
@@ -89,7 +89,7 @@ public class HybridEncryption {
         // Create shared secret with our private key and senders public key
         byte[] sharedSecret = SymEncryption.generateSharedSecret(receiversKeyPair.getPrivate(), senderPublicKey);
 
-        Tuple2<byte[], byte[]> tuple = deriveKeyMaterial(sharedSecret);
+        Couple<byte[], byte[]> tuple = deriveKeyMaterial(sharedSecret);
         SecretKey hmacKey = SymEncryption.generateAESKey(tuple.first);
         SecretKey sessionKey = SymEncryption.generateAESKey(tuple.second);
 
@@ -100,7 +100,7 @@ public class HybridEncryption {
         return SymEncryption.decrypt(cypherText, sessionKey, new IvParameterSpec(iv));
     }
 
-    private static Tuple2<byte[], byte[]> deriveKeyMaterial(byte[] input) {
+    private static Couple<byte[], byte[]> deriveKeyMaterial(byte[] input) {
         // todo causes exceptions as encryption... not clear why
       /*  KDF2BytesGenerator kdf = new KDF2BytesGenerator(new SHA512Digest());
         kdf.init(new KDFParameters(keyInput, iv));
@@ -116,6 +116,6 @@ public class HybridEncryption {
         to = length;
         byte[] sessionKeyBytes = Arrays.copyOfRange(hash, from, to);
 
-        return new Tuple2<>(macKeyBytes, sessionKeyBytes);
+        return new Couple<>(macKeyBytes, sessionKeyBytes);
     }
 }
