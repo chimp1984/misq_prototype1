@@ -26,9 +26,9 @@ import misq.jfx.main.content.createoffer.CreateOfferController;
 import misq.jfx.main.content.offerbook.details.OfferDetailsController;
 import misq.jfx.overlay.OverlayController;
 
-// As all controllers are created we do not do anything in the constructors beside assigning fields.
-// initialize starts  MVC group up. onViewAdded is called when the view got added to the stage.
-// onViewRemoved when the view got removed from the stage.
+// As all controllers in a view hierarchy are created at startup we do not do anything in the constructors beside assigning fields.
+// The initialize() method starts the MVC group. onViewAdded() is called when the view got added to the stage.
+// onViewRemoved() when the view got removed from the stage.
 public class OfferbookController implements Controller {
     private OfferbookModel model;
     @Getter

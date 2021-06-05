@@ -17,7 +17,7 @@
 
 package misq.p2p;
 
-import misq.common.util.ObjectSerializer;
+import misq.common.ObjectSerializer;
 
 import java.io.Serializable;
 

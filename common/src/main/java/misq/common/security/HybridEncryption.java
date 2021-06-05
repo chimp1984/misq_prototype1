@@ -18,7 +18,7 @@
 package misq.common.security;
 
 import lombok.extern.slf4j.Slf4j;
-import misq.common.util.Couple;
+import misq.common.data.Couple;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
 import javax.crypto.SecretKey;

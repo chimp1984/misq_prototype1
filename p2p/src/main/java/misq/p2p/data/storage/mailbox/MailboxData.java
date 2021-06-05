@@ -19,7 +19,7 @@ package misq.p2p.data.storage.mailbox;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import misq.common.util.Hex;
+import misq.common.encoding.Hex;
 import misq.p2p.data.storage.auth.AuthenticatedData;
 
 import java.security.PublicKey;

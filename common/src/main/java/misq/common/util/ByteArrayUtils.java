@@ -20,49 +20,33 @@ package misq.common.util;
 import java.nio.ByteBuffer;
 
 public class ByteArrayUtils {
-  /*  public static byte[] concat(byte[] first, byte[] second) {
-        ByteBuffer byteBuffer = ByteBuffer.allocate(first.length + second.length);
-        byteBuffer.put(first);
-        byteBuffer.put(second);
+
+    public static byte[] concat(byte[]... bytes) {
+        int length = 0;
+        for (byte[] aByte : bytes) {
+            length += aByte.length;
+        }
+        ByteBuffer byteBuffer = ByteBuffer.allocate(length);
+        for (byte[] aByte : bytes) {
+            byteBuffer.put(aByte);
+        }
         return byteBuffer.array();
     }
 
-    public static byte[] concat(byte[] first, byte[] second, byte[] third) {
-        ByteBuffer byteBuffer = ByteBuffer.allocate(first.length + second.length + third.length);
-        byteBuffer.put(first);
-        byteBuffer.put(second);
-        byteBuffer.put(third);
-        return byteBuffer.array();
+    public static byte[] integerToByteArray(int intValue, int numBytes) {
+        byte[] bytes = new byte[numBytes];
+        for (int i = numBytes - 1; i >= 0; i--) {
+            bytes[i] = ((byte) (intValue & 0xFF));
+            intValue >>>= 8;
+        }
+        return bytes;
     }
 
-    public static byte[] concat(byte[] first, byte[] second, byte[] third, byte[] forth) {
-        ByteBuffer byteBuffer = ByteBuffer.allocate(first.length + second.length + third.length + forth.length);
-        byteBuffer.put(first);
-        byteBuffer.put(second);
-        byteBuffer.put(third);
-        byteBuffer.put(forth);
-        return byteBuffer.array();
+    public static int byteArrayToInteger(byte[] bytes) {
+        int result = 0;
+        for (byte aByte : bytes) {
+            result = result << 8 | aByte & 0xff;
+        }
+        return result;
     }
-
-    public static byte[] concat(byte[] first, byte[] second, byte[] third, byte[] forth, byte[] fifth) {
-        ByteBuffer byteBuffer = ByteBuffer.allocate(first.length + second.length + third.length + forth.length + fifth.length);
-        byteBuffer.put(first);
-        byteBuffer.put(second);
-        byteBuffer.put(third);
-        byteBuffer.put(forth);
-        byteBuffer.put(fifth);
-        return byteBuffer.array();
-    }
-*/
-  public static byte[] concat(byte[]... bytes) {
-      int length = 0;
-      for (byte[] aByte : bytes) {
-          length += aByte.length;
-      }
-      ByteBuffer byteBuffer = ByteBuffer.allocate(length);
-      for (byte[] aByte : bytes) {
-          byteBuffer.put(aByte);
-      }
-      return byteBuffer.array();
-  }
 }

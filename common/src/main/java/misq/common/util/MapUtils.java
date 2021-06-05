@@ -17,6 +17,8 @@
 
 package misq.common.util;
 
+import misq.common.Disposable;
+
 import java.util.Map;
 
 public class MapUtils {

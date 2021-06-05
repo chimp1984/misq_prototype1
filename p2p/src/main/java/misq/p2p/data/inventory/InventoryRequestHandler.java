@@ -18,7 +18,7 @@
 package misq.p2p.data.inventory;
 
 import lombok.extern.slf4j.Slf4j;
-import misq.common.util.Disposable;
+import misq.common.Disposable;
 import misq.p2p.data.filter.DataFilter;
 import misq.p2p.message.Message;
 import misq.p2p.node.Connection;

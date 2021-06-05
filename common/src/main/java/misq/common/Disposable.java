@@ -15,16 +15,8 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package misq.common.util;
+package misq.common;
 
-import com.google.common.io.BaseEncoding;
-
-public class Hex {
-    public static byte[] decode(String hex) {
-        return BaseEncoding.base16().lowerCase().decode(hex.toLowerCase());
-    }
-
-    public static String encode(byte[] bytes) {
-        return BaseEncoding.base16().lowerCase().encode(bytes);
-    }
+public interface Disposable {
+    void dispose();
 }

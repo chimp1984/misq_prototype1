@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package misq.common.util;
+package misq.common;
 
 import java.io.*;
 

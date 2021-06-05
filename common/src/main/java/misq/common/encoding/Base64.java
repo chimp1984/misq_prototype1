@@ -15,8 +15,19 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package misq.common.util;
+package misq.common.encoding;
 
-public interface Disposable {
-    void dispose();
+/**
+ * We use Java 8 builtin Base64 because it is much faster than Guava and Apache versions:
+ * http://java-performance.info/base64-encoding-and-decoding-performance/
+ */
+public class Base64 {
+
+    public static byte[] decode(String base64) {
+        return java.util.Base64.getDecoder().decode(base64);
+    }
+
+    public static String encode(byte[] bytes) {
+        return java.util.Base64.getEncoder().encodeToString(bytes);
+    }
 }

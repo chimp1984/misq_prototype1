@@ -19,7 +19,7 @@ package misq.presentation.offer;
 
 import io.reactivex.rxjava3.disposables.Disposable;
 import io.reactivex.rxjava3.subjects.BehaviorSubject;
-import misq.common.util.Couple;
+import misq.common.data.Couple;
 import misq.finance.swap.offer.SwapOffer;
 import org.jetbrains.annotations.NotNull;
 

@@ -18,9 +18,9 @@
 package misq.p2p.confidential;
 
 import lombok.extern.slf4j.Slf4j;
+import misq.common.ObjectSerializer;
 import misq.common.security.ConfidentialData;
 import misq.common.security.HybridEncryption;
-import misq.common.util.ObjectSerializer;
 import misq.p2p.Address;
 import misq.p2p.KeyPairRepository;
 import misq.p2p.NetworkId;

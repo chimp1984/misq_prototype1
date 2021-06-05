@@ -19,8 +19,8 @@ package misq.p2p;
 
 import com.google.common.collect.Sets;
 import lombok.extern.slf4j.Slf4j;
+import misq.common.data.Triple;
 import misq.common.util.OsUtils;
-import misq.common.util.Triple;
 import misq.p2p.data.storage.Storage;
 import misq.p2p.node.Node;
 import misq.p2p.peers.PeerConfig;

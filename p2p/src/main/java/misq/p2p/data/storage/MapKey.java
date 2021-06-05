@@ -19,7 +19,7 @@ package misq.p2p.data.storage;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import misq.common.util.Hex;
+import misq.common.encoding.Hex;
 
 import java.io.Serializable;
 

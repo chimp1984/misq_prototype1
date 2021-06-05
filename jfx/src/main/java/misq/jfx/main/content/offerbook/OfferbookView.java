@@ -67,7 +67,6 @@ public class OfferbookView extends View<VBox, OfferbookModel, OfferbookControlle
         baseAmountSliderBox.onViewRemoved();
     }
 
-
     @Override
     protected void setupView() {
         Label askCurrencyLabel = new AutoTooltipLabel("I want (ask):");
@@ -150,10 +149,7 @@ public class OfferbookView extends View<VBox, OfferbookModel, OfferbookControlle
         });
         askCurrencyComboBox.setOnAction(e -> controller.onSelectAskCurrency(askCurrencyComboBox.getSelectionModel().getSelectedItem()));
         bidCurrencyComboBox.setOnAction(e -> controller.onSelectBidCurrency(bidCurrencyComboBox.getSelectionModel().getSelectedItem()));
-        createOfferButton.setOnAction(e -> {
-            controller.onCreateOffer();
-            // Navigation.navigateTo(MainView.class, CreateOfferView.class);
-        });
+        createOfferButton.setOnAction(e -> controller.onCreateOffer());
     }
 
     private void addMakerColumn(String header) {

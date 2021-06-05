@@ -17,7 +17,7 @@
 
 package misq.p2p.peers.exchange;
 
-import misq.common.util.Couple;
+import misq.common.data.Couple;
 import misq.p2p.Address;
 
 import java.util.List;

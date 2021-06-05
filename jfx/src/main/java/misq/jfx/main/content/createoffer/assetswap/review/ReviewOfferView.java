@@ -21,7 +21,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
-import misq.common.util.Couple;
+import misq.common.data.Couple;
 import misq.jfx.common.View;
 import misq.jfx.components.controls.AutoTooltipButton;
 import misq.jfx.components.controls.AutoTooltipLabel;

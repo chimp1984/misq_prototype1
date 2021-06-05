@@ -20,9 +20,9 @@ package misq.p2p.data.storage.auth;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import misq.common.encoding.Hex;
 import misq.common.security.DigestUtil;
 import misq.common.security.SignatureUtil;
-import misq.common.util.Hex;
 import misq.p2p.data.storage.MetaData;
 
 import java.io.Serializable;

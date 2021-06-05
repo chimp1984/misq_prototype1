@@ -15,32 +15,32 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package misq.common.util;
+package misq.common.data;
 
+import java.io.Serializable;
 import java.util.Objects;
 
-public class Triple<A, B, C> {
+public class Couple<A, B> implements Serializable {
+    private static final long serialVersionUID = 1;
+
     final public A first;
     final public B second;
-    final public C third;
 
-    public Triple(A first, B second, C third) {
+    public Couple(A first, B second) {
         this.first = first;
         this.second = second;
-        this.third = third;
     }
 
     @SuppressWarnings("SimplifiableIfStatement")
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof Triple)) return false;
+        if (!(o instanceof Couple)) return false;
 
-        Triple<?, ?, ?> triple = (Triple<?, ?, ?>) o;
+        Couple<?, ?> couple = (Couple<?, ?>) o;
 
-        if (!Objects.equals(first, triple.first)) return false;
-        if (!Objects.equals(second, triple.second)) return false;
-        return Objects.equals(third, triple.third);
+        if (!Objects.equals(first, couple.first)) return false;
+        return Objects.equals(second, couple.second);
 
     }
 
@@ -48,7 +48,14 @@ public class Triple<A, B, C> {
     public int hashCode() {
         int result = first != null ? first.hashCode() : 0;
         result = 31 * result + (second != null ? second.hashCode() : 0);
-        result = 31 * result + (third != null ? third.hashCode() : 0);
         return result;
+    }
+
+    @Override
+    public String toString() {
+        return "Tuple2{" +
+                "\n     first=" + first +
+                ",\n     second=" + second +
+                "\n}";
     }
 }

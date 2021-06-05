@@ -17,6 +17,8 @@
 
 package misq.common.util;
 
+import java.text.DecimalFormat;
+
 public class StringUtils {
     public static String truncate(String value) {
         return truncate(value, 32);
@@ -24,5 +26,12 @@ public class StringUtils {
 
     public static String truncate(String value, int maxLength) {
         return value.substring(0, Math.min(value.length(), maxLength)) + "...";
+    }
+
+    public static String fileSizePrettyPrint(long size) {
+        if (size <= 0) return "0";
+        String[] units = new String[]{"B", "kB", "MB", "GB", "TB"};
+        int digitGroups = (int) (Math.log10(size) / Math.log10(1024));
+        return new DecimalFormat("#,##0.###").format(size / Math.pow(1024, digitGroups)) + " " + units[digitGroups];
     }
 }

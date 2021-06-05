@@ -19,9 +19,9 @@ package misq.p2p.data.storage.auth;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import misq.common.ObjectSerializer;
 import misq.common.security.DigestUtil;
 import misq.common.security.KeyGeneration;
-import misq.common.util.ObjectSerializer;
 import misq.common.util.OsUtils;
 import misq.p2p.data.filter.FilterItem;
 import misq.p2p.data.filter.ProtectedDataFilter;

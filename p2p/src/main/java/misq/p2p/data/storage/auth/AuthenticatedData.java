@@ -19,8 +19,8 @@ package misq.p2p.data.storage.auth;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import misq.common.util.Hex;
-import misq.common.util.ObjectSerializer;
+import misq.common.ObjectSerializer;
+import misq.common.encoding.Hex;
 
 import java.io.Serializable;
 

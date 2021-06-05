@@ -15,14 +15,24 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package misq.p2p.message;
+package misq.common.util;
 
-import misq.common.ObjectSerializer;
+import lombok.extern.slf4j.Slf4j;
 
-import java.io.Serializable;
+@Slf4j
+public class StatisticsUtils {
+    public static long medianFrom(Long[] list) {
+        if (list.length == 0) {
+            return 0L;
+        }
 
-public interface Message extends Serializable {
-    default byte[] serialize() {
-        return ObjectSerializer.serialize(this);
+        int middle = list.length / 2;
+        long median;
+        if (list.length % 2 == 1) {
+            median = list[middle];
+        } else {
+            median = MathUtils.roundDoubleToLong((list[middle - 1] + list[middle]) / 2.0);
+        }
+        return median;
     }
 }
