@@ -15,14 +15,12 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package misq.jfx.utils;
+package misq.common.timer;
 
-import java.time.Duration;
+public interface MisqTimer {
+    MisqTimer runLater(long delay, Runnable action);
 
-public interface Timer {
-    Timer runLater(Duration delay, Runnable action);
-
-    Timer runPeriodically(Duration interval, Runnable runnable);
+    MisqTimer runPeriodically(long interval, Runnable runnable);
 
     void stop();
 }

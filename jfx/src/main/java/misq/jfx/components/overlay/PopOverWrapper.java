@@ -18,8 +18,8 @@
 package misq.jfx.components.overlay;
 
 
+import misq.common.timer.UserThread;
 import misq.jfx.components.controls.controlsfx.control.PopOver;
-import misq.jfx.utils.UserThread;
 
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;

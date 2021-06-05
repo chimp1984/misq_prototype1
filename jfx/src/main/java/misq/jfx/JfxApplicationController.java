@@ -20,12 +20,12 @@ package misq.jfx;
 import javafx.application.Application;
 import lombok.extern.slf4j.Slf4j;
 import misq.api.Api;
+import misq.common.timer.UserThread;
 import misq.jfx.common.Controller;
 import misq.jfx.common.View;
 import misq.jfx.main.MainViewController;
 import misq.jfx.overlay.OverlayController;
 import misq.jfx.utils.UncaughtExceptionHandler;
-import misq.jfx.utils.UserThread;
 
 import java.util.concurrent.CompletableFuture;
 

@@ -15,21 +15,16 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package misq.jfx.utils;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+package misq.common.timer;
 
 import java.util.Set;
 import java.util.TimerTask;
 import java.util.concurrent.CopyOnWriteArraySet;
 
-// Runs all listener objects periodically in a short interval.
 public class MasterTimer {
-    private final static Logger log = LoggerFactory.getLogger(MasterTimer.class);
     private static final java.util.Timer timer = new java.util.Timer();
-    // frame rate of 60 fps is about 16 ms but we  don't need such a short interval, 100 ms should be good enough
-    public static final long FRAME_INTERVAL_MS = 100;
+    // frame rate of 60 fps is about 16 ms
+    public static final long FRAME_INTERVAL_MS = 16;
 
     static {
         timer.scheduleAtFixedRate(new TimerTask() {
